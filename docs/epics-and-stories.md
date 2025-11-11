@@ -160,18 +160,19 @@ So that I can view available products professionally.
 ### Story 3.3: Collection Data Integration
 As a system integrator,
 I want to integrate existing collection schema,
-So that all product specifications and materials are available.
+So that all product specifications, materials, and assembly codes are available.
 
 **Acceptance Criteria:**
 **Given** existing MySQL gayafusionall schema
 **When** collections are accessed
-**Then** tblcollect_master data is fully integrated
+**Then** tblcollect_master data is fully integrated with assembly codes
 **And** material tables (clay, glaze, tools) are accessible
 **And** reference tables (categories, colors, sizes) support filtering
+**And** assembly products (sets, non-ceramic materials) are properly linked
 
 **Prerequisites:** Story 1.1
 
-**Technical Notes:** Schema mapping, data transformation, relationship preservation, query optimization.
+**Technical Notes:** Schema mapping with assembly fields, data transformation, relationship preservation, assembly component linking, query optimization.
 
 ---
 
