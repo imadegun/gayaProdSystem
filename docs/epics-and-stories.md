@@ -291,6 +291,8 @@ So that extra production generates additional revenue.
 **Acceptance Criteria:**
 **Given** client re-order inquiry
 **When** sales admin checks stock availability
+**Then** QC user check fisical stoke availability
+**And** stock offering system is available
 **Then** relevant stock is displayed with grades and discounts
 **And** client can purchase stock alongside new orders
 **And** stock delivery integrates with PO fulfillment
