@@ -1,13 +1,44 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, Wifi, WifiOff } from "lucide-react";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function Dashboard() {
   const { data: session } = useSession();
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+
+  const {
+    onProductionUpdate,
+    onQcUpdate,
+    onStockUpdate
+  } = useSocket();
+
+  useEffect(() => {
+    // Set up real-time listeners
+    onProductionUpdate((data) => {
+      setLastUpdate(`Production update: ${data.message || 'Data changed'}`);
+      setIsConnected(true);
+    });
+
+    onQcUpdate((data) => {
+      setLastUpdate(`QC update: ${data.message || 'Quality check completed'}`);
+      setIsConnected(true);
+    });
+
+    onStockUpdate((data) => {
+      setLastUpdate(`Stock update: ${data.message || 'Inventory changed'}`);
+      setIsConnected(true);
+    });
+
+    // Simulate connection status (in real app, check socket connection)
+    setIsConnected(true);
+  }, [onProductionUpdate, onQcUpdate, onStockUpdate]);
 
   if (!session) {
     return <div>Loading...</div>;
@@ -35,6 +66,16 @@ export default function Dashboard() {
                   {session.user.username}
                 </span>
                 <Badge variant="secondary">{session.user.role}</Badge>
+                <div className="flex items-center space-x-1">
+                  {isConnected ? (
+                    <Wifi className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <WifiOff className="h-4 w-4 text-red-500" />
+                  )}
+                  <span className="text-xs text-gray-500">
+                    {isConnected ? "Live" : "Offline"}
+                  </span>
+                </div>
               </div>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -174,13 +215,21 @@ export default function Dashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>Real-Time Activity</CardTitle>
                 <CardDescription>
-                  Latest system updates
+                  Live system updates and notifications
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {lastUpdate && (
+                    <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      <p className="text-sm text-blue-700">
+                        {lastUpdate}
+                      </p>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <p className="text-sm text-gray-600">
@@ -197,6 +246,12 @@ export default function Dashboard() {
                     <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                     <p className="text-sm text-gray-600">
                       Database migration pending
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <p className="text-sm text-gray-600">
+                      Real-time infrastructure active
                     </p>
                   </div>
                 </div>

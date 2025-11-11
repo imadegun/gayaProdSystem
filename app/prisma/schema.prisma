@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -24,7 +24,7 @@ model TblcollectMaster {
   materialCode      String   @map("material_code")
   clientCode        String?  @map("client_code")
   clientDescription String?  @map("client_description")
-  collectDate       DateTime? @default(sql"'0001-01-01'") @map("collect_date")
+  collectDate       DateTime? @map("collect_date")
   techDraw          String?  @map("tech_draw")
   photo1            String?  @map("photo1")
   photo2            String?  @map("photo2")
@@ -171,10 +171,10 @@ model PurchaseOrder {
   poNumber        String    @unique @map("po_number")
   clientId        Int       @map("client_id")
   orderDate       DateTime  @map("order_date")
-  depositAmount   Decimal?  @db.Decimal(12, 2) @map("deposit_amount")
+  depositAmount   Float?    @map("deposit_amount")
   depositPaid     Boolean   @default(false) @map("deposit_paid")
   depositPaidDate DateTime? @map("deposit_paid_date")
-  totalAmount     Decimal?  @db.Decimal(12, 2) @map("total_amount")
+  totalAmount     Float?    @map("total_amount")
   status          String    @default("draft")
   notes           String?
   createdBy       Int       @map("created_by")
@@ -277,8 +277,8 @@ model StockItem {
   poNumber              String?   @map("po_number")
   quantity              Int
   grade                 String    @map("grade") // 1st, 2nd
-  unitCost              Decimal?  @db.Decimal(10, 2) @map("unit_cost")
-  sellingPrice          Decimal?  @db.Decimal(10, 2) @map("selling_price")
+  unitCost              Float?    @map("unit_cost")
+  sellingPrice          Float?    @map("selling_price")
   status                String    @default("available") @map("status") // available, reserved, sold
   location              String?
   notes                 String?
@@ -345,7 +345,7 @@ model AttendanceRecord {
   recordDate    DateTime @map("record_date")
   checkInTime   DateTime? @map("check_in_time")
   checkOutTime  DateTime? @map("check_out_time")
-  hoursWorked   Decimal? @db.Decimal(4, 2) @map("hours_worked")
+  hoursWorked   Float?   @map("hours_worked")
   status        String   @default("present") @map("status") // present, absent, late, half_day
   notes         String?
   recordedBy    Int      @map("recorded_by")
