@@ -1,0 +1,356 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Existing migrated tables
+model TblcollectMaster {
+  id                Int      @id @default(autoincrement())
+  collectCode       String   @unique @map("collect_code") // Master product code
+  assemblyCode      String?  @map("assembly_code") // Assembly product code for sets and non-ceramic materials
+  designCode        String   @map("design_code")
+  nameCode          String   @map("name_code")
+  categoryCode      String   @map("category_code")
+  sizeCode          String   @map("size_code")
+  textureCode       String   @map("texture_code")
+  colorCode         String   @map("color_code")
+  materialCode      String   @map("material_code")
+  clientCode        String?  @map("client_code")
+  clientDescription String?  @map("client_description")
+  collectDate       DateTime? @default(sql"'0001-01-01'") @map("collect_date")
+  techDraw          String?  @map("tech_draw")
+  photo1            String?  @map("photo1")
+  photo2            String?  @map("photo2")
+  photo3            String?  @map("photo3")
+  photo4            String?  @map("photo4")
+  isAssembly        Boolean  @default(false) @map("is_assembly") // Indicates if this is an assembly/set product
+  assemblyComponents Json?   @map("assembly_components") // JSON array of component product codes
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  category          TblcollectCategory? @relation(fields: [categoryCode], references: [categoryCode])
+  color             TblcollectColor?    @relation(fields: [colorCode], references: [colorCode])
+  design            TblcollectDesign?   @relation(fields: [designCode], references: [designCode])
+  material          TblcollectMaterial? @relation(fields: [materialCode], references: [materialCode])
+  name              TblcollectName?     @relation(fields: [nameCode], references: [nameCode])
+  size              TblcollectSize?     @relation(fields: [sizeCode], references: [sizeCode])
+  texture           TblcollectTexture?  @relation(fields: [textureCode], references: [textureCode])
+
+  // Production relations
+  workPlanAssignments WorkPlanAssignment[]
+
+  @@map("tblcollect_master")
+}
+
+// Reference tables (migrated)
+model TblcollectCategory {
+  categoryCode    String @id @map("category_code")
+  categoryName    String @map("category_name")
+
+  products        TblcollectMaster[]
+  @@map("tblcollect_category")
+}
+
+model TblcollectColor {
+  colorCode    String @id @map("color_code")
+  colorName    String @map("color_name")
+
+  products     TblcollectMaster[]
+  @@map("tblcollect_color")
+}
+
+model TblcollectDesign {
+  designCode    String @id @map("design_code")
+  designName    String @map("design_name")
+
+  products      TblcollectMaster[]
+  @@map("tblcollect_design")
+}
+
+model TblcollectMaterial {
+  materialCode    String @id @map("material_code")
+  materialName    String @map("material_name")
+
+  products        TblcollectMaster[]
+  @@map("tblcollect_material")
+}
+
+model TblcollectName {
+  nameCode    String @id @map("name_code")
+  nameValue   String @map("name_value")
+
+  products    TblcollectMaster[]
+  @@map("tblcollect_name")
+}
+
+model TblcollectSize {
+  sizeCode    String @id @map("size_code")
+  sizeName    String @map("size_name")
+
+  products    TblcollectMaster[]
+  @@map("tblcollect_size")
+}
+
+model TblcollectTexture {
+  textureCode    String @id @map("texture_code")
+  textureName    String @map("texture_name")
+
+  products       TblcollectMaster[]
+  @@map("tblcollect_texture")
+}
+
+// New production tracking tables
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  passwordHash  String    @map("password_hash")
+  email         String?
+  role          String    // R&D, Sales, Forming, Glaze, QC, Admin
+  subRole       String?   @map("sub_role")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  employees     Employee[]
+  purchaseOrders PurchaseOrder[] @relation("CreatedBy")
+  workPlans     WorkPlan[] @relation("CreatedBy")
+  productionRecaps ProductionRecap[] @relation("RecordedBy")
+  qcResults     QcResult[] @relation("InspectedBy")
+  revisionTickets RevisionTicket[] @relation("SubmittedBy")
+  approvedTickets RevisionTicket[] @relation("ApprovedBy")
+  systemLogs    SystemLog[]
+  performanceAssessments PerformanceAssessment[] @relation("AssessedBy")
+  attendanceRecords AttendanceRecord[] @relation("RecordedBy")
+}
+
+model Employee {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  employeeCode String @unique @map("employee_code")
+  firstName  String   @map("first_name")
+  lastName   String   @map("last_name")
+  photoUrl   String?  @map("photo_url")
+  department String?
+  position   String?
+  hireDate   DateTime? @map("hire_date")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User     @relation(fields: [userId], references: [id])
+  workPlanAssignments WorkPlanAssignment[]
+  performanceAssessments PerformanceAssessment[]
+  attendanceRecords AttendanceRecord[]
+}
+
+model Client {
+  id              Int      @id @default(autoincrement())
+  clientCode      String   @unique @map("client_code")
+  clientDescription String @map("client_description")
+  region          String?  // Tokyo, Bali, Milan, etc.
+  department      String?  // Spa, F&B, Restaurant, etc.
+  contactPerson   String?  @map("contact_person")
+  email           String?
+  phone           String?
+  address         String?
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  purchaseOrders  PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id              Int       @id @default(autoincrement())
+  poNumber        String    @unique @map("po_number")
+  clientId        Int       @map("client_id")
+  orderDate       DateTime  @map("order_date")
+  depositAmount   Decimal?  @db.Decimal(12, 2) @map("deposit_amount")
+  depositPaid     Boolean   @default(false) @map("deposit_paid")
+  depositPaidDate DateTime? @map("deposit_paid_date")
+  totalAmount     Decimal?  @db.Decimal(12, 2) @map("total_amount")
+  status          String    @default("draft")
+  notes           String?
+  createdBy       Int       @map("created_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  client          Client    @relation(fields: [clientId], references: [id])
+  creator         User      @relation("CreatedBy", fields: [createdBy], references: [id])
+  productionStages ProductionStage[]
+}
+
+model ProductionStage {
+  id              Int       @id @default(autoincrement())
+  name            String    // Forming, Glaze, QC & Packaging
+  code            String    @unique
+  sequenceOrder   Int       @map("sequence_order")
+  description     String?
+  isActive        Boolean   @default(true) @map("is_active")
+
+  workPlanAssignments WorkPlanAssignment[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model WorkPlan {
+  id          Int      @id @default(autoincrement())
+  weekStart   DateTime @map("week_start")
+  weekEnd     DateTime @map("week_end")
+  planType    String   @default("production") @map("plan_type") // production, overtime
+  printed     Boolean  @default(false)
+  printedDate DateTime? @map("printed_date")
+  createdBy   Int      @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  creator     User     @relation("CreatedBy", fields: [createdBy], references: [id])
+  assignments WorkPlanAssignment[]
+}
+
+model WorkPlanAssignment {
+  id              Int      @id @default(autoincrement())
+  workPlanId      Int      @map("work_plan_id")
+  employeeId      Int      @map("employee_id")
+  productionStageId Int    @map("production_stage_id")
+  collectCode     String   @map("collect_code")
+  plannedQuantity Int      @map("planned_quantity")
+  targetQuantity  Int?     @map("target_quantity")
+  processName     String?  @map("process_name")
+  dayOfWeek       Int      @map("day_of_week") // 1=Monday, 7=Sunday
+  isOvertime      Boolean  @default(false) @map("is_overtime")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  workPlan        WorkPlan        @relation(fields: [workPlanId], references: [id])
+  employee        Employee        @relation(fields: [employeeId], references: [id])
+  productionStage ProductionStage @relation(fields: [productionStageId], references: [id])
+  product         TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  productionRecaps ProductionRecap[]
+}
+
+model ProductionRecap {
+  id                    Int       @id @default(autoincrement())
+  workPlanAssignmentId  Int       @map("work_plan_assignment_id")
+  recapDate             DateTime  @map("recap_date")
+  actualQuantity        Int       @map("actual_quantity")
+  goodQuantity          Int?
+  rejectQuantity        Int       @default(0) @map("reject_quantity")
+  reFireQuantity        Int       @default(0) @map("re_fire_quantity")
+  secondQualityQuantity Int       @default(0) @map("second_quality_quantity")
+  notes                 String?
+  recordedBy            Int       @map("recorded_by")
+  recordedAt            DateTime  @default(now()) @map("recorded_at")
+
+  workPlanAssignment    WorkPlanAssignment @relation(fields: [workPlanAssignmentId], references: [id])
+  recorder              User                @relation("RecordedBy", fields: [recordedBy], references: [id])
+  qcResults             QcResult[]
+}
+
+model QcResult {
+  id                    Int       @id @default(autoincrement())
+  productionRecapsId    Int       @map("production_recaps_id")
+  poNumber              String?   @map("po_number")
+  collectCode           String    @map("collect_code")
+  qcStage               String    @map("qc_stage") // loading_firing_high, loading_firing_luster
+  goodQuantity          Int       @default(0) @map("good_quantity")
+  reFireQuantity        Int       @default(0) @map("re_fire_quantity")
+  rejectQuantity        Int       @default(0) @map("reject_quantity")
+  secondQualityQuantity Int       @default(0) @map("second_quality_quantity")
+  qcNotes               String?   @map("qc_notes")
+  inspectedBy           Int       @map("inspected_by")
+  inspectedAt           DateTime  @default(now()) @map("inspected_at")
+
+  productionRecap       ProductionRecap @relation(fields: [productionRecapsId], references: [id])
+  inspector             User            @relation("InspectedBy", fields: [inspectedBy], references: [id])
+  stockItems            StockItem[]
+}
+
+model StockItem {
+  id                    Int       @id @default(autoincrement())
+  qcResultId            Int       @map("qc_result_id")
+  collectCode           String    @map("collect_code")
+  poNumber              String?   @map("po_number")
+  quantity              Int
+  grade                 String    @map("grade") // 1st, 2nd
+  unitCost              Decimal?  @db.Decimal(10, 2) @map("unit_cost")
+  sellingPrice          Decimal?  @db.Decimal(10, 2) @map("selling_price")
+  status                String    @default("available") @map("status") // available, reserved, sold
+  location              String?
+  notes                 String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  qcResult              QcResult  @relation(fields: [qcResultId], references: [id])
+}
+
+model RevisionTicket {
+  id            Int       @id @default(autoincrement())
+  ticketNumber  String    @unique @map("ticket_number")
+  poNumber      String?   @map("po_number")
+  collectCode   String    @map("collect_code")
+  title         String
+  purpose       String?
+  explanation   String?
+  status        String    @default("pending") @map("status") // pending, approved, rejected, implemented
+  attachments   Json?     @map("attachments") // Array of file URLs
+  submittedBy   Int       @map("submitted_by")
+  approvedBy    Int?      @map("approved_by")
+  approvedAt    DateTime? @map("approved_at")
+  implementedAt DateTime? @map("implemented_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  submitter     User      @relation("SubmittedBy", fields: [submittedBy], references: [id])
+  approver      User?     @relation("ApprovedBy", fields: [approvedBy], references: [id])
+}
+
+model SystemLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  action      String
+  entityType  String?  @map("entity_type") // table name or module
+  entityId    Int?
+  oldValues   Json?    @map("old_values")
+  newValues   Json?    @map("new_values")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+model PerformanceAssessment {
+  id                Int      @id @default(autoincrement())
+  employeeId        Int      @map("employee_id")
+  assessmentDate    DateTime @map("assessment_date")
+  periodStart       DateTime? @map("period_start")
+  periodEnd         DateTime? @map("period_end")
+  plusPoints        Int      @default(0) @map("plus_points")
+  minusPoints       Int      @default(0) @map("minus_points")
+  assessmentNotes   String?  @map("assessment_notes")
+  assessedBy        Int      @map("assessed_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  employee          Employee @relation(fields: [employeeId], references: [id])
+  assessor          User     @relation("AssessedBy", fields: [assessedBy], references: [id])
+}
+
+model AttendanceRecord {
+  id            Int      @id @default(autoincrement())
+  employeeId    Int      @map("employee_id")
+  recordDate    DateTime @map("record_date")
+  checkInTime   DateTime? @map("check_in_time")
+  checkOutTime  DateTime? @map("check_out_time")
+  hoursWorked   Decimal? @db.Decimal(4, 2) @map("hours_worked")
+  status        String   @default("present") @map("status") // present, absent, late, half_day
+  notes         String?
+  recordedBy    Int      @map("recorded_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  employee      Employee @relation(fields: [employeeId], references: [id])
+  recorder      User     @relation("RecordedBy", fields: [recordedBy], references: [id])
+}
