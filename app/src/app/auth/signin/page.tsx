@@ -53,7 +53,7 @@ export default function SignIn() {
               router.push("/qc");
               break;
             case "Admin":
-              router.push("/admin");
+              router.push("/dashboard");
               break;
             default:
               router.push("/dashboard");
