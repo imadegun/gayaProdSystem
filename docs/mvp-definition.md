@@ -32,8 +32,8 @@ The Minimum Viable Product (MVP) for gayaProdSystem focuses on the core producti
 - **Assembly Product Support:** Master product codes and assembly codes for non-ceramic materials (label rings, stainless tags, bamboo/rattan handles, rubber lids) and set products (oil burners, tea pots with handles/lids)
 
 #### 3. Production Planning & Tracking
-- **Work Plan Calendar:** Drag-and-drop weekly planning for Forming and Glaze users
-- **Daily Recap System:** Quantity tracking with validation and performance metrics
+- **Work Plan Calendar:** Drag-and-drop weekly planning for Forming and Glaze users, tracking product complexity (main parts, additional parts, sub parts)
+- **Daily Recap System:** Quantity tracking with validation and performance metrics, including 15% extra quantity management (default, editable based on shape/size/difficulty)
 - **Real-Time Dashboard:** Live production status for all users
 
 #### 4. Quality Control & Stock Management

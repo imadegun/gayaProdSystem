@@ -192,6 +192,7 @@ So that workers are efficiently scheduled across production stages.
 **And** worker groups (A, B) are managed
 **And** overtime is marked with visual indicators
 **And** plans print with photos, properties, day/date labels
+**And** product complexity is tracked with main parts, additional parts, and sub parts
 
 **Prerequisites:** Story 3.3
 
@@ -209,6 +210,7 @@ So that production progress is accurately tracked.
 **And** alerts trigger for discrepancies >15% extra reduction
 **And** stage-by-stage validation ensures consistency
 **And** performance metrics are recorded for assessment
+**And** extra quantity management uses 15% default (editable based on shape, size, difficulty) to guarantee order coverage
 
 **Prerequisites:** Story 4.1
 

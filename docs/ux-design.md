@@ -246,6 +246,7 @@ Dashboard
 - **Worker Photos:** 50x50px thumbnails for easy identification
 - **Group Management:** A/B group assignments with color coding
 - **Print Layout:** Production-ready work plans with photos and details
+- **Product Complexity Tracking:** Displays main parts, additional parts, and sub parts in assignments
 
 ### 4. Daily Production Recap
 
@@ -278,7 +279,7 @@ Dashboard
 
 #### Features
 - **Real-time Validation:** Automatic quantity validation with alerts
-- **Extra Quantity Tracking:** Automatic stock creation for surplus production
+- **Extra Quantity Tracking:** 15% default extra quantity (editable based on shape/size/difficulty), automatic stock creation for surplus production
 - **Performance Metrics:** Plus/minus point system with trends
 - **Photo Integration:** Product photos for easy identification
 - **Bulk Operations:** Save progress, complete assignments

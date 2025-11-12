@@ -341,6 +341,10 @@ This section shapes all functional and non-functional requirements below.
   - **3rd QC & Packaging Parts:** Unloading firing high, unloading firing luster, quality control, wrapping, packaging
 - **Section Responsibility:** Each user section manages their production process flow
 - **Calendar Planning:** Modern drag-and-drop weekly work plan for workers in each division
+- **Product Complexity Implementation:** Complexity in production system to implement in weekly work plan for tracking and detection that products are:
+  - **Main parts:** e.g., plate, saucer, bowl, etc.
+  - **Additional parts:** e.g., tea pot with lid+spout+handle, tea cup with handle, etc.
+  - **Sub parts:** Additional parts also have sub parts (base, lid, spout, handle, part a, part b, etc.)
 - **Data Preparation:** All required materials and data sourced from existing collection data (tblcollect_master, material tables)
 - **Product Codes:** Utilize existing CollectCode system and add master/assembly product codes for production tracking (ceramic and non-ceramic materials, set products)
 - **Work Plan Reference:** Serves as printed work reference with detailed items and completion processes
@@ -359,7 +363,8 @@ This section shapes all functional and non-functional requirements below.
 - **Validation & Alert System:** Critical data validation
   - Validate planned quantity vs actual quantity
   - Validate quantity at each process stage (e.g., 10 pieces thrown = 10 pieces trimmed = 10 pieces decorated = 10 pieces dried = 10 pieces loaded for biscuit firing)
-  - Alert notifications for rejected quantities reducing extra quantity (generally 15% extra from order qty)
+  - Alert notifications for rejected quantities reducing extra quantity
+  - **Extra Quantity Management:** Qty order in production has 15% extra default and editable depending on shape, size, difficulty of the product. Qty order + 15% extra become qty forming/making and become control & tracking in production to guarantee that extra will cover the order.
 - **Public Production Records:** Professional table list (no login) for cross-department tracking and search
   - Multi & dynamic filters: PO no, Client, item code, item name, date range, process stage, process detail name
   - Search, Sort, Pagination features
