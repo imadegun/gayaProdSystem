@@ -13,17 +13,30 @@ Build an enterprise application Product Collections Management & Production Trac
 ### General Description of the Flow
 
 1. **R&D (Research & Development) Sample Development & Directory List**
-   - User R&D responsible for directory listing & sample development
-   - New clients and goods development
-   - Client pays R&D fee
-   - Sample process, review, approve/revision
-   - If revision, return to fee payment and process
-   - Approved becomes Directory List Client
-   - Directory List becomes proforma to clients
+   Sample development flow in R&D:
+   1. A request comes from the client for the development of a new sample.
+   2. The R&D user will create a draft directory list of sample items and send it as a quotation to the client.
+   3. The quotation is approved by the client.
+   4. The sample creation process begins.
+   5. Once the sample is complete, the directory list will be updated according to the detailed description of the sample items.
+   6. The sales user will then follow up by extracting the data from the directory list into a Proforma Invoice to be sent to the client.
+   7. Client response:
+      - "Samples OK for all models": The sales user will proceed to the Purchase Order Invoice.
+      - "Samples OK with some selected models": The sales user will update the Proforma and forward it to the Purchase Order Invoice, and the R&D user will update the R&D directory list according to the models approved by the client.
+      - "Revised samples": The sample creation process will return to the client's approval process.
+      - "Samples Cancel"
+      - Samples are OK but not ordered.
+   8. All documents from the directory list, proforma, and purchase order list must be recorded with an update date.
+   9. In addition to product information, the directory list also contains detailed technical information (clay, glaze, texture, engobe, firing type, luster, etc.).
+   10. Model samples approved/ordered by the client will become the client's product collection.
+   11. Model samples not approved by the client will become R&D product collections.
 
 2. **Purchase Order Management (POL)**
-   - User sales admins manage and communicate with clients on Proforma & PO
-   - Client pays deposit for order issued by Purchase Order List (POL) to production
+   - The sales user will update the order status to the client when the order is nearly complete or approximately 80% complete and will also request payment.
+   - The sales user will update the client on order completion and offer additional or second-hand stock.
+   - The sales user is responsible for shipping documentation/packing lists.
+   - Sales users handle when there is a Re-Order request from a client, follow up by creating a Quotation by taking data (drag & drop) from Product Collections, until it becomes an Order.
+   
 
 3. **Product Collections**
    - Directory approved becomes client collection product with specification and technical process details

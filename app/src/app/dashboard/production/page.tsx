@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import WorkPlanCalendar from "@/components/WorkPlanCalendar";
 import {
   Calendar,
   Clock,
@@ -34,7 +36,7 @@ interface WorkPlan {
   weekEnd: string;
   planType: string;
   printed: boolean;
-  assignments: any[];
+  assignments?: WorkPlanAssignment[];
   creator: {
     username: string;
     role: string;
@@ -71,14 +73,52 @@ interface ProductionRecap {
   };
 }
 
+interface WorkPlanAssignment {
+  id: number;
+  employeeId: number;
+  productionStageId: number;
+  collectCode: string;
+  plannedQuantity: number;
+  targetQuantity?: number;
+  processName?: string;
+  dayOfWeek: number;
+  isOvertime: boolean;
+  notes?: string;
+  employee: {
+    firstName: string;
+    lastName: string;
+    employeeCode: string;
+  };
+  productionStage: {
+    name: string;
+    code: string;
+  };
+  product: {
+    collectCode: string;
+    nameCode: string;
+    categoryCode: string;
+  };
+}
+
+interface Employee {
+  id: number;
+  firstName: string;
+  lastName: string;
+  employeeCode: string;
+  department?: string;
+}
+
 export default function ProductionPage() {
   const { data: session } = useSession();
   const [stages, setStages] = useState<ProductionStage[]>([]);
   const [workPlans, setWorkPlans] = useState<WorkPlan[]>([]);
+  const [assignments, setAssignments] = useState<WorkPlanAssignment[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [recaps, setRecaps] = useState<ProductionRecap[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRecapForm, setShowRecapForm] = useState(false);
   const [showWorkPlanForm, setShowWorkPlanForm] = useState(false);
+  const [selectedWorkPlan, setSelectedWorkPlan] = useState<WorkPlan | null>(null);
   const [recapForm, setRecapForm] = useState({
     workPlanAssignmentId: '',
     recapDate: new Date().toISOString().split('T')[0],
@@ -101,10 +141,11 @@ export default function ProductionPage() {
 
   const fetchProductionData = async () => {
     try {
-      const [stagesRes, workPlansRes, recapsRes] = await Promise.all([
+      const [stagesRes, workPlansRes, recapsRes, employeesRes] = await Promise.all([
         fetch("/api/production/stages"),
         fetch("/api/production/work-plans"),
-        fetch("/api/production/recaps")
+        fetch("/api/production/recaps"),
+        fetch("/api/employees") // Assuming we have an employees API
       ]);
 
       if (stagesRes.ok) {
@@ -115,16 +156,110 @@ export default function ProductionPage() {
       if (workPlansRes.ok) {
         const workPlansData = await workPlansRes.json();
         setWorkPlans(workPlansData.workPlans || []);
+        // Set the first work plan as selected by default
+        if (workPlansData.workPlans && workPlansData.workPlans.length > 0) {
+          setSelectedWorkPlan(workPlansData.workPlans[0]);
+          fetchAssignmentsForWorkPlan(workPlansData.workPlans[0].id);
+        }
       }
 
       if (recapsRes.ok) {
         const recapsData = await recapsRes.json();
         setRecaps(recapsData.recaps || []);
       }
+
+      if (employeesRes.ok) {
+        const employeesData = await employeesRes.json();
+        setEmployees(employeesData.employees || []);
+      }
     } catch (error) {
       console.error("Error fetching production data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAssignmentsForWorkPlan = async (workPlanId: number) => {
+    try {
+      const response = await fetch(`/api/production/work-plans/${workPlanId}/assignments`);
+      if (response.ok) {
+        const data = await response.json();
+        setAssignments(data.assignments || []);
+      }
+    } catch (error) {
+      console.error("Error fetching assignments:", error);
+    }
+  };
+
+  const handleAssignmentUpdate = async (assignmentId: number, updates: Partial<WorkPlanAssignment>) => {
+    try {
+      const response = await fetch(`/api/production/work-plans/assignments/${assignmentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setAssignments(prev =>
+          prev.map(assignment =>
+            assignment.id === assignmentId
+              ? { ...assignment, ...updates }
+              : assignment
+          )
+        );
+      } else {
+        const error = await response.json();
+        alert(`Error updating assignment: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating assignment:', error);
+      alert('Error updating assignment');
+    }
+  };
+
+  const handleAssignmentCreate = async (assignment: Omit<WorkPlanAssignment, 'id'>) => {
+    if (!selectedWorkPlan) return;
+
+    try {
+      const response = await fetch(`/api/production/work-plans/${selectedWorkPlan.id}/assignments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(assignment),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAssignments(prev => [...prev, data.assignment]);
+      } else {
+        const error = await response.json();
+        alert(`Error creating assignment: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error creating assignment:', error);
+      alert('Error creating assignment');
+    }
+  };
+
+  const handleAssignmentDelete = async (assignmentId: number) => {
+    try {
+      const response = await fetch(`/api/production/work-plans/assignments/${assignmentId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setAssignments(prev => prev.filter(assignment => assignment.id !== assignmentId));
+      } else {
+        const error = await response.json();
+        alert(`Error deleting assignment: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      alert('Error deleting assignment');
     }
   };
 
@@ -206,8 +341,16 @@ export default function ProductionPage() {
     }
   };
 
+
   if (!session) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   if (loading) {
@@ -353,32 +496,72 @@ export default function ProductionPage() {
                     Get started by creating your first work plan.
                   </p>
                   <div className="mt-6">
-                    <Button>Create Work Plan</Button>
+                    <Button onClick={() => setShowWorkPlanForm(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Work Plan
+                    </Button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {workPlans.map((plan) => (
-                    <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900">
-                          Week of {new Date(plan.weekStart).toLocaleDateString()}
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          {plan.assignments.length} assignments • Created by {plan.creator.username}
+                <Tabs defaultValue="list" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="list">List View</TabsTrigger>
+                    <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="list" className="space-y-4">
+                    {workPlans.map((plan) => (
+                      <div key={plan.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">
+                            Week of {new Date(plan.weekStart).toLocaleDateString()}
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {plan.assignments?.length || 0} assignments • Created by {plan.creator.username}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={plan.planType === "production" ? "default" : "secondary"}>
+                            {plan.planType}
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedWorkPlan(plan);
+                              fetchAssignmentsForWorkPlan(plan.id);
+                            }}
+                          >
+                            View Calendar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </TabsContent>
+
+                  <TabsContent value="calendar" className="space-y-4">
+                    {selectedWorkPlan ? (
+                      <WorkPlanCalendar
+                        workPlanId={selectedWorkPlan.id}
+                        weekStart={new Date(selectedWorkPlan.weekStart)}
+                        weekEnd={new Date(selectedWorkPlan.weekEnd)}
+                        assignments={assignments}
+                        employees={employees}
+                        onAssignmentUpdate={handleAssignmentUpdate}
+                        onAssignmentCreate={handleAssignmentCreate}
+                        onAssignmentDelete={handleAssignmentDelete}
+                      />
+                    ) : (
+                      <div className="text-center py-8">
+                        <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">Select a work plan</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Choose a work plan from the list view to see the calendar.
                         </p>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant={plan.planType === "production" ? "default" : "secondary"}>
-                          {plan.planType}
-                        </Badge>
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
               )}
             </CardContent>
           </Card>

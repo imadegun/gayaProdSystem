@@ -24,6 +24,8 @@ The Minimum Viable Product (MVP) for gayaProdSystem focuses on the core producti
 - **User Management:** Registration, login, role-based access (R&D, Sales, Forming, Glaze, QC)
 - **Database Migration:** PostgreSQL setup with Prisma, initial schema migration
 - **Real-Time Infrastructure:** WebSocket setup for live updates
+- **R&D Sample Development:** Client onboarding, sample development workflow with approval loops, directory listing for approved samples
+- **Purchase Order Management:** Sales admin tools for client communication on proformas and POs, deposit payment tracking, seamless transition from paid orders to production workflow
 
 #### 2. Product Collections Management
 - **Public Catalog:** No-login product browsing with search, filter, pagination
