@@ -10,6 +10,307 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Material and tool tables (migrated from MySQL)
+model Tblcasting {
+  id                Int      @id @default(autoincrement())
+  castingCode       String   @unique @map("CastingCode")
+  castingDescription String  @map("CastingDescription")
+  castingDate       DateTime @map("CastingDate")
+  castingTechDraw   String?  @map("CastingTechDraw")
+  castingPhoto1     String?  @map("CastingPhoto1")
+  castingPhoto2     String?  @map("CastingPhoto2")
+  castingPhoto3     String?  @map("CastingPhoto3")
+  castingPhoto4     String?  @map("CastingPhoto4")
+  castingNotes      String?  @map("CastingNotes")
+
+  // Relations
+  productCastings    ProductCasting[]
+
+  @@map("tblcasting")
+}
+
+model Tblclay {
+  id                Int      @id @default(autoincrement())
+  clayCode          String   @unique @map("ClayCode")
+  clayDescription   String   @map("ClayDescription")
+  clayDate          DateTime @map("ClayDate")
+  clayTechDraw      String?  @map("ClayTechDraw")
+  clayPhoto1        String?  @map("ClayPhoto1")
+  clayPhoto2        String?  @map("ClayPhoto2")
+  clayPhoto3        String?  @map("ClayPhoto3")
+  clayPhoto4        String?  @map("ClayPhoto4")
+  clayNotes         String?  @map("ClayNotes")
+
+  // Relations
+  productClays      ProductClay[]
+
+  @@map("tblclay")
+}
+
+model Tblengobe {
+  id                Int      @id @default(autoincrement())
+  engobeCode        String   @unique @map("EngobeCode")
+  engobeDescription String   @map("EngobeDescription")
+  engobeDate        DateTime @map("EngobeDate")
+  engobeTechDraw    String?  @map("EngobeTechDraw")
+  engobePhoto1      String?  @map("EngobePhoto1")
+  engobePhoto2      String?  @map("EngobePhoto2")
+  engobePhoto3      String?  @map("EngobePhoto3")
+  engobePhoto4      String?  @map("EngobePhoto4")
+  engobeNotes       String?  @map("EngobeNotes")
+
+  // Relations
+  productEngobes    ProductEngobe[]
+
+  @@map("tblengobe")
+}
+
+model Tblestruder {
+  id                Int      @id @default(autoincrement())
+  estruderCode      String   @unique @map("EstruderCode")
+  estruderDescription String @map("EstruderDescription")
+  estruderDate      DateTime @map("EstruderDate")
+  estruderTechDraw  String?  @map("EstruderTechDraw")
+  estruderPhoto1    String?  @map("EstruderPhoto1")
+  estruderPhoto2    String?  @map("EstruderPhoto2")
+  estruderPhoto3    String?  @map("EstruderPhoto3")
+  estruderPhoto4    String?  @map("EstruderPhoto4")
+  estruderNotes     String?  @map("EstruderNotes")
+
+  // Relations
+  productEstruders  ProductEstruder[]
+
+  @@map("tblestruder")
+}
+
+model Tblglaze {
+  id                Int      @id @default(autoincrement())
+  glazeCode         String   @unique @map("GlazeCode")
+  glazeDescription  String   @map("GlazeDescription")
+  glazeDate         DateTime @map("GlazeDate")
+  glazeTechDraw     String?  @map("GlazeTechDraw")
+  glazePhoto1       String?  @map("GlazePhoto1")
+  glazePhoto2       String?  @map("GlazePhoto2")
+  glazePhoto3       String?  @map("GlazePhoto3")
+  glazePhoto4       String?  @map("GlazePhoto4")
+  glazeNotes        String?  @map("GlazeNotes")
+
+  // Relations
+  productGlazes     ProductGlaze[]
+
+  @@map("tblglaze")
+}
+
+model Tbllustre {
+  id                Int      @id @default(autoincrement())
+  lustreCode        String   @unique @map("LustreCode")
+  lustreDescription String   @map("LustreDescription")
+  lustreDate        DateTime @map("LustreDate")
+  lustreTechDraw    String?  @map("LustreTechDraw")
+  lustrePhoto1      String?  @map("LustrePhoto1")
+  lustrePhoto2      String?  @map("LustrePhoto2")
+  lustrePhoto3      String?  @map("LustrePhoto3")
+  lustrePhoto4      String?  @map("LustrePhoto4")
+  lustreNotes       String?  @map("LustreNotes")
+
+  // Relations
+  productLustres    ProductLustre[]
+
+  @@map("tbllustre")
+}
+
+model Tblstainoxide {
+  id                Int      @id @default(autoincrement())
+  stainOxideCode    String   @unique @map("StainOxideCode")
+  stainOxideDescription String @map("StainOxideDescription")
+  stainOxideDate    DateTime @map("StainOxideDate")
+  stainOxideTechDraw String? @map("StainOxideTechDraw")
+  stainOxidePhoto1  String?  @map("StainOxidePhoto1")
+  stainOxidePhoto2  String?  @map("StainOxidePhoto2")
+  stainOxidePhoto3  String?  @map("StainOxidePhoto3")
+  stainOxidePhoto4  String?  @map("StainOxidePhoto4")
+  stainOxideNotes   String?  @map("StainOxideNotes")
+
+  // Relations
+  productStainOxides ProductStainOxide[]
+
+  @@map("tblstainoxide")
+}
+
+model Tbltexture {
+  id                Int      @id @default(autoincrement())
+  textureCode       String   @unique @map("TextureCode")
+  textureDescription String  @map("TextureDescription")
+  textureDate       DateTime @map("TextureDate")
+  textureTechDraw   String?  @map("TextureTechDraw")
+  texturePhoto1     String?  @map("TexturePhoto1")
+  texturePhoto2     String?  @map("TexturePhoto2")
+  texturePhoto3     String?  @map("TexturePhoto3")
+  texturePhoto4     String?  @map("TexturePhoto4")
+  textureNotes      String?  @map("TextureNotes")
+
+  // Relations
+  productTextures   ProductTexture[]
+
+  @@map("tbltexture")
+}
+
+model Tbltools {
+  id                Int      @id @default(autoincrement())
+  toolsCode         String   @unique @map("ToolsCode")
+  toolsDescription  String   @map("ToolsDescription")
+  toolsDate         DateTime @map("ToolsDate")
+  toolsTechDraw     String?  @map("ToolsTechDraw")
+  toolsPhoto1       String?  @map("ToolsPhoto1")
+  toolsPhoto2       String?  @map("ToolsPhoto2")
+  toolsPhoto3       String?  @map("ToolsPhoto3")
+  toolsPhoto4       String?  @map("ToolsPhoto4")
+  toolsNotes        String?  @map("ToolsNotes")
+
+  // Relations
+  productTools      ProductTools[]
+
+  @@map("tbltools")
+}
+
+// Junction tables for product-material relationships (one-to-many migration)
+model ProductClay {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  clayId      Int      @map("clay_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  quantity    Float?   // KG used
+  notes       String?  @map("clay_note")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  clay        Tblclay          @relation(fields: [clayId], references: [id])
+
+  @@unique([collectCode, clayId])
+  @@map("product_clays")
+}
+
+model ProductCasting {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  castingId   Int      @map("casting_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  notes       String?  @map("casting_note")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  casting     Tblcasting       @relation(fields: [castingId], references: [id])
+
+  @@unique([collectCode, castingId])
+  @@map("product_castings")
+}
+
+model ProductEstruder {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  estruderId  Int      @map("estruder_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  notes       String?  @map("estruder_note")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  estruder    Tblestruder      @relation(fields: [estruderId], references: [id])
+
+  @@unique([collectCode, estruderId])
+  @@map("product_estruders")
+}
+
+model ProductTexture {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  textureId   Int      @map("texture_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  notes       String?  @map("texture_note")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  texture     Tbltexture       @relation(fields: [textureId], references: [id])
+
+  @@unique([collectCode, textureId])
+  @@map("product_textures")
+}
+
+model ProductTools {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  toolsId     Int      @map("tools_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  notes       String?  @map("tools_note")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  tools       Tbltools         @relation(fields: [toolsId], references: [id])
+
+  @@unique([collectCode, toolsId])
+  @@map("product_tools")
+}
+
+model ProductEngobe {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  engobeId    Int      @map("engobe_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  notes       String?  @map("engobe_note")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  engobe      Tblengobe        @relation(fields: [engobeId], references: [id])
+
+  @@unique([collectCode, engobeId])
+  @@map("product_engobes")
+}
+
+model ProductStainOxide {
+  id            Int      @id @default(autoincrement())
+  collectCode   String   @map("collect_code")
+  stainOxideId  Int      @map("stain_oxide_id")
+  sequence      Int?     // 1-4 for legacy compatibility
+  notes         String?  @map("stain_oxide_note")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  product       TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  stainOxide    Tblstainoxide    @relation(fields: [stainOxideId], references: [id])
+
+  @@unique([collectCode, stainOxideId])
+  @@map("product_stain_oxides")
+}
+
+model ProductLustre {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  lustreId    Int      @map("lustre_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  notes       String?  @map("lustre_note")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  lustre      Tbllustre        @relation(fields: [lustreId], references: [id])
+
+  @@unique([collectCode, lustreId])
+  @@map("product_lustres")
+}
+
+model ProductGlaze {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  glazeId     Int      @map("glaze_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  density     String?  @map("glaze_density") // Density value for this glaze
+  notes       String?  @map("glaze_note")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  glaze       Tblglaze         @relation(fields: [glazeId], references: [id])
+
+  @@unique([collectCode, glazeId])
+  @@map("product_glazes")
+}
+
 // Existing migrated tables
 model TblcollectMaster {
   id                Int      @id @default(autoincrement())
@@ -43,6 +344,17 @@ model TblcollectMaster {
   name              TblcollectName?     @relation(fields: [nameCode], references: [nameCode])
   size              TblcollectSize?     @relation(fields: [sizeCode], references: [sizeCode])
   texture           TblcollectTexture?  @relation(fields: [textureCode], references: [textureCode])
+
+  // Material relations (flexible one-to-many)
+  productClays      ProductClay[]
+  productCastings   ProductCasting[]
+  productEstruders  ProductEstruder[]
+  productTextures   ProductTexture[]
+  productTools      ProductTools[]
+  productEngobes    ProductEngobe[]
+  productStainOxides ProductStainOxide[]
+  productLustres    ProductLustre[]
+  productGlazes     ProductGlaze[]
 
   // Production relations
   workPlanAssignments WorkPlanAssignment[]

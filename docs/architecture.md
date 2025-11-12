@@ -1,407 +1,526 @@
 # gayaProdSystem - Technical Architecture
 
-**Author:** BMad
-**Date:** 2025-11-11
-**Version:** 1.0
+**Author:** BMad Architect Agent
+**Date:** 2025-11-12
+**Version:** 2.1 - Schema Revision (Material Relationships)
 
 ---
 
 ## Overview
 
-This document outlines the technical architecture for gayaProdSystem, a comprehensive enterprise web application for ceramic craft production management. The system transforms artisanal ceramic production from manual processes into a data-driven enterprise platform with real-time tracking, stock management, and multi-user collaboration.
+This document outlines the final technical architecture for gayaProdSystem, a comprehensive enterprise web application for ceramic craft production management. The system transforms artisanal ceramic production from manual processes into a data-driven enterprise platform with real-time tracking, stock management, and multi-user collaboration.
+
+**Foundation**: Built on existing Next.js 16 application with pre-configured production-ready setup.
 
 ## System Architecture
 
-I would like Core framework :
-Next.js@latest (Backend & Frontend)
-TypeScript 5
-Tailwind CSS
-UI Components & Styling
-shadcn/ui
-Lucide React
-Framer Motion
-Next Themes
-React Hook Form
-Zod - TypeScript-first schema validation
-State Management & Data Fetching
-Zustand - Simple, scalable state management
-TanStack Query - Powerful data synchronization for React
-Axios - Promise-based HTTP client
-Database & Backend
-Prisma - Next-generation Node.js and TypeScript ORM
-NextAuth.js - Complete open-source authentication solution
-Advanced UI Features
-TanStack Table - Headless UI for building tables and datagrids
-DND Kit - Modern drag and drop toolkit for React
-Recharts - Redefined chart library built with React and D3
-Sharp - High performance image processing
-Internationalization & Utilities
-Next Intl - Internationalization library for Next.js
-Date-fns - Modern JavaScript date utility library
-ReactUse - Collection of essential React hooks for modern development
-Why This Scaffold?
-Fast Development - Pre-configured tooling and best practices
-Beautiful UI - Complete shadcn/ui component library with advanced interactions
-Type Safety - Full TypeScript configuration with Zod validation
-Responsive - Mobile-first design principles with smooth animations
-Database Ready - Prisma ORM configured for rapid backend development
-Auth Included - NextAuth.js for secure authentication flows
-Data Visualization - Charts, tables, and drag-and-drop functionality
-i18n Ready - Multi-language support with Next Intl
-Production Ready - Optimized build and deployment settings
-AI-Friendly - Structured codebase perfect for AI assistance
+### Core Technology Stack
+
+**Frontend & Backend Framework**
+- Next.js 16.0.1 (App Router) - Full-stack React framework
+- TypeScript 5.6.3 - Type-safe development
+- Tailwind CSS 4.0.0 - Utility-first CSS framework
+
+**UI Components & Styling**
+- shadcn/ui - Professional component library with Radix UI primitives
+- Lucide React - Beautiful icon library
+- Next Themes - Dark/light mode support
+- React Hook Form + Zod - Form validation with TypeScript schemas
+
+**State Management & Data Fetching**
+- TanStack Query (React Query) - Server state management and caching
+- NextAuth.js - Complete authentication solution with role-based access
+
+**Database & ORM**
+- Prisma 6.19.0 - Type-safe database access
+- PostgreSQL - Primary database (migrated from MySQL)
+
+**Real-Time Features**
+- Socket.io 4.8.1 - WebSocket implementation for live updates
+
+**Development Tools**
+- ESLint - Code quality and consistency
+- PostCSS - CSS processing
+- TypeScript - Type checking and IntelliSense
+
+### Architecture Benefits
+
+- **Production Ready**: Pre-configured with industry best practices
+- **Type Safe**: Full TypeScript coverage with Prisma-generated types
+- **Scalable**: Serverless API routes with automatic scaling
+- **Real-Time**: WebSocket integration for live production updates
+- **Secure**: Role-based authentication with audit trails
+- **Maintainable**: Clean architecture with separation of concerns
 
 ## Database Architecture
 
-### PostgreSQL Schema Design
+### Prisma Schema Design
 
-#### Existing Tables (Migrated from MySQL)
+The database schema is defined using Prisma ORM with PostgreSQL as the target database. The schema includes migrated legacy tables and new production tracking tables.
 
-```sql
--- Core collection tables (migrated from gayafusionall schema)
-CREATE TABLE tblcollect_master (
-    id SERIAL PRIMARY KEY,
-    collect_code VARCHAR(15) UNIQUE NOT NULL, -- Master product code
-    assembly_code VARCHAR(15), -- Assembly product code for sets and non-ceramic materials
-    design_code VARCHAR(2) NOT NULL,
-    name_code VARCHAR(2) NOT NULL,
-    category_code VARCHAR(3) NOT NULL,
-    size_code VARCHAR(2) NOT NULL,
-    texture_code VARCHAR(2) NOT NULL,
-    color_code VARCHAR(3) NOT NULL,
-    material_code VARCHAR(2) NOT NULL,
-    client_code VARCHAR(20),
-    client_description VARCHAR(50),
-    collect_date DATE DEFAULT '0001-01-01',
-    tech_draw VARCHAR(300),
-    photo1 VARCHAR(300),
-    photo2 VARCHAR(300),
-    photo3 VARCHAR(300),
-    photo4 VARCHAR(300),
-    is_assembly BOOLEAN DEFAULT false, -- Indicates if this is an assembly/set product
-    assembly_components JSONB, -- JSON array of component product codes
-    -- ... (all existing fields migrated)
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+#### Core Data Models
 
--- Reference tables
-CREATE TABLE tblcollect_category (
-    category_code VARCHAR(3) PRIMARY KEY,
-    category_name VARCHAR(50) NOT NULL
-);
+**Legacy Product Catalog (Migrated)**
+```prisma
+model TblcollectMaster {
+  id                Int      @id @default(autoincrement())
+  collectCode       String   @unique @map("collect_code")
+  assemblyCode      String?  @map("assembly_code")
+  designCode        String   @map("design_code")
+  nameCode          String   @map("name_code")
+  categoryCode      String   @map("category_code")
+  sizeCode          String   @map("size_code")
+  textureCode       String   @map("texture_code")
+  colorCode         String   @map("color_code")
+  materialCode      String   @map("material_code")
+  clientCode        String?  @map("client_code")
+  clientDescription String?  @map("client_description")
+  collectDate       DateTime? @map("collect_date")
+  techDraw          String?  @map("tech_draw")
+  photo1            String?  @map("photo1")
+  photo2            String?  @map("photo2")
+  photo3            String?  @map("photo3")
+  photo4            String?  @map("photo4")
+  isAssembly        Boolean  @default(false) @map("is_assembly")
+  assemblyComponents Json?   @map("assembly_components")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
--- Material tables (clay, glaze, tools, etc.)
-CREATE TABLE tblclay (
-    id SERIAL PRIMARY KEY,
-    clay_code VARCHAR(10) UNIQUE NOT NULL,
-    clay_description VARCHAR(100) NOT NULL,
-    clay_date DATE DEFAULT '0001-01-01',
-    clay_tech_draw VARCHAR(50),
-    clay_photo1 VARCHAR(300),
-    clay_photo2 VARCHAR(300),
-    clay_photo3 VARCHAR(300),
-    clay_photo4 VARCHAR(300),
-    clay_notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+  // Relations
+  category          TblcollectCategory?
+  color             TblcollectColor?
+  design            TblcollectDesign?
+  material          TblcollectMaterial?
+  name              TblcollectName?
+  size              TblcollectSize?
+  texture           TblcollectTexture?
+
+  // Material relations (flexible one-to-many)
+  productClays      ProductClay[]
+  productCastings   ProductCasting[]
+  productEstruders  ProductEstruder[]
+  productTextures   ProductTexture[]
+  productTools      ProductTools[]
+  productEngobes    ProductEngobe[]
+  productStainOxides ProductStainOxide[]
+  productLustres    ProductLustre[]
+  productGlazes     ProductGlaze[]
+
+  // Production relations
+  workPlanAssignments WorkPlanAssignment[]
+}
 ```
 
-#### New Tables for Production System
+**Material & Tool Tables (Migrated with Photos)**
+```prisma
+model Tblclay {
+  id                Int      @id @default(autoincrement())
+  clayCode          String   @unique @map("ClayCode")
+  clayDescription   String   @map("ClayDescription")
+  clayDate          DateTime @map("ClayDate")
+  clayTechDraw      String?  @map("ClayTechDraw")
+  clayPhoto1        String?  @map("ClayPhoto1")  // Added photo fields
+  clayPhoto2        String?  @map("ClayPhoto2")
+  clayPhoto3        String?  @map("ClayPhoto3")
+  clayPhoto4        String?  @map("ClayPhoto4")
+  clayNotes         String?  @map("ClayNotes")
 
-```sql
--- User management
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(100),
-    role VARCHAR(20) NOT NULL, -- R&D, Sales, Forming, Glaze, QC, Admin
-    sub_role VARCHAR(20),
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+  productClays      ProductClay[]
+}
 
--- Employee profiles
-CREATE TABLE employees (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    employee_code VARCHAR(20) UNIQUE,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    photo_url VARCHAR(300),
-    department VARCHAR(50),
-    position VARCHAR(50),
-    hire_date DATE,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+model Tbltools {
+  id                Int      @id @default(autoincrement())
+  toolsCode         String   @unique @map("ToolsCode")
+  toolsDescription  String   @map("ToolsDescription")
+  toolsDate         DateTime @map("ToolsDate")
+  toolsTechDraw     String?  @map("ToolsTechDraw")
+  toolsPhoto1       String?  @map("ToolsPhoto1")  // Added photo fields
+  toolsPhoto2       String?  @map("ToolsPhoto2")
+  toolsPhoto3       String?  @map("ToolsPhoto3")
+  toolsPhoto4       String?  @map("ToolsPhoto4")
+  toolsNotes        String?  @map("ToolsNotes")
 
--- Clients
-CREATE TABLE clients (
-    id SERIAL PRIMARY KEY,
-    client_code VARCHAR(20) UNIQUE NOT NULL,
-    client_description VARCHAR(100) NOT NULL,
-    region VARCHAR(50), -- Tokyo, Bali, Milan, etc.
-    department VARCHAR(50), -- Spa, F&B, Restaurant, etc.
-    contact_person VARCHAR(100),
-    email VARCHAR(100),
-    phone VARCHAR(20),
-    address TEXT,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+  productTools      ProductTools[]
+}
+```
 
--- Purchase Orders (POL)
-CREATE TABLE purchase_orders (
-    id SERIAL PRIMARY KEY,
-    po_number VARCHAR(20) UNIQUE NOT NULL,
-    client_id INTEGER REFERENCES clients(id),
-    order_date DATE NOT NULL,
-    deposit_amount DECIMAL(12,2),
-    deposit_paid BOOLEAN DEFAULT false,
-    deposit_paid_date DATE,
-    total_amount DECIMAL(12,2),
-    status VARCHAR(20) DEFAULT 'draft', -- draft, confirmed, in_production, completed, cancelled
-    notes TEXT,
-    created_by INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**Junction Tables (One-to-Many Migration)**
+```prisma
+model ProductClay {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  clayId      Int      @map("clay_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  quantity    Float?   // KG used
+  notes       String?  @map("clay_note")
+  createdAt   DateTime @default(now()) @map("created_at")
 
--- Production stages
-CREATE TABLE production_stages (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL, -- Forming, Glaze, QC & Packaging
-    code VARCHAR(10) UNIQUE NOT NULL,
-    sequence_order INTEGER NOT NULL,
-    description TEXT,
-    is_active BOOLEAN DEFAULT true
-);
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  clay        Tblclay          @relation(fields: [clayId], references: [id])
 
--- Work plans
-CREATE TABLE work_plans (
-    id SERIAL PRIMARY KEY,
-    week_start DATE NOT NULL,
-    week_end DATE NOT NULL,
-    plan_type VARCHAR(20) DEFAULT 'production', -- production, overtime
-    printed BOOLEAN DEFAULT false,
-    printed_date TIMESTAMP,
-    created_by INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+  @@unique([collectCode, clayId])
+  @@map("product_clays")
+}
 
--- Work plan assignments
-CREATE TABLE work_plan_assignments (
-    id SERIAL PRIMARY KEY,
-    work_plan_id INTEGER REFERENCES work_plans(id),
-    employee_id INTEGER REFERENCES employees(id),
-    production_stage_id INTEGER REFERENCES production_stages(id),
-    collect_code VARCHAR(15) NOT NULL,
-    planned_quantity INTEGER NOT NULL,
-    target_quantity INTEGER,
-    process_name VARCHAR(100),
-    day_of_week INTEGER, -- 1=Monday, 7=Sunday
-    is_overtime BOOLEAN DEFAULT false,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+model ProductGlaze {
+  id          Int      @id @default(autoincrement())
+  collectCode String   @map("collect_code")
+  glazeId     Int      @map("glaze_id")
+  sequence    Int?     // 1-4 for legacy compatibility
+  density     String?  @map("glaze_density") // Density value
+  notes       String?  @map("glaze_note")
+  createdAt   DateTime @default(now()) @map("created_at")
 
--- Daily production recaps
-CREATE TABLE production_recaps (
-    id SERIAL PRIMARY KEY,
-    work_plan_assignment_id INTEGER REFERENCES work_plan_assignments(id),
-    recap_date DATE NOT NULL,
-    actual_quantity INTEGER NOT NULL,
-    good_quantity INTEGER,
-    reject_quantity INTEGER DEFAULT 0,
-    re_fire_quantity INTEGER DEFAULT 0,
-    second_quality_quantity INTEGER DEFAULT 0,
-    notes TEXT,
-    recorded_by INTEGER REFERENCES users(id),
-    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+  product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  glaze       Tblglaze         @relation(fields: [glazeId], references: [id])
 
--- Quality control results
-CREATE TABLE qc_results (
-    id SERIAL PRIMARY KEY,
-    production_recaps_id INTEGER REFERENCES production_recaps(id),
-    po_number VARCHAR(20),
-    collect_code VARCHAR(15),
-    qc_stage VARCHAR(20), -- loading_firing_high, loading_firing_luster
-    good_quantity INTEGER DEFAULT 0,
-    re_fire_quantity INTEGER DEFAULT 0,
-    reject_quantity INTEGER DEFAULT 0,
-    second_quality_quantity INTEGER DEFAULT 0,
-    qc_notes TEXT,
-    inspected_by INTEGER REFERENCES users(id),
-    inspected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+  @@unique([collectCode, glazeId])
+  @@map("product_glazes")
+}
+```
 
--- Stock management
-CREATE TABLE stock_items (
-    id SERIAL PRIMARY KEY,
-    qc_result_id INTEGER REFERENCES qc_results(id),
-    collect_code VARCHAR(15) NOT NULL,
-    po_number VARCHAR(20),
-    quantity INTEGER NOT NULL,
-    grade VARCHAR(10) NOT NULL, -- 1st, 2nd
-    unit_cost DECIMAL(10,2),
-    selling_price DECIMAL(10,2),
-    status VARCHAR(20) DEFAULT 'available', -- available, reserved, sold
-    location VARCHAR(50),
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**Production Management System**
+```prisma
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  passwordHash  String    @map("password_hash")
+  email         String?
+  role          String    // R&D, Sales, Forming, Glaze, QC, Admin
+  subRole       String?   @map("sub_role")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
--- Revision tickets
-CREATE TABLE revision_tickets (
-    id SERIAL PRIMARY KEY,
-    ticket_number VARCHAR(20) UNIQUE NOT NULL,
-    po_number VARCHAR(20),
-    collect_code VARCHAR(15),
-    title VARCHAR(200) NOT NULL,
-    purpose TEXT,
-    explanation TEXT,
-    status VARCHAR(20) DEFAULT 'pending', -- pending, approved, rejected, implemented
-    attachments JSONB, -- Array of file URLs
-    submitted_by INTEGER REFERENCES users(id),
-    approved_by INTEGER REFERENCES users(id),
-    approved_at TIMESTAMP,
-    implemented_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+  // Relations
+  employees     Employee[]
+  purchaseOrders PurchaseOrder[] @relation("CreatedBy")
+  workPlans     WorkPlan[] @relation("CreatedBy")
+  productionRecaps ProductionRecap[] @relation("RecordedBy")
+  qcResults     QcResult[] @relation("InspectedBy")
+  revisionTickets RevisionTicket[] @relation("SubmittedBy")
+  approvedTickets RevisionTicket[] @relation("ApprovedBy")
+  systemLogs    SystemLog[]
+  performanceAssessments PerformanceAssessment[] @relation("AssessedBy")
+  attendanceRecords AttendanceRecord[] @relation("RecordedBy")
+}
 
--- System logging
-CREATE TABLE system_logs (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    action VARCHAR(100) NOT NULL,
-    entity_type VARCHAR(50), -- table name or module
-    entity_id INTEGER,
-    old_values JSONB,
-    new_values JSONB,
-    ip_address INET,
-    user_agent TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+model ProductionStage {
+  id              Int      @id @default(autoincrement())
+  name            String   // Forming, Glaze, QC & Packaging
+  code            String   @unique
+  sequenceOrder   Int      @map("sequence_order")
+  description     String?
+  isActive        Boolean  @default(true) @map("is_active")
 
--- Performance assessments
-CREATE TABLE performance_assessments (
-    id SERIAL PRIMARY KEY,
-    employee_id INTEGER REFERENCES employees(id),
-    assessment_date DATE NOT NULL,
-    period_start DATE,
-    period_end DATE,
-    plus_points INTEGER DEFAULT 0,
-    minus_points INTEGER DEFAULT 0,
-    assessment_notes TEXT,
-    assessed_by INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+  workPlanAssignments WorkPlanAssignment[]
+}
 
--- Attendance records
-CREATE TABLE attendance_records (
-    id SERIAL PRIMARY KEY,
-    employee_id INTEGER REFERENCES employees(id),
-    record_date DATE NOT NULL,
-    check_in_time TIME,
-    check_out_time TIME,
-    hours_worked DECIMAL(4,2),
-    status VARCHAR(20) DEFAULT 'present', -- present, absent, late, half_day
-    notes TEXT,
-    recorded_by INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+model WorkPlanAssignment {
+  id              Int      @id @default(autoincrement())
+  workPlanId      Int      @map("work_plan_id")
+  employeeId      Int      @map("employee_id")
+  productionStageId Int    @map("production_stage_id")
+  collectCode     String   @map("collect_code")
+  plannedQuantity Int      @map("planned_quantity")
+  targetQuantity  Int?     @map("target_quantity")
+  processName     String?  @map("process_name")
+  dayOfWeek       Int      @map("day_of_week")
+  isOvertime      Boolean  @default(false) @map("is_overtime")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  workPlan        WorkPlan
+  employee        Employee
+  productionStage ProductionStage
+  product         TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  productionRecaps ProductionRecap[]
+}
+
+model ProductionRecap {
+  id                    Int       @id @default(autoincrement())
+  workPlanAssignmentId  Int       @map("work_plan_assignment_id")
+  recapDate             DateTime  @map("recap_date")
+  actualQuantity        Int       @map("actual_quantity")
+  goodQuantity          Int?
+  rejectQuantity        Int       @default(0) @map("reject_quantity")
+  reFireQuantity        Int       @default(0) @map("re_fire_quantity")
+  secondQualityQuantity Int       @default(0) @map("second_quality_quantity")
+  notes                 String?
+  recordedBy            Int       @map("recorded_by")
+  recordedAt            DateTime  @default(now()) @map("recorded_at")
+
+  workPlanAssignment    WorkPlanAssignment @relation(fields: [workPlanAssignmentId], references: [id])
+  recorder              User                @relation("RecordedBy", fields: [recordedBy], references: [id])
+  qcResults             QcResult[]
+}
+
+model QcResult {
+  id                    Int       @id @default(autoincrement())
+  productionRecapsId    Int       @map("production_recaps_id")
+  poNumber              String?   @map("po_number")
+  collectCode           String    @map("collect_code")
+  qcStage               String    @map("qc_stage")
+  goodQuantity          Int       @default(0) @map("good_quantity")
+  reFireQuantity        Int       @default(0) @map("re_fire_quantity")
+  rejectQuantity        Int       @default(0) @map("reject_quantity")
+  secondQualityQuantity Int       @default(0) @map("second_quality_quantity")
+  qcNotes               String?   @map("qc_notes")
+  inspectedBy           Int       @map("inspected_by")
+  inspectedAt           DateTime  @default(now()) @map("inspected_at")
+
+  productionRecap       ProductionRecap @relation(fields: [productionRecapsId], references: [id])
+  inspector             User            @relation("InspectedBy", fields: [inspectedBy], references: [id])
+  stockItems            StockItem[]
+}
+
+model StockItem {
+  id                    Int       @id @default(autoincrement())
+  qcResultId            Int       @map("qc_result_id")
+  collectCode           String    @map("collect_code")
+  poNumber              String?   @map("po_number")
+  quantity              Int
+  grade                 String    @map("grade")
+  unitCost              Float?    @map("unit_cost")
+  sellingPrice          Float?    @map("selling_price")
+  status                String    @default("available") @map("status")
+  location              String?
+  notes                 String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  qcResult              QcResult  @relation(fields: [qcResultId], references: [id])
+}
 ```
 
 ### Database Migration Strategy
 
-1. **Phase 1**: Create PostgreSQL schema with migrated tables
-2. **Phase 2**: Data migration with validation scripts
-3. **Phase 3**: Add new tables and relationships
-4. **Phase 4**: Performance optimization and indexing
-5. **Phase 5**: Switch to PostgreSQL as primary database
+**Material Relationship Migration Challenge:**
+The original MySQL schema used rigid 4-field relationships (Clay1, Clay2, Clay3, Clay4) in `tblcollect_master`. The new PostgreSQL schema implements flexible one-to-many relationships using junction tables.
+
+**Migration Approach:**
+1. **Phase 1**: Migrate core tables (tblcollect_master, reference tables) to PostgreSQL
+2. **Phase 2**: Migrate material/tool tables (tblclay, tblglaze, tbltools, etc.) with added photo fields
+3. **Phase 3**: Transform rigid relationships to junction tables:
+   - Extract Clay1-4 IDs → ProductClay junction records
+   - Extract Glaze1-4 IDs → ProductGlaze junction records
+   - Extract Tools1-4 IDs → ProductTools junction records
+   - Extract all other material relationships
+4. **Phase 4**: Implement new production tracking tables
+5. **Phase 5**: Data validation and integrity checks
+6. **Phase 6**: Performance optimization with indexes
+
+**Data Synchronization:**
+- **Legacy Compatibility**: Junction tables maintain sequence numbers (1-4) for backward compatibility
+- **Quantity Tracking**: Clay relationships include KG quantities
+- **Notes Preservation**: Material-specific notes migrated to junction tables
+- **Photo Fields**: Added to tbltools, tblcasting, tbltexture, tblestruder tables
 
 ## API Architecture
 
-### Next.js API Routes
+### Next.js App Router API Routes
 
-Next.js provides built-in API routes for serverless functions:
+The application uses Next.js 16 App Router for API endpoints with RESTful conventions:
 
+**Authentication & Users**
 ```
-POST   /api/auth/login
-GET    /api/users/profile
-GET    /api/collections?client=exclusive&search=term
-POST   /api/purchase-orders
-GET    /api/production/work-plans?week=2025-W45
-POST   /api/production/recaps
-GET    /api/qc/results?po=PO001
-POST   /api/revisions
-GET    /api/reports/production-efficiency
+GET    /api/auth/[...nextauth]     # NextAuth.js handlers
+POST   /api/auth/[...nextauth]
+```
+
+**Production Management**
+```
+GET    /api/production/stages       # Production stages
+GET    /api/production/work-plans  # Work plan management
+POST   /api/production/recaps      # Daily production recording
+GET    /api/production/recaps      # Production history
+```
+
+**Quality Control**
+```
+GET    /api/qc/results             # QC results by PO/stage
+POST   /api/qc/results             # Record QC inspections
+```
+
+**Stock Management**
+```
+GET    /api/stock/items            # Stock availability
+POST   /api/stock/adjustments      # Stock adjustments
+```
+
+**Business Entities**
+```
+GET    /api/clients                # Client management
+POST   /api/purchase-orders        # PO creation/management
+GET    /api/collections            # Product catalog
 ```
 
 ### Data Fetching with TanStack Query
 
-The frontend uses TanStack Query for efficient data synchronization and caching. For complex queries, API routes can be extended with additional logic.
+**Client-side Implementation:**
+```typescript
+// src/lib/hooks/useProduction.ts
+import { useQuery, useMutation } from '@tanstack/react-query';
+
+export function useProductionRecaps(poNumber?: string) {
+  return useQuery({
+    queryKey: ['production-recaps', poNumber],
+    queryFn: () => fetch(`/api/production/recaps?po=${poNumber}`),
+    staleTime: 30000, // 30 seconds
+  });
+}
+
+export function useCreateRecap() {
+  return useMutation({
+    mutationFn: (data) => fetch('/api/production/recaps', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['production-recaps'] });
+    },
+  });
+}
+```
 
 ## Real-Time Architecture
 
-### WebSocket Implementation with Next.js
+### Socket.io Integration
 
-Using Socket.io integrated with Next.js API routes:
+**Server Implementation** (`app/src/pages/api/socket.ts`):
+```typescript
+import { Server as ServerIO } from 'socket.io';
+import { Server as NetServer } from 'http';
 
-```javascript
-// Server-side (Next.js API route with Socket.io)
-import { Server } from 'socket.io';
+export default function handler(req, res) {
+  if (res.socket?.server?.io) {
+    console.log('Socket.io already running');
+    res.end();
+    return;
+  }
 
-const io = new Server(res.socket.server);
-
-io.on('connection', (socket) => {
-  socket.join('production-updates');
-  socket.on('subscribe-production', (poNumber) => {
-    socket.join(`po-${poNumber}`);
+  const httpServer: NetServer = res.socket.server;
+  const io = new ServerIO(httpServer, {
+    path: '/api/socket',
+    addTrailingSlash: false,
   });
-});
 
-// Client-side updates
-socket.on('production-update', (data) => {
-  updateProductionStatus(data);
-});
+  io.on('connection', (socket) => {
+    socket.join('production-updates');
+
+    socket.on('subscribe-production', (poNumber: string) => {
+      socket.join(`po-${poNumber}`);
+    });
+
+    socket.on('production-update', (data) => {
+      io.to('production-updates').emit('production-update', data);
+      if (data.poNumber) {
+        io.to(`po-${data.poNumber}`).emit('production-update', data);
+      }
+    });
+
+    socket.on('qc-update', (data) => {
+      io.to('production-updates').emit('qc-update', data);
+      if (data.poNumber) {
+        io.to(`po-${data.poNumber}`).emit('qc-update', data);
+      }
+    });
+
+    socket.on('stock-update', (data) => {
+      io.to('production-updates').emit('stock-update', data);
+    });
+  });
+
+  res.socket.server.io = io;
+  res.end();
+}
+```
+
+**Client Implementation** (`app/src/hooks/useSocket.ts`):
+```typescript
+import { io } from 'socket.io-client';
+import { useEffect, useRef } from 'react';
+
+export function useSocket() {
+  const socketRef = useRef();
+
+  useEffect(() => {
+    socketRef.current = io();
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
+  }, []);
+
+  return socketRef.current;
+}
 ```
 
 ### Real-Time Features
 
-- Live production status updates
-- Alert notifications for discrepancies
-- Work plan changes
-- QC result updates
-- Stock availability changes
+- **Production Updates**: Live status changes across all clients
+- **PO-Specific Notifications**: Targeted updates for relevant stakeholders
+- **QC Results**: Real-time quality control feedback
+- **Stock Changes**: Automatic inventory updates
+- **Performance**: <2 second delivery time for updates
 
 ## Security Architecture
 
 ### Authentication & Authorization
 
-- NextAuth.js for authentication with JWT tokens and refresh mechanism
-- Role-based access control (RBAC)
-- Sub-role permissions for granular control
-- Session management with secure cookies
+**NextAuth.js Implementation** (`app/src/lib/auth.ts`):
+```typescript
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    CredentialsProvider({
+      authorize: async (credentials) => {
+        const user = await prisma.user.findUnique({
+          where: { username: credentials.username, isActive: true },
+          include: { employees: true }
+        });
+
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.passwordHash
+        );
+
+        return {
+          id: user.id.toString(),
+          username: user.username,
+          role: user.role,        // R&D, Sales, Forming, Glaze, QC, Admin
+          subRole: user.subRole,  // Granular permissions
+          employee: user.employees[0]
+        };
+      }
+    })
+  ],
+  session: { strategy: 'jwt' },
+  callbacks: {
+    jwt: ({ token, user }) => ({ ...token, role: user.role, subRole: user.subRole }),
+    session: ({ session, token }) => ({ ...session, user: { ...session.user, ...token } })
+  }
+};
+```
 
 ### Data Security
 
-- AES-256 encryption for sensitive data
-- SSL/TLS for all communications
-- Input validation and sanitization
-- SQL injection prevention with parameterized queries
+- **Password Security**: bcrypt hashing with salt rounds
+- **Database Security**: Prisma ORM prevents SQL injection
+- **Session Security**: JWT tokens with secure cookies
+- **Audit Trail**: SystemLog table tracks all data changes
+- **Input Validation**: TypeScript + Zod schemas for API validation
 
-### Public Access Security
+### Role-Based Access Control
 
-- No-login endpoints protected by rate limiting
-- API key authentication for public interfaces
-- CORS configuration for allowed origins
-- Content Security Policy (CSP) headers
+**User Roles & Permissions:**
+- **R&D**: Product design, technical specifications
+- **Sales**: Client management, order creation
+- **Forming**: Production planning, work assignments
+- **Glaze**: Quality control, process monitoring
+- **QC**: Final inspection, stock categorization
+- **Admin**: System administration, user management
+
+**Sub-roles** provide granular permissions within departments.
 
 ## File Storage Architecture
 
@@ -428,63 +547,85 @@ Bucket Structure:
 - Automatic thumbnail generation
 - Version control for critical documents
 
+## File Structure
+
+### Application Architecture
+
+```
+app/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── api/                # API routes
+│   │   │   └── auth/[...nextauth]/route.ts
+│   │   ├── auth/               # Authentication pages
+│   │   ├── dashboard/          # Main application
+│   │   ├── globals.css         # Global styles
+│   │   ├── layout.tsx          # Root layout
+│   │   └── page.tsx            # Home page
+│   ├── components/             # React components
+│   │   ├── ui/                 # Shadcn/UI components
+│   │   └── providers.tsx       # Context providers
+│   ├── hooks/                  # Custom React hooks
+│   ├── lib/                    # Utilities and configurations
+│   │   ├── auth.ts             # NextAuth configuration
+│   │   ├── prisma.ts           # Database client
+│   │   └── utils.ts            # Helper functions
+│   ├── types/                  # TypeScript definitions
+│   └── pages/api/socket.ts     # Socket.io server
+├── prisma/
+│   └── schema.prisma           # Database schema
+├── public/                     # Static assets
+├── package.json                # Dependencies
+├── next.config.ts             # Next.js configuration
+├── tailwind.config.ts         # Tailwind CSS config
+├── components.json            # Shadcn/UI configuration
+├── tsconfig.json              # TypeScript configuration
+└── eslint.config.mjs          # ESLint configuration
+```
+
 ## Deployment Architecture
 
-### Containerization
+### Vercel Deployment (Recommended)
 
-```dockerfile
-# Multi-stage Dockerfile for Next.js
-FROM node:18-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:18-alpine AS runtime
-WORKDIR /app
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
-EXPOSE 3000
-CMD ["npm", "start"]
+**Configuration** (`vercel.json`):
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["sin1"],
+  "env": {
+    "DATABASE_URL": "@gaya-prod-db-url",
+    "NEXTAUTH_SECRET": "@nextauth-secret",
+    "NEXTAUTH_URL": "@nextauth-url"
+  }
+}
 ```
 
-### Kubernetes Orchestration
+### Database Hosting Options
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: gayaprod-app
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nextjs
-  template:
-    spec:
-      containers:
-      - name: nextjs
-        image: gayaprod/app:latest
-        ports:
-        - containerPort: 3000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-secret
-              key: url
-```
+- **Vercel Postgres**: Managed PostgreSQL with automatic scaling
+- **Supabase**: Open-source Firebase alternative with real-time features
+- **Railway**: Developer-friendly PostgreSQL hosting
+- **AWS RDS**: Enterprise-grade PostgreSQL with high availability
 
-### Infrastructure Components
+### Production Environment Setup
 
-- Load balancer (AWS ALB/Nginx)
-- PostgreSQL cluster with read replicas
-- Redis for caching and sessions
-- Elasticsearch for advanced search
-- Monitoring stack (Prometheus + Grafana)
+1. **Database**: PostgreSQL with connection pooling
+2. **Environment Variables**:
+   ```
+   DATABASE_URL=postgresql://...
+   NEXTAUTH_SECRET=your-secret-key
+   NEXTAUTH_URL=https://your-domain.com
+   ```
+3. **Build Optimization**: Next.js automatic optimization enabled
+4. **CDN**: Vercel global CDN for static assets
+5. **Monitoring**: Vercel Analytics and Error tracking
 
 ## Scalability Considerations
 
@@ -557,19 +698,76 @@ graph LR
 - Data loss: Automated backups and disaster recovery
 - Security breaches: Regular audits and penetration testing
 
+## Performance & Scalability
+
+### Performance Optimizations
+
+- **Next.js App Router**: Automatic code splitting and server components
+- **React Query**: Intelligent caching with 30-second stale time for production data
+- **Database Indexing**: Optimized queries for production tracking and reporting
+- **Real-time Efficiency**: Socket.io room-based broadcasting prevents unnecessary updates
+- **PWA Features**: Service worker for offline capability and faster subsequent loads
+
+### Scalability Considerations
+
+- **Horizontal Scaling**: Stateless API routes support multiple instances
+- **Database Scaling**: PostgreSQL with read replicas for high-traffic periods
+- **CDN Integration**: Global content delivery for static assets
+- **Caching Strategy**: Multi-layer caching (browser, CDN, server, database)
+
 ## Success Metrics
 
 ### Performance Targets
-- API response time: <200ms for 95% of requests
-- Real-time updates: <2 seconds delivery
-- Concurrent users: 500+ simultaneous connections
-- Database query performance: <3 seconds for complex reports
+- **API Response Time**: <200ms for 95% of requests
+- **Real-time Updates**: <2 seconds delivery time
+- **Concurrent Users**: 500+ simultaneous WebSocket connections
+- **Database Queries**: <3 seconds for complex production reports
+- **Page Load**: <3 seconds initial load time
 
 ### Reliability Targets
-- Uptime: 99.9% during business hours
-- Data accuracy: 100% audit trail
-- Backup recovery: <4 hours RTO, <1 hour RPO
+- **Uptime**: 99.9% during business hours (Vercel SLA)
+- **Data Accuracy**: 100% audit trail with SystemLog table
+- **Backup Recovery**: <4 hours RTO, <1 hour RPO
+- **Real-time Reliability**: <0.1% message loss rate
+
+## Implementation Roadmap
+
+### Phase 1: Foundation (Current)
+- ✅ Database schema with Prisma
+- ✅ Authentication with NextAuth.js
+- ✅ Real-time architecture with Socket.io
+- ✅ UI components with Shadcn/UI
+
+### Phase 2: Core Features
+- Production workflow management
+- Quality control system
+- Stock management with automatic grading
+- Client and PO management
+
+### Phase 3: Advanced Features
+- Public catalog with no-login access
+- Performance analytics and reporting
+- Mobile PWA optimization
+- Integration with existing systems
+
+### Phase 4: Enterprise Features
+- Advanced analytics dashboard
+- Automated alerts and notifications
+- ERP system integrations
+- Multi-language support
 
 ---
 
-This architecture provides a solid foundation for gayaProdSystem, enabling the transformation of ceramic production from manual processes to a sophisticated, data-driven enterprise system.
+## Conclusion
+
+This final architecture document establishes gayaProdSystem as a modern, scalable enterprise platform that transforms artisanal ceramic production into a data-driven operation. Built on your existing Next.js foundation with collaborative architectural decisions, the system supports:
+
+- **Complete Production Workflow**: From R&D to final packaging with real-time tracking
+- **Multi-User Collaboration**: Role-based access with live updates across departments
+- **Quality Assurance**: Automated QC processes with stock grading
+- **Business Intelligence**: Comprehensive reporting and analytics
+- **Scalability**: Vercel deployment with global CDN and database optimization
+
+The architecture balances technical excellence with practical implementation, ensuring the system can grow with your business while maintaining the performance and reliability required for ceramic production operations.
+
+**Next Steps**: Begin development with the dashboard and production management modules, using this document as the technical blueprint for all implementation decisions.
