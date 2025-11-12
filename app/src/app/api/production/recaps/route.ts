@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, requireRole } from "@/lib/auth-utils";
+import { emitNotification, createProductionNotification, getSocketIO } from "@/lib/socket-utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -119,8 +120,23 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Emit real-time update
-    // This would be handled by the socket integration
+    // Emit real-time notification
+    try {
+      // Access socket.io instance from global
+      const io = (global as any).io;
+      if (io) {
+        const notification = createProductionNotification('created', {
+          collectCode: recap.workPlanAssignment.product.collectCode,
+          actualQuantity: recap.actualQuantity,
+          poNumber: recap.workPlanAssignment.product.clientCode,
+          employee: recap.workPlanAssignment.employee.firstName + ' ' + recap.workPlanAssignment.employee.lastName,
+          stage: recap.workPlanAssignment.productionStage.name
+        }, user);
+        emitNotification(io, notification);
+      }
+    } catch (error) {
+      console.error('Error emitting notification:', error);
+    }
 
     return NextResponse.json({ recap }, { status: 201 });
   } catch (error) {

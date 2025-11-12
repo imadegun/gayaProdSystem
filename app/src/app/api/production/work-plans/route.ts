@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, requireRole } from "@/lib/auth-utils";
+import { emitNotification, createWorkPlanNotification } from "@/lib/socket-utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -77,6 +78,21 @@ export async function POST(request: NextRequest) {
         }
       }
     });
+
+    // Emit real-time notification
+    try {
+      const io = (global as any).io;
+      if (io) {
+        const notification = createWorkPlanNotification('created', {
+          weekStart: workPlan.weekStart,
+          weekEnd: workPlan.weekEnd,
+          planType: workPlan.planType
+        }, user);
+        emitNotification(io, notification);
+      }
+    } catch (error) {
+      console.error('Error emitting work plan notification:', error);
+    }
 
     return NextResponse.json({ workPlan }, { status: 201 });
   } catch (error) {

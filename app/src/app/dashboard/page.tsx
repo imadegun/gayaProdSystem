@@ -179,7 +179,17 @@ export default function Dashboard() {
                     </Button>
                   </>
                 )}
-                <Button className="w-full justify-start" variant="outline">
+                {(session.user.role === "Glaze" || session.user.role === "QC") && (
+                  <>
+                    <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/dashboard/qc'}>
+                      Quality Control
+                    </Button>
+                    <Button className="w-full justify-start" variant="outline">
+                      Stock Management
+                    </Button>
+                  </>
+                )}
+                <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/dashboard/production'}>
                   View Production Tracking
                 </Button>
               </CardContent>
