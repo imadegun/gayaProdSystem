@@ -144,22 +144,22 @@ async function migrateReferenceTables() {
     }
     console.log(`✅ Migrated ${colorData.length} colors`);
 
-    // Migrate designs
-    const [designRows] = await mysqlConnection.execute(
+    // Migrate clients
+    const [clientRows] = await mysqlConnection.execute(
       'SELECT DesignCode, DesignName FROM tblcollect_design'
     );
-    const designData = designRows as any[];
-    for (const row of designData) {
-      await prisma.tblcollectDesign.upsert({
-        where: { designCode: row.DesignCode },
-        update: { designName: row.DesignName },
+    const clientData = clientRows as any[];
+    for (const row of clientData) {
+      await prisma.client.upsert({
+        where: { clientCode: row.DesignCode },
+        update: { clientDescription: row.DesignName },
         create: {
-          designCode: row.DesignCode,
-          designName: row.DesignName,
+          clientCode: row.DesignCode,
+          clientDescription: row.DesignName,
         },
       });
     }
-    console.log(`✅ Migrated ${designData.length} designs`);
+    console.log(`✅ Migrated ${clientData.length} clients`);
 
     // Migrate materials
     const [materialRows] = await mysqlConnection.execute(
@@ -427,11 +427,11 @@ async function migrateProducts() {
       }
 
       if (validDesignCode && validDesignCode !== 'MOD') {
-        const designExists = await prisma.tblcollectDesign.findUnique({
-          where: { designCode: validDesignCode }
+        const clientExists = await prisma.client.findUnique({
+          where: { clientCode: validDesignCode }
         });
-        if (!designExists) {
-          console.warn(`⚠️  Design code ${validDesignCode} not found, using default MOD`);
+        if (!clientExists) {
+          console.warn(`⚠️  Client code ${validDesignCode} not found, using default MOD`);
           validDesignCode = 'MOD';
         }
       }
@@ -696,18 +696,18 @@ async function createSampleReferenceData() {
       });
     }
 
-    // Create sample designs
-    const designs = [
-      { designCode: 'MOD', designName: 'Modern' },
-      { designCode: 'TRAD', designName: 'Traditional' },
-      { designCode: 'ART', designName: 'Artistic' },
+    // Create sample clients
+    const clients = [
+      { clientCode: 'MOD', clientDescription: 'Modern' },
+      { clientCode: 'TRAD', clientDescription: 'Traditional' },
+      { clientCode: 'ART', clientDescription: 'Artistic' },
     ];
 
-    for (const design of designs) {
-      await prisma.tblcollectDesign.upsert({
-        where: { designCode: design.designCode },
+    for (const client of clients) {
+      await prisma.client.upsert({
+        where: { clientCode: client.clientCode },
         update: {},
-        create: design,
+        create: client,
       });
     }
 

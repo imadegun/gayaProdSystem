@@ -15,7 +15,7 @@ workflow_status:
   product-brief: null  # Not started
   research: null  # Not started
   prd: "docs/PRD.md"  # Completed
-  create-epics-and-stories: null  # Next step
+  create-epics-and-stories: "docs/epics-and-stories.md"  # Completed
   create-design: null  # After epics
   create-architecture: null  # After design
   create-mvp: null  # After architecture
@@ -24,7 +24,7 @@ workflow_status:
   deployment: null  # After testing
 
 current_phase: "Planning"
-next_recommended_workflow: "create-epics-and-stories"
+next_recommended_workflow: "create-design"
 
 # Workflow decisions and context
 decisions:

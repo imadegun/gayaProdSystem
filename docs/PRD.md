@@ -142,7 +142,7 @@ Success means ceramic craft companies can seamlessly manage their entire product
 Core production tracking system with:
 
 **R&D Sample Development & Directory Management:**
-- Client onboarding with R&D fee payment tracking
+- Client onboarding
 - Sample development workflow: development → review → approve/revise (loop back on revision)
 - Directory listing for approved samples
 - Automatic proforma generation from directory items
@@ -315,9 +315,8 @@ This section shapes all functional and non-functional requirements below.
 ### 1. R&D Sample Development & Directory Management
 - **User R&D Responsibility:** Directory listing and sample development management
 - **New Client & Goods Development:** Process for onboarding new clients and developing new products
-- **R&D Fee Payment:** Client payment tracking for R&D services
 - **Sample Process:** Development, review, and approval workflow
-- **Approval/Revision Loop:** If revision needed, return to fee payment and reprocess
+- **Approval/Revision Loop:** If revision needed, return to client approval and reprocess
 - **Directory List Client:** Approved samples become client directory entries
 - **Proforma Generation:** Directory items automatically become proformas for clients
 

@@ -70,21 +70,20 @@ So that all users receive live production status updates.
 
 **Goal:** Enable end-to-end client lifecycle management from R&D onboarding through order fulfillment, including stock management integration.
 
-### Story 2.1: R&D Client Onboarding & Fee Tracking
+### Story 2.1: R&D Client Onboarding
 As an R&D user,
-I want to onboard new clients with fee payment tracking,
+I want to onboard new clients,
 So that development workflows can be initiated properly.
 
 **Acceptance Criteria:**
 **Given** new client information
 **When** R&D user creates client profile
 **Then** automatic client code is generated
-**And** R&D fee payment status is tracked (pending, paid, overdue)
 **And** client regions and departments are assigned
 
 **Prerequisites:** Story 1.2
 
-**Technical Notes:** Client table integration with existing schema, payment status workflow, region/department reference data.
+**Technical Notes:** Client table integration with existing schema, region/department reference data.
 
 ### Story 2.2: Sample Development Workflow
 As an R&D user,
@@ -92,10 +91,10 @@ I want to manage sample development with approval loops,
 So that approved samples become directory listings.
 
 **Acceptance Criteria:**
-**Given** client R&D fee is paid
+**Given** new client onboarded
 **When** sample development is initiated
 **Then** workflow progresses through draft → development → review → approval
-**And** revision loop returns to fee payment if needed
+**And** revision loop returns to client approval if needed
 **And** approved samples automatically become directory entries
 
 **Prerequisites:** Story 2.1

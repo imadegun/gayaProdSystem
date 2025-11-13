@@ -340,7 +340,7 @@ model TblcollectMaster {
   // Relations
   category          TblcollectCategory? @relation(fields: [categoryCode], references: [categoryCode])
   color             TblcollectColor?    @relation(fields: [colorCode], references: [colorCode])
-  design            TblcollectDesign?   @relation(fields: [designCode], references: [designCode])
+  client            Client?             @relation(fields: [designCode], references: [clientCode])
   material          TblcollectMaterial? @relation(fields: [materialCode], references: [materialCode])
   name              TblcollectName?     @relation(fields: [nameCode], references: [nameCode])
   size              TblcollectSize?     @relation(fields: [sizeCode], references: [sizeCode])
@@ -380,11 +380,23 @@ model TblcollectColor {
   @@map("tblcollect_color")
 }
 
-model TblcollectDesign {
-  designCode    String @id @map("design_code")
-  designName    String @map("design_name")
+model Client {
+  clientCode      String @id @map("design_code")
+  clientDescription String @map("design_name")
+  region          String?
+  department      String?
+  contactPerson   String?
+  email           String?
+  phone           String?
+  address         String?
+  isActive        Boolean @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
 
-  products      TblcollectMaster[]
+  // Relations
+  products        TblcollectMaster[]
+  purchaseOrders  PurchaseOrder[]
+  rndProjects     RnDProject[]
+
   @@map("tblcollect_design")
 }
 
@@ -466,27 +478,11 @@ model Employee {
   attendanceRecords AttendanceRecord[]
 }
 
-model Client {
-  id              Int      @id @default(autoincrement())
-  clientCode      String   @unique @map("client_code")
-  clientDescription String @map("client_description")
-  region          String?  // Tokyo, Bali, Milan, etc.
-  department      String?  // Spa, F&B, Restaurant, etc.
-  contactPerson   String?  @map("contact_person")
-  email           String?
-  phone           String?
-  address         String?
-  isActive        Boolean  @default(true) @map("is_active")
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  purchaseOrders  PurchaseOrder[]
-  rndProjects     RnDProject[]
-}
 
 model PurchaseOrder {
   id              Int       @id @default(autoincrement())
   poNumber        String    @unique @map("po_number")
-  clientId        Int       @map("client_id")
+  clientId        String    @map("client_id")
   orderDate       DateTime  @map("order_date")
   depositAmount   Float?    @map("deposit_amount")
   depositPaid     Boolean   @default(false) @map("deposit_paid")
@@ -498,7 +494,7 @@ model PurchaseOrder {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  client          Client    @relation(fields: [clientId], references: [id])
+  client          Client    @relation(fields: [clientId], references: [clientCode])
   creator         User      @relation("CreatedBy", fields: [createdBy], references: [id])
   productionStages ProductionStage[]
 }
@@ -675,7 +671,7 @@ model AttendanceRecord {
 // R&D Project Management
 model RnDProject {
   id          Int      @id @default(autoincrement())
-  clientId    Int      @map("client_id")
+  clientId    String   @map("client_id")
   projectName String   @map("project_name")
   description String?
   status      String   @default("draft_directory") @map("status") // draft_directory, quotation_sent, quotation_approved, sample_development, sample_completed, proforma_created, client_approved, client_revised, cancelled
@@ -684,7 +680,7 @@ model RnDProject {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  client      Client   @relation(fields: [clientId], references: [id])
+  client      Client   @relation(fields: [clientId], references: [clientCode])
   creator     User     @relation("RnDCreatedBy", fields: [createdBy], references: [id])
   directoryLists DirectoryList[]
   quotations   Quotation[]
