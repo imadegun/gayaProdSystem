@@ -24,9 +24,61 @@ interface Client {
   createdAt: string;
 }
 
+interface DirectoryList {
+  id: number;
+  itemName: string;
+  description?: string;
+  collectCode?: string;
+  quantity: number;
+  status: string;
+  clay?: string;
+  glaze?: string;
+  texture?: string;
+  engobe?: string;
+  firingType?: string;
+  luster?: string;
+  dimensions?: any;
+  weight?: number;
+  notes?: string;
+}
+
+interface Quotation {
+  id: number;
+  quotationNumber: string;
+  title: string;
+  status: string;
+  sentDate?: string;
+  responseDate?: string;
+  clientResponse?: string;
+  totalAmount?: number;
+}
+
+interface Sample {
+  id: number;
+  sampleCode: string;
+  status: string;
+  startDate?: string;
+  completionDate?: string;
+  quantity: number;
+  directoryList: {
+    itemName: string;
+  };
+}
+
+interface Proforma {
+  id: number;
+  proformaNumber: string;
+  title: string;
+  status: string;
+  totalAmount?: number;
+  sentDate?: string;
+  responseDate?: string;
+  clientResponse?: string;
+}
+
 interface RnDProject {
   id: number;
-  clientId: number;
+  clientId: string;
   projectName: string;
   description?: string;
   status: string;
@@ -44,10 +96,10 @@ interface RnDProject {
     username: string;
     email?: string;
   };
-  directoryLists: any[];
-  quotations: any[];
-  samples: any[];
-  proformas: any[];
+  directoryLists?: DirectoryList[];
+  quotations?: Quotation[];
+  samples?: Sample[];
+  proformas?: Proforma[];
 }
 
 export default function RnDDashboard() {
@@ -82,8 +134,8 @@ export default function RnDDashboard() {
   const stats = {
     totalProjects: projects.length,
     activeProjects: projects.filter(p => p.status !== 'cancelled' && p.status !== 'client_revised').length,
-    completedSamples: projects.reduce((sum, p) => sum + p.samples.filter(s => s.status === 'completed').length, 0),
-    pendingQuotations: projects.reduce((sum, p) => sum + p.quotations.filter(q => q.status === 'draft').length, 0),
+    completedSamples: projects.reduce((sum, p) => sum + (p.samples || []).filter(s => s.status === 'completed').length, 0),
+    pendingQuotations: projects.reduce((sum, p) => sum + (p.quotations || []).filter(q => q.status === 'draft').length, 0),
   };
 
   if (loading) {
@@ -170,7 +222,13 @@ export default function RnDDashboard() {
         <TabsContent value="workflow" className="space-y-4">
           {selectedProject ? (
             <SampleDevelopmentWorkflow
-              project={selectedProject}
+              project={{
+                ...selectedProject,
+                directoryLists: selectedProject.directoryLists || [],
+                quotations: selectedProject.quotations || [],
+                samples: selectedProject.samples || [],
+                proformas: selectedProject.proformas || [],
+              }}
               onProjectUpdate={() => {
                 fetchProjects();
                 // Refresh selected project data

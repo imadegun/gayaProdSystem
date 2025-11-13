@@ -151,7 +151,7 @@ async function main() {
     update: {},
     create: {
       poNumber: 'PO001',
-      clientId: client.id,
+      clientId: client.clientCode,
       orderDate: new Date('2024-11-01'),
       depositAmount: 5000,
       depositPaid: true,
@@ -191,12 +191,12 @@ async function main() {
     },
   });
 
-  await prisma.tblcollectDesign.upsert({
-    where: { designCode: 'MOD' },
+  await prisma.client.upsert({
+    where: { clientCode: 'MOD' },
     update: {},
     create: {
-      designCode: 'MOD',
-      designName: 'Modern',
+      clientCode: 'MOD',
+      clientDescription: 'Modern',
     },
   });
 

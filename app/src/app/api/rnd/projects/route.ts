@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     // Verify client exists
     const client = await prisma.client.findUnique({
-      where: { id: clientId }
+      where: { clientCode: clientId }
     });
 
     if (!client) {

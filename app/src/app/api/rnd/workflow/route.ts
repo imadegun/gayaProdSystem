@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
             status: 'sent',
             sentDate: new Date(),
             attachments: data.attachments,
-            createdBy: user.id,
+            createdBy: Number(user.id),
           }
         });
 
@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
             totalAmount: data?.totalAmount || 0,
             selectedItems: data?.selectedItems,
             attachments: data?.attachments,
-            createdBy: user.id,
+            createdBy: Number(user.id),
           }
         });
 

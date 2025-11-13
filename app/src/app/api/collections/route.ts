@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         include: {
           category: true,
           color: true,
-          design: true,
+          client: true,
           material: true,
           name: true,
           size: true,

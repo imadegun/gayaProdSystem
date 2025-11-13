@@ -98,19 +98,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const data: any = {
+      collectCode,
+      poNumber,
+      quantity: parseInt(quantity),
+      grade,
+      unitCost: unitCost ? parseFloat(unitCost) : null,
+      sellingPrice: sellingPrice ? parseFloat(sellingPrice) : null,
+      status: status || "available",
+      location,
+      notes,
+    };
+
+    if (qcResultId) {
+      data.qcResultId = parseInt(qcResultId);
+    }
+
     const stockItem = await prisma.stockItem.create({
-      data: {
-        qcResultId: qcResultId ? parseInt(qcResultId) : null,
-        collectCode,
-        poNumber,
-        quantity: parseInt(quantity),
-        grade,
-        unitCost: unitCost ? parseFloat(unitCost) : null,
-        sellingPrice: sellingPrice ? parseFloat(sellingPrice) : null,
-        status: status || "available",
-        location,
-        notes,
-      },
+      data,
       include: {
         qcResult: {
           include: {

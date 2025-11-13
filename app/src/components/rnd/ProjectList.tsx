@@ -14,7 +14,6 @@ import { FolderOpen, Calendar, Play, Plus } from "lucide-react";
 import { format } from "date-fns";
 
 interface Client {
-  id: number;
   clientCode: string;
   clientDescription: string;
   region?: string;
@@ -23,7 +22,7 @@ interface Client {
 
 interface RnDProject {
   id: number;
-  clientId: number;
+  clientId: string;
   projectName: string;
   description?: string;
   status: string;
@@ -86,7 +85,7 @@ export default function ProjectList({ projects, onProjectUpdate, onProjectSelect
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          clientId: parseInt(projectForm.clientId),
+          clientId: projectForm.clientId,
           projectName: projectForm.projectName,
           description: projectForm.description,
         }),
@@ -151,8 +150,8 @@ export default function ProjectList({ projects, onProjectUpdate, onProjectSelect
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id.toString()}>
-                        {client.clientDescription} ({client.clientCode})
+                      <SelectItem key={client.clientCode} value={client.clientCode}>
+                        {client.clientDescription}
                       </SelectItem>
                     ))}
                   </SelectContent>

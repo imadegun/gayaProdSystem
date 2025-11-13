@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ interface ApiResponse {
   filters: Filters;
 }
 
-export default function CollectionsPage() {
+function CollectionsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -436,5 +436,17 @@ export default function CollectionsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CollectionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading collections...</div>
+      </div>
+    }>
+      <CollectionsPageContent />
+    </Suspense>
   );
 }

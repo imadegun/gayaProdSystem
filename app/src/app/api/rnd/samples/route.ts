@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     const project = await prisma.rnDProject.findFirst({
       where: {
         id: projectId,
-        createdBy: user.id,
+        createdBy: Number(user.id),
       }
     });
 
