@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth-utils";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -12,7 +12,8 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const assignmentId = parseInt(params.id);
+    const { id } = await params;
+    const assignmentId = parseInt(id);
     if (isNaN(assignmentId)) {
       return NextResponse.json({ error: "Invalid assignment ID" }, { status: 400 });
     }
@@ -80,7 +81,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -88,7 +89,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const assignmentId = parseInt(params.id);
+    const { id } = await params;
+    const assignmentId = parseInt(id);
     if (isNaN(assignmentId)) {
       return NextResponse.json({ error: "Invalid assignment ID" }, { status: 400 });
     }

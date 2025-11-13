@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth-utils";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -12,7 +12,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const workPlanId = parseInt(params.id);
+    const { id } = await params;
+    const workPlanId = parseInt(id);
     if (isNaN(workPlanId)) {
       return NextResponse.json({ error: "Invalid work plan ID" }, { status: 400 });
     }
@@ -59,7 +60,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getCurrentUser();
@@ -67,7 +68,8 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const workPlanId = parseInt(params.id);
+    const { id } = await params;
+    const workPlanId = parseInt(id);
     if (isNaN(workPlanId)) {
       return NextResponse.json({ error: "Invalid work plan ID" }, { status: 400 });
     }

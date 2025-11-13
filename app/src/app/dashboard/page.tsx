@@ -189,6 +189,16 @@ export default function Dashboard() {
                     </Button>
                   </>
                 )}
+                {session.user.role === "Admin" && (
+                  <>
+                    <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/dashboard/rnd'}>
+                      R&D Management
+                    </Button>
+                    <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/dashboard/qc'}>
+                      Quality Control
+                    </Button>
+                  </>
+                )}
                 <Button className="w-full justify-start" variant="outline" onClick={() => window.location.href = '/dashboard/production'}>
                   View Production Tracking
                 </Button>

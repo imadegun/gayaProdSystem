@@ -325,6 +325,7 @@ model TblcollectMaster {
   materialCode      String?  @map("material_code")
   clientCode        String?  @map("client_code")
   clientDescription String?  @map("client_description")
+  collectionType    String?  @map("collection_type") // Exclusive, Exclusive-Group, General
   collectDate       DateTime? @map("collect_date")
   techDraw          String?  @map("tech_draw")
   photo1            String?  @map("photo1")
@@ -441,6 +442,9 @@ model User {
   systemLogs    SystemLog[]
   performanceAssessments PerformanceAssessment[] @relation("AssessedBy")
   attendanceRecords AttendanceRecord[] @relation("RecordedBy")
+  rndProjects   RnDProject[] @relation("RnDCreatedBy")
+  quotations    Quotation[]  @relation("QuotationCreatedBy")
+  proformas     Proforma[]   @relation("ProformaCreatedBy")
 }
 
 model Employee {
@@ -476,6 +480,7 @@ model Client {
   createdAt       DateTime @default(now()) @map("created_at")
 
   purchaseOrders  PurchaseOrder[]
+  rndProjects     RnDProject[]
 }
 
 model PurchaseOrder {
@@ -665,4 +670,123 @@ model AttendanceRecord {
 
   employee      Employee @relation(fields: [employeeId], references: [id])
   recorder      User     @relation("RecordedBy", fields: [recordedBy], references: [id])
+}
+
+// R&D Project Management
+model RnDProject {
+  id          Int      @id @default(autoincrement())
+  clientId    Int      @map("client_id")
+  projectName String   @map("project_name")
+  description String?
+  status      String   @default("draft_directory") @map("status") // draft_directory, quotation_sent, quotation_approved, sample_development, sample_completed, proforma_created, client_approved, client_revised, cancelled
+  workflowStep String? @map("workflow_step") // Current step in workflow
+  createdBy   Int      @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  client      Client   @relation(fields: [clientId], references: [id])
+  creator     User     @relation("RnDCreatedBy", fields: [createdBy], references: [id])
+  directoryLists DirectoryList[]
+  quotations   Quotation[]
+  samples      Sample[]
+  proformas    Proforma[]
+}
+
+// Sample Development Workflow Tables
+model DirectoryList {
+  id          Int      @id @default(autoincrement())
+  projectId   Int      @map("project_id")
+  itemName    String   @map("item_name")
+  description String?  @map("description")
+  collectCode String?  @map("collect_code") // Reference to TblcollectMaster
+  quantity    Int      @default(1) @map("quantity")
+  status      String   @default("draft") @map("status") // draft, approved, rejected
+  clay        String?  @map("clay")
+  glaze       String?  @map("glaze")
+  texture     String?  @map("texture")
+  engobe      String?  @map("engobe")
+  firingType  String?  @map("firing_type")
+  luster      String?  @map("luster")
+  dimensions  Json?    @map("dimensions") // Width, Height, Length, Diameter
+  weight      Float?   @map("weight")
+  notes       String?  @map("notes")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  project     RnDProject @relation(fields: [projectId], references: [id])
+  quotations  Quotation[]
+  samples     Sample[]
+  proformas   Proforma[]
+
+  @@map("directory_lists")
+}
+
+model Quotation {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  quotationNumber String @unique @map("quotation_number")
+  directoryListId Int?   @map("directory_list_id")
+  title         String   @map("title")
+  description   String?  @map("description")
+  totalAmount   Float?   @map("total_amount")
+  status        String   @default("draft") @map("status") // draft, sent, approved, rejected, revised
+  sentDate      DateTime? @map("sent_date")
+  responseDate  DateTime? @map("response_date")
+  clientResponse String? @map("client_response") // ok_all, ok_selected, revised, cancelled
+  notes         String?  @map("notes")
+  attachments   Json?    @map("attachments") // Array of file URLs
+  createdBy     Int      @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  project       RnDProject @relation(fields: [projectId], references: [id])
+  directoryList DirectoryList? @relation(fields: [directoryListId], references: [id])
+  creator       User      @relation("QuotationCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("quotations")
+}
+
+model Sample {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  directoryListId Int    @map("directory_list_id")
+  sampleCode    String   @unique @map("sample_code")
+  status        String   @default("pending") @map("status") // pending, in_progress, completed, rejected
+  startDate     DateTime? @map("start_date")
+  completionDate DateTime? @map("completion_date")
+  quantity      Int      @default(1) @map("quantity")
+  notes         String?  @map("notes")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  project       RnDProject @relation(fields: [projectId], references: [id])
+  directoryList DirectoryList @relation(fields: [directoryListId], references: [id])
+
+  @@map("samples")
+}
+
+model Proforma {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  proformaNumber String  @unique @map("proforma_number")
+  directoryListId Int?   @map("directory_list_id")
+  title         String   @map("title")
+  description   String?  @map("description")
+  totalAmount   Float?   @map("total_amount")
+  status        String   @default("draft") @map("status") // draft, sent, approved, rejected
+  sentDate      DateTime? @map("sent_date")
+  responseDate  DateTime? @map("response_date")
+  clientResponse String? @map("client_response") // ok_all, ok_selected, revised, cancelled
+  selectedItems Json?    @map("selected_items") // Array of approved directory item IDs
+  notes         String?  @map("notes")
+  attachments   Json?    @map("attachments") // Array of file URLs
+  createdBy     Int      @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  project       RnDProject @relation(fields: [projectId], references: [id])
+  directoryList DirectoryList? @relation(fields: [directoryListId], references: [id])
+  creator       User      @relation("ProformaCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("proformas")
 }

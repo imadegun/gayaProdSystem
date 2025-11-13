@@ -45,6 +45,12 @@ export function hasRole(user: AuthUser | null, roles: UserRole | UserRole[]): bo
   if (!user) return false;
 
   const requiredRoles = Array.isArray(roles) ? roles : [roles];
+
+  // Allow Admin to access R&D features for trialing
+  if (requiredRoles.includes("R&D") && user.role === "Admin") {
+    return true;
+  }
+
   return requiredRoles.includes(user.role);
 }
 
@@ -103,9 +109,12 @@ export async function requireAuth(request: NextRequest): Promise<AuthUser> {
  */
 export async function requireRole(request: NextRequest, roles: UserRole | UserRole[]): Promise<AuthUser> {
   const user = await requireAuth(request);
+  console.log(`DEBUG: User ${user.username} with role ${user.role} attempting access requiring roles: ${Array.isArray(roles) ? roles.join(', ') : roles}`);
   if (!hasRole(user, roles)) {
+    console.log(`DEBUG: Access denied for user ${user.username}`);
     throw new Error("Insufficient permissions");
   }
+  console.log(`DEBUG: Access granted for user ${user.username}`);
   return user;
 }
 

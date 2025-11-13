@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         const notification = createProductionNotification('created', {
           collectCode: recap.workPlanAssignment.product.collectCode,
           actualQuantity: recap.actualQuantity,
-          poNumber: recap.workPlanAssignment.product.clientCode,
+          poNumber: recap.workPlanAssignment.product.collectCode,
           employee: recap.workPlanAssignment.employee.firstName + ' ' + recap.workPlanAssignment.employee.lastName,
           stage: recap.workPlanAssignment.productionStage.name
         }, user);

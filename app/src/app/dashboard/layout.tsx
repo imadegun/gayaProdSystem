@@ -25,7 +25,7 @@ import { useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home, roles: ["all"] },
-  { name: "Products", href: "/dashboard/products", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "R&D", href: "/dashboard/rnd", icon: Package, roles: ["R&D", "Admin"] },
   { name: "Production", href: "/dashboard/production", icon: ClipboardList, roles: ["Forming", "Glaze", "QC", "Admin"] },
   { name: "Orders", href: "/dashboard/orders", icon: Users, roles: ["Sales", "Admin"] },
   { name: "Reports", href: "/dashboard/reports", icon: BarChart3, roles: ["Admin", "Sales", "R&D"] },

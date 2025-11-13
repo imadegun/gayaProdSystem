@@ -47,6 +47,19 @@ async function main() {
     },
   });
 
+  const rndPassword = await bcrypt.hash('rnd123', 10);
+  const rndUser = await prisma.user.upsert({
+    where: { username: 'rnd' },
+    update: {},
+    create: {
+      username: 'rnd',
+      passwordHash: rndPassword,
+      email: 'rnd@gayaprod.com',
+      role: 'R&D',
+      isActive: true,
+    },
+  });
+
   // Create sample employees
   const employee1 = await prisma.employee.upsert({
     where: { employeeCode: 'EMP001' },
@@ -169,6 +182,15 @@ async function main() {
     },
   });
 
+  await prisma.tblcollectColor.upsert({
+    where: { colorCode: 'BLK' },
+    update: {},
+    create: {
+      colorCode: 'BLK',
+      colorName: 'Black',
+    },
+  });
+
   await prisma.tblcollectDesign.upsert({
     where: { designCode: 'MOD' },
     update: {},
@@ -228,9 +250,34 @@ async function main() {
       colorCode: 'WHT',
       materialCode: 'PLT',
       clientCode: 'CLIENT001',
+      clientDescription: 'Tokyo Hotel Group',
+      collectionType: 'Exclusive',
       collectDate: new Date('2024-10-15'),
       techDraw: 'TD-001',
       photo1: 'plate_white_modern_1.jpg',
+      isAssembly: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  });
+
+  // Create a general collection product
+  const generalProduct = await prisma.tblcollectMaster.upsert({
+    where: { collectCode: 'PLT-BLK-MOD-PRC-DIN-M-GLS-002' },
+    update: {},
+    create: {
+      collectCode: 'PLT-BLK-MOD-PRC-DIN-M-GLS-002',
+      designCode: 'MOD',
+      nameCode: 'PRC',
+      categoryCode: 'DIN',
+      sizeCode: 'M',
+      textureCode: 'GLS',
+      colorCode: 'BLK',
+      materialCode: 'PLT',
+      collectionType: 'General',
+      collectDate: new Date('2024-10-20'),
+      techDraw: 'TD-002',
+      photo1: 'plate_black_modern_1.jpg',
       isAssembly: false,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -336,7 +383,7 @@ async function main() {
 
   console.log('✅ Sample data seeded successfully!');
   console.log('\n📊 Created:');
-  console.log('- 3 Users (admin, forming, qc)');
+  console.log('- 4 Users (admin, forming, qc, rnd)');
   console.log('- 2 Employees');
   console.log('- 3 Production Stages');
   console.log('- 1 Client & 1 Purchase Order');
@@ -348,6 +395,7 @@ async function main() {
   console.log('Admin: admin / admin123');
   console.log('Forming: forming / forming123');
   console.log('QC: qc / qc123');
+  console.log('R&D: rnd / rnd123');
 }
 
 main()
