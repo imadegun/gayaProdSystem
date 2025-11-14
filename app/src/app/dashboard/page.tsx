@@ -20,18 +20,22 @@ export default function Dashboard() {
   } = useSocket();
 
   useEffect(() => {
+    console.log("Dashboard: Setting up socket listeners");
     // Set up real-time listeners
     onProductionUpdate((data) => {
+      console.log("Dashboard: Production update received", data);
       setLastUpdate(`Production update: ${data.message || 'Data changed'}`);
       setIsConnected(true);
     });
 
     onQcUpdate((data) => {
+      console.log("Dashboard: QC update received", data);
       setLastUpdate(`QC update: ${data.message || 'Quality check completed'}`);
       setIsConnected(true);
     });
 
     onStockUpdate((data) => {
+      console.log("Dashboard: Stock update received", data);
       setLastUpdate(`Stock update: ${data.message || 'Inventory changed'}`);
       setIsConnected(true);
     });

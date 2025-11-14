@@ -7,6 +7,7 @@ export function useSocket() {
   const { data: session } = useSession();
 
   useEffect(() => {
+    console.log("useSocket: useEffect running, session:", session ? "available" : "null");
     if (!session) {
       console.log("No session available, skipping socket connection");
       return;
