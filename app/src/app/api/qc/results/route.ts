@@ -110,24 +110,29 @@ export async function POST(request: NextRequest) {
     });
 
     // Automatically create stock items based on QC results
-    await createStockItems(qcResult.id, qcResult);
+     await createStockItems(qcResult.id, qcResult);
 
-    // Emit real-time notification
-    try {
-      const io = (global as any).io;
-      if (io) {
-        const notification = createQcNotification('created', {
-          collectCode: qcResult.collectCode,
-          poNumber: qcResult.poNumber,
-          totalInspected: (qcResult.goodQuantity || 0) + (qcResult.reFireQuantity || 0) +
-                         (qcResult.rejectQuantity || 0) + (qcResult.secondQualityQuantity || 0),
-          qcStage: qcResult.qcStage
-        }, user);
-        emitNotification(io, notification);
-      }
-    } catch (error) {
-      console.error('Error emitting QC notification:', error);
-    }
+     // Check if QC is completed for this PO and update status
+     if (qcResult.poNumber) {
+       await checkAndUpdateQcStatus(qcResult.poNumber, user.id);
+     }
+
+     // Emit real-time notification
+     try {
+       const io = (global as any).io;
+       if (io) {
+         const notification = createQcNotification('created', {
+           collectCode: qcResult.collectCode,
+           poNumber: qcResult.poNumber,
+           totalInspected: (qcResult.goodQuantity || 0) + (qcResult.reFireQuantity || 0) +
+                          (qcResult.rejectQuantity || 0) + (qcResult.secondQualityQuantity || 0),
+           qcStage: qcResult.qcStage
+         }, user);
+         emitNotification(io, notification);
+       }
+     } catch (error) {
+       console.error('Error emitting QC notification:', error);
+     }
 
     return NextResponse.json({ qcResult }, { status: 201 });
   } catch (error) {
@@ -191,9 +196,76 @@ async function createStockItems(qcResultId: number, qcResult: any) {
   }
 
   // Insert stock items
-  for (const item of stockItems) {
-    await prisma.stockItem.create({ data: item });
-  }
+   for (const item of stockItems) {
+     await prisma.stockItem.create({ data: item });
+   }
 
-  console.log(`Created ${stockItems.length} stock items from QC result`);
-}
+   console.log(`Created ${stockItems.length} stock items from QC result`);
+ }
+
+ async function checkAndUpdateQcStatus(poNumber: string, userId: string) {
+   try {
+     // Find the purchase order
+     const purchaseOrder = await prisma.purchaseOrder.findUnique({
+       where: { poNumber },
+       include: {
+         items: {
+           include: {
+             directoryList: true
+           }
+         }
+       }
+     });
+
+     if (!purchaseOrder || purchaseOrder.status !== 'in_production') {
+       return; // Only check if currently in production
+     }
+
+     // Get all production recaps for this PO's items
+     const collectCodes = purchaseOrder.items
+       .map(item => item.collectCode)
+       .filter((code): code is string => code !== null);
+
+     const productionRecaps = await prisma.productionRecap.findMany({
+       where: {
+         workPlanAssignment: {
+           product: {
+             collectCode: {
+               in: collectCodes
+             }
+           }
+         }
+       },
+       include: {
+         qcResults: true
+       }
+     });
+
+     // Check if all production recaps have QC results
+     const totalRecaps = productionRecaps.length;
+     const recapsWithQc = productionRecaps.filter(recap => recap.qcResults.length > 0).length;
+
+     if (totalRecaps > 0 && recapsWithQc === totalRecaps) {
+       // All production has been QC'd, update status to qc_completed
+       await prisma.purchaseOrder.update({
+         where: { id: purchaseOrder.id },
+         data: { status: 'qc_completed' }
+       });
+
+       // Log status change
+       await prisma.purchaseOrderStatusHistory.create({
+         data: {
+           purchaseOrderId: purchaseOrder.id,
+           oldStatus: 'in_production',
+           newStatus: 'qc_completed',
+           changedBy: parseInt(userId),
+           changeReason: 'QC completed for all production items',
+         }
+       });
+
+       console.log(`Updated PO ${poNumber} status to qc_completed`);
+     }
+   } catch (error) {
+     console.error('Error checking QC status:', error);
+   }
+ }

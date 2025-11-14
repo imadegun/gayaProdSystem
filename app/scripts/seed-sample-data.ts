@@ -91,7 +91,7 @@ async function main() {
     },
   });
 
-  // Create sample production stages
+  // Create sample production stages with labor costs
   const formingStage = await prisma.productionStage.upsert({
     where: { code: 'FORMING' },
     update: {},
@@ -101,6 +101,7 @@ async function main() {
       sequenceOrder: 1,
       description: 'Initial ceramic forming and shaping',
       isActive: true,
+      laborCostPerHour: 15.0, // $15 per hour
     },
   });
 
@@ -113,6 +114,7 @@ async function main() {
       sequenceOrder: 2,
       description: 'Glaze application and preparation',
       isActive: true,
+      laborCostPerHour: 12.0, // $12 per hour
     },
   });
 
@@ -125,6 +127,7 @@ async function main() {
       sequenceOrder: 3,
       description: 'Quality control and final packaging',
       isActive: true,
+      laborCostPerHour: 10.0, // $10 per hour
     },
   });
 
@@ -160,6 +163,43 @@ async function main() {
       status: 'in_production',
       notes: 'Urgent order for hotel restaurant',
       createdBy: admin.id,
+    },
+  });
+
+  // Create sample materials with costs
+  await prisma.tblclay.upsert({
+    where: { clayCode: 'CLAY001' },
+    update: {},
+    create: {
+      clayCode: 'CLAY001',
+      clayDescription: 'Porcelain Clay - Fine White',
+      clayDate: new Date('2024-01-01'),
+      unitCost: 25.0, // $25 per KG
+      costUnit: 'KG',
+    },
+  });
+
+  await prisma.tblglaze.upsert({
+    where: { glazeCode: 'GLAZE001' },
+    update: {},
+    create: {
+      glazeCode: 'GLAZE001',
+      glazeDescription: 'Clear Gloss Glaze',
+      glazeDate: new Date('2024-01-01'),
+      unitCost: 45.0, // $45 per KG
+      costUnit: 'KG',
+    },
+  });
+
+  await prisma.tbltools.upsert({
+    where: { toolsCode: 'TOOL001' },
+    update: {},
+    create: {
+      toolsCode: 'TOOL001',
+      toolsDescription: 'Ceramic Mold Set',
+      toolsDate: new Date('2024-01-01'),
+      unitCost: 150.0, // $150 per use
+      costUnit: 'USE',
     },
   });
 
@@ -258,6 +298,38 @@ async function main() {
       isAssembly: false,
       createdAt: new Date(),
       updatedAt: new Date(),
+    },
+  });
+
+  // Associate materials with the product
+  await prisma.productClay.upsert({
+    where: { collectCode_clayId: { collectCode: product.collectCode, clayId: 1 } },
+    update: {},
+    create: {
+      collectCode: product.collectCode,
+      clayId: 1, // CLAY001
+      quantity: 1.5, // 1.5 KG per plate
+      sequence: 1,
+    },
+  });
+
+  await prisma.productGlaze.upsert({
+    where: { collectCode_glazeId: { collectCode: product.collectCode, glazeId: 1 } },
+    update: {},
+    create: {
+      collectCode: product.collectCode,
+      glazeId: 1, // GLAZE001
+      sequence: 1,
+    },
+  });
+
+  await prisma.productTools.upsert({
+    where: { collectCode_toolsId: { collectCode: product.collectCode, toolsId: 1 } },
+    update: {},
+    create: {
+      collectCode: product.collectCode,
+      toolsId: 1, // TOOL001
+      sequence: 1,
     },
   });
 
@@ -381,15 +453,69 @@ async function main() {
     },
   });
 
+  // Create sample R&D project
+  const rndProject = await prisma.rnDProject.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      clientId: client.clientCode,
+      projectName: 'Modern Dinnerware Collection',
+      description: 'Contemporary plate designs for hotel restaurant',
+      status: 'sample_completed',
+      workflowStep: 'Sample Completed',
+      createdBy: rndUser.id,
+    },
+  });
+
+  // Create sample directory list items
+  const dirItem1 = await prisma.directoryList.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      projectId: rndProject.id,
+      itemName: 'Modern White Plate - Medium',
+      description: 'Contemporary design with clean lines',
+      collectCode: product.collectCode,
+      quantity: 100,
+      clay: 'Porcelain Clay',
+      glaze: 'Clear Gloss',
+      firingType: 'high_fire',
+      dimensions: { width: 25, height: 2, length: 25 },
+      weight: 0.8,
+      status: 'approved',
+    },
+  });
+
+  const dirItem2 = await prisma.directoryList.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      projectId: rndProject.id,
+      itemName: 'Modern Black Plate - Medium',
+      description: 'Contemporary design in matte black',
+      collectCode: generalProduct.collectCode,
+      quantity: 50,
+      clay: 'Porcelain Clay',
+      glaze: 'Matte Black',
+      firingType: 'high_fire',
+      dimensions: { width: 25, height: 2, length: 25 },
+      weight: 0.8,
+      status: 'approved',
+    },
+  });
+
   console.log('✅ Sample data seeded successfully!');
   console.log('\n📊 Created:');
   console.log('- 4 Users (admin, forming, qc, rnd)');
   console.log('- 2 Employees');
-  console.log('- 3 Production Stages');
+  console.log('- 3 Production Stages with labor costs');
+  console.log('- Sample materials (clay, glaze, tools) with costs');
   console.log('- 1 Client & 1 Purchase Order');
-  console.log('- 1 Product, 1 Work Plan, 1 Assignment');
+  console.log('- 2 Products with material associations');
+  console.log('- 1 Work Plan, 1 Assignment');
   console.log('- 1 Production Recap, 1 QC Result');
   console.log('- 2 Stock Items (1st quality + re-fire)');
+  console.log('- 1 R&D Project with 2 Directory List items');
 
   console.log('\n🔐 Login Credentials:');
   console.log('Admin: admin / admin123');

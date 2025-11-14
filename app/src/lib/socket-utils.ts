@@ -13,7 +13,8 @@ export interface NotificationData {
 /**
  * Emit real-time notification to connected clients
  */
-export function emitNotification(io: ServerIO | null, notification: NotificationData) {
+export function emitNotification(notification: NotificationData) {
+  const io = getSocketIO();
   if (!io) {
     console.log('Socket.io not available, skipping notification:', notification);
     return;
@@ -54,10 +55,10 @@ export function emitNotification(io: ServerIO | null, notification: Notification
 }
 
 /**
- * Get socket.io instance from server
+ * Get socket.io instance from global
  */
-export function getSocketIO(res: any): ServerIO | null {
-  return res.socket?.server?.io || null;
+export function getSocketIO(): ServerIO | null {
+  return (global as any).io || null;
 }
 
 /**

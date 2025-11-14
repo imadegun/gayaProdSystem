@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-utils";
+import { calculateProformaPricing, getDefaultPricingConfig, calculateComplexityMultiplier } from "@/lib/pricing";
 
 export async function GET(request: NextRequest) {
   try {
@@ -101,11 +102,51 @@ export async function POST(request: NextRequest) {
     });
     const proformaNumber = `P${projectId.toString().padStart(3, '0')}-${(proformaCount + 1).toString().padStart(3, '0')}`;
 
-    // Calculate total amount (placeholder - would be calculated from selected items)
+    // Calculate pricing based on selected items
     let totalAmount = 0;
+    let pricingDetails = null;
+
     if (selectedItems && Array.isArray(selectedItems)) {
-      // In real implementation, calculate based on item prices and quantities
-      totalAmount = selectedItems.length * 500; // Placeholder calculation
+      try {
+        // Get directory list items to calculate complexity
+        const directoryItems = await prisma.directoryList.findMany({
+          where: {
+            id: { in: selectedItems.map(item => item.id) },
+            projectId,
+          },
+        });
+
+        // Prepare items for pricing calculation
+        const pricingItems = selectedItems.map(item => ({
+          id: item.id,
+          quantity: item.quantity || 1,
+        }));
+
+        // Calculate pricing with default config
+        const pricingConfig = getDefaultPricingConfig();
+
+        // Apply complexity multipliers
+        for (const item of pricingItems) {
+          const dirItem = directoryItems.find(d => d.id === item.id);
+          if (dirItem) {
+            const complexity = calculateComplexityMultiplier(dirItem);
+            // Update config for this item (in future, could be per-item)
+            pricingConfig.complexityMultiplier = complexity;
+          }
+        }
+
+        const pricingResult = await calculateProformaPricing(pricingItems, pricingConfig);
+        totalAmount = pricingResult.totalAmount;
+        pricingDetails = {
+          items: pricingResult.items,
+          breakdown: pricingResult.breakdown,
+          config: pricingConfig,
+        };
+      } catch (error) {
+        console.error('Error calculating pricing:', error);
+        // Fallback to basic calculation if pricing fails
+        totalAmount = selectedItems.length * 500;
+      }
     }
 
     // Create proforma
@@ -117,6 +158,7 @@ export async function POST(request: NextRequest) {
         description,
         totalAmount,
         selectedItems,
+        pricingDetails: pricingDetails as any,
         attachments,
         createdBy: parseInt(user.id),
       },

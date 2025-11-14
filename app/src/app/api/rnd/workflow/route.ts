@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     // Check permissions based on action
     const rnDActions = ['create_directory', 'send_quotation', 'start_samples', 'complete_samples'];
-    const salesActions = ['record_client_response', 'create_proforma', 'approve_proforma'];
+    const salesActions = ['record_client_response', 'create_proforma', 'approve_proforma', 'update_status'];
 
     if (rnDActions.includes(action) && user.role !== 'R&D') {
       return NextResponse.json(
@@ -261,6 +261,255 @@ export async function POST(request: NextRequest) {
           workflowStep: 'Proforma Created',
         };
         result = { proforma };
+        break;
+
+      case 'approve_proforma':
+        // Approve proforma and create PurchaseOrder
+        if (!data || !data.proformaId) {
+          return NextResponse.json(
+            { error: "Proforma ID is required" },
+            { status: 400 }
+          );
+        }
+
+        const proformaToApprove = await prisma.proforma.findUnique({
+          where: { id: data.proformaId },
+          include: {
+            project: {
+              include: {
+                client: true,
+                directoryLists: true,
+              }
+            }
+          }
+        });
+
+        if (!proformaToApprove) {
+          return NextResponse.json(
+            { error: "Proforma not found" },
+            { status: 404 }
+          );
+        }
+
+        // Check if already approved and has PurchaseOrder
+        if (proformaToApprove.status === 'approved') {
+          const existingPO = await prisma.purchaseOrder.findFirst({
+            where: { proformaId: data.proformaId }
+          });
+          if (existingPO) {
+            return NextResponse.json(
+              { error: "PurchaseOrder already exists for this approved proforma" },
+              { status: 400 }
+            );
+          }
+        }
+
+        // Use transaction for safety
+        const resultData = await prisma.$transaction(async (tx) => {
+          // Update proforma status
+          await tx.proforma.update({
+            where: { id: data.proformaId },
+            data: {
+              status: 'approved',
+              responseDate: new Date(),
+              clientResponse: 'approved',
+              notes: data.notes,
+            }
+          });
+
+          // Generate PO number
+          const poCount = await tx.purchaseOrder.count();
+          const poNumber = `PO${(poCount + 1).toString().padStart(4, '0')}`;
+
+          // Calculate deposit amount
+          const depositPercentage = 30.0; // Default 30%
+          const depositAmount = proformaToApprove.totalAmount
+            ? (proformaToApprove.totalAmount * depositPercentage / 100)
+            : null;
+
+          // Create PurchaseOrder
+           const purchaseOrder = await tx.purchaseOrder.create({
+             data: {
+               poNumber,
+               proformaId: data.proformaId,
+               clientId: proformaToApprove.project.clientId,
+               orderDate: new Date(),
+               depositPercentage,
+               depositAmount,
+               totalAmount: proformaToApprove.totalAmount,
+               status: 'pending_deposit',
+               createdBy: Number(user.id),
+             }
+           });
+
+           // Log initial status
+           await tx.purchaseOrderStatusHistory.create({
+             data: {
+               purchaseOrderId: purchaseOrder.id,
+               newStatus: 'pending_deposit',
+               changedBy: Number(user.id),
+               changeReason: 'Purchase order created from approved proforma',
+             }
+           });
+
+          // Create PurchaseOrderItems from selectedItems
+          const selectedItemIds = proformaToApprove.selectedItems as number[] || [];
+          const poItems = [];
+
+          for (const itemId of selectedItemIds) {
+            const directoryItem = proformaToApprove.project.directoryLists.find(dl => dl.id === itemId);
+            if (directoryItem) {
+              const poItem = await tx.purchaseOrderItem.create({
+                data: {
+                  purchaseOrderId: purchaseOrder.id,
+                  directoryListId: directoryItem.id,
+                  collectCode: directoryItem.collectCode,
+                  quantity: directoryItem.quantity,
+                  // unitPrice and totalPrice can be added later when pricing is finalized
+                  notes: directoryItem.notes,
+                }
+              });
+              poItems.push(poItem);
+            }
+          }
+
+          // Trigger production workflow
+          const productionStages = await tx.productionStage.findMany({ where: { isActive: true } });
+          const employees = await tx.employee.findMany({ where: { isActive: true } });
+
+          // Get current week (Monday to Sunday)
+          const now = new Date();
+          const startOfWeek = new Date(now);
+          startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
+
+          // Create work plan
+          const workPlan = await tx.workPlan.create({
+            data: {
+              weekStart: startOfWeek,
+              weekEnd: endOfWeek,
+              planType: 'production',
+              createdBy: Number(user.id),
+            }
+          });
+
+          // For each poItem, for each stage, create assignment
+          for (const item of poItems) {
+            if (!item.collectCode) continue; // Skip if no collect code
+
+            for (const stage of productionStages) {
+              // Find employee for this stage (match department to stage name)
+              const employee = employees.find(e =>
+                e.department === stage.name ||
+                (stage.name === 'QC & Packaging' && e.department === 'Quality Control') ||
+                (stage.name === 'Glaze' && e.department === 'Forming') // Temporary: assign Forming to Glaze
+              );
+              if (!employee) continue; // Skip if no suitable employee
+
+              await tx.workPlanAssignment.create({
+                data: {
+                  workPlanId: workPlan.id,
+                  employeeId: employee.id,
+                  productionStageId: stage.id,
+                  collectCode: item.collectCode,
+                  plannedQuantity: item.quantity,
+                  dayOfWeek: 1, // Monday - can be distributed later
+                  isOvertime: false,
+                }
+              });
+            }
+          }
+
+          // Check deposit payment before allowing production
+          const requiredDeposit = purchaseOrder.totalAmount
+            ? (purchaseOrder.totalAmount * (purchaseOrder.depositPercentage || 30) / 100)
+            : 0;
+
+          if (requiredDeposit > 0 && !purchaseOrder.depositPaid) {
+            throw new Error(`Deposit payment of ${requiredDeposit} is required before production can start`);
+          }
+
+          // Update PurchaseOrder status to in_production
+          await tx.purchaseOrder.update({
+            where: { id: purchaseOrder.id },
+            data: { status: 'in_production' }
+          });
+
+          // Log status change to in_production
+          await tx.purchaseOrderStatusHistory.create({
+            data: {
+              purchaseOrderId: purchaseOrder.id,
+              oldStatus: 'pending_deposit',
+              newStatus: 'in_production',
+              changedBy: Number(user.id),
+              changeReason: 'Production started after deposit payment verification',
+            }
+          });
+
+          return { purchaseOrder, poItems, workPlan };
+        });
+
+        updateData = {
+          status: 'client_approved',
+          workflowStep: 'Proforma Approved',
+        };
+        result = resultData;
+        break;
+
+      case 'update_status':
+        // Update purchase order status
+        if (!data || !data.poNumber || !data.newStatus) {
+          return NextResponse.json(
+            { error: "PO number and new status are required" },
+            { status: 400 }
+          );
+        }
+
+        const poToUpdate = await prisma.purchaseOrder.findUnique({
+          where: { poNumber: data.poNumber }
+        });
+
+        if (!poToUpdate) {
+          return NextResponse.json(
+            { error: "Purchase order not found" },
+            { status: 404 }
+          );
+        }
+
+        // Validate status transition
+        const validStatuses = ['packaging', 'shipped', 'delivered', 'cancelled'];
+        if (!validStatuses.includes(data.newStatus)) {
+          return NextResponse.json(
+            { error: "Invalid status. Must be one of: packaging, shipped, delivered, cancelled" },
+            { status: 400 }
+          );
+        }
+
+        // Update status
+        await prisma.purchaseOrder.update({
+          where: { poNumber: data.poNumber },
+          data: {
+            status: data.newStatus,
+            shippingDate: data.shippingDate ? new Date(data.shippingDate) : undefined,
+            trackingNumber: data.trackingNumber,
+            deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : undefined,
+          }
+        });
+
+        // Log status change
+        await prisma.purchaseOrderStatusHistory.create({
+          data: {
+            purchaseOrderId: poToUpdate.id,
+            oldStatus: poToUpdate.status,
+            newStatus: data.newStatus,
+            changedBy: Number(user.id),
+            changeReason: data.reason || `Status updated to ${data.newStatus}`,
+            notes: data.notes,
+          }
+        });
+
+        result = { status: data.newStatus };
         break;
 
       default:
