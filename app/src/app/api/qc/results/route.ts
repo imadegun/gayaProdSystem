@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
                           (qcResult.rejectQuantity || 0) + (qcResult.secondQualityQuantity || 0),
            qcStage: qcResult.qcStage
          }, user);
-         emitNotification(io, notification);
+         emitNotification(notification);
        }
      } catch (error) {
        console.error('Error emitting QC notification:', error);

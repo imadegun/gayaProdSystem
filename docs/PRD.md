@@ -13,23 +13,58 @@ Build an enterprise application Product Collections Management & Production Trac
 ### General Description of the Flow
 
 1. **R&D (Research & Development) Sample Development & Directory List**
-   Sample development flow in R&D:
-   1. A request comes from the client for the development of a new sample.
-   2. The R&D user will create a draft directory list of sample items and send it as a quotation to the client.
-   3. The quotation is approved by the client.
-   4. The sample creation process begins.
-   5. Once the sample is complete, the directory list will be updated according to the detailed description of the sample items.
-   6. The sales user will then follow up by extracting the data from the directory list into a Proforma Invoice to be sent to the client.
-   7. Client response:
-      - "Samples OK for all models": The sales user will proceed to the Purchase Order Invoice.
-      - "Samples OK with some selected models": The sales user will update the Proforma and forward it to the Purchase Order Invoice, and the R&D user will update the R&D directory list according to the models approved by the client.
-      - "Revised samples": The sample creation process will return to the client's approval process.
-      - "Samples Cancel"
-      - Samples are OK but not ordered.
-   8. All documents from the directory list, proforma, and purchase order list must be recorded with an update date.
-   9. In addition to product information, the directory list also contains detailed technical information (clay, glaze, texture, engobe, firing type, luster, etc.).
-   10. Model samples approved/ordered by the client will become the client's product collection.
-   11. Model samples not approved by the client will become R&D product collections.
+    Enhanced sample development flow with user-specific project management and revision tracking:
+
+    **User-Specific Sample Project Management:**
+    - Within the R&D User role, individual users are responsible for managing their own sample projects
+    - Each R&D user maintains separate project portfolios with full ownership and tracking
+    - Project isolation ensures users can manage multiple client projects simultaneously
+
+    **Directory List Management with Revisions:**
+    - A single project directory list can have multiple revisions logged by revision date
+    - Users maintain complete track record from first directory draft to final approved product
+    - Revision history provides audit trail and supports iterative client feedback loops
+
+    **Directory List Item Properties:**
+    - Items include comprehensive properties: photos, code, item name, texture name, color name, material name, size information, notes
+    - Set/breakdown model support: items can be composite sets consisting of multiple components
+    - Examples: Tea pot + underliner, amenity bottle + stainless steel pump, sink + kitchen, mug + wooden lid
+    - Assembly management for complex multi-part ceramic and non-ceramic combinations
+
+    **Communication Flow Across R&D and Sales Departments:**
+    - **Estimate List**: Draft item directory list in sketch/reference form, emailed to client
+    - **Quotation**: Directory list with product properties, emailed to client
+    - **Proforma**: Directory list in finished form, emailed to client
+    - **Invoice**: Approved Purchase Order list becoming official client order
+
+    **Sales Manager Role & Pricing:**
+    - Sales Manager (CEO in this company) responsible for pricing from draft directory to invoice
+    - Advanced pricing calculation application with special formulas based on:
+      - Material factors (clay type, glaze quality, firing requirements)
+      - Difficulty level (complexity of design and production)
+      - Firing type (biscuit, high, luster firing specifications)
+      - Glaze level/technique (application methods, decorative complexity)
+    - Multi-currency support for professional international administration
+    - All documents support export features: PDF & Excel formats
+
+    **Sample Development Workflow:**
+    1. Client request for new sample development
+    2. R&D user creates Estimate List (draft directory) and emails to client
+    3. Client feedback loop with revisions tracked by date
+    4. Approved Estimate becomes Quotation with detailed properties
+    5. Sample creation process begins with assigned R&D user ownership
+    6. Completed samples update directory list with final specifications
+    7. Sales Manager creates Proforma from approved directory items
+    8. Client response options:
+       - "Samples OK for all models": Proceed to Invoice (Purchase Order)
+       - "Samples OK with some selected models": Update Proforma → Invoice, R&D updates directory for approved models only
+       - "Revised samples": Return to revision loop with new directory version
+       - "Samples Cancel": Project termination
+       - "Samples OK but not ordered": Archive as potential future opportunity
+    9. All documents maintain update timestamps and revision history
+    10. Directory lists include detailed technical specifications (clay, glaze, texture, engobe, firing type, luster, etc.)
+    11. Approved/ordered models become client product collections
+    12. Non-approved models become R&D reference collections
 
 2. **Purchase Order Management (POL)**
    - The sales user will update the order status to the client when the order is nearly complete or approximately 80% complete and will also request payment.
@@ -142,9 +177,15 @@ Success means ceramic craft companies can seamlessly manage their entire product
 Core production tracking system with:
 
 **R&D Sample Development & Directory Management:**
-- Client onboarding
-- Sample development workflow: development → review → approve/revise (loop back on revision)
-- Directory listing for approved samples
+- User-specific sample project management with individual project portfolios
+- Directory list management with multiple revisions tracked by revision date
+- Enhanced directory item properties: photos, code, item name, texture name, color name, material name, size information, notes
+- Set/breakdown model support for composite items (tea pot + underliner, amenity bottle + stainless steel pump, etc.)
+- Communication flow: Estimate List → Quotation → Proforma → Invoice
+- Sales Manager role for pricing with advanced calculation formulas
+- Multi-currency support for professional administration
+- Document export features (PDF & Excel) for all documents
+- Client onboarding and sample development workflow with revision tracking
 - Automatic proforma generation from directory items
 
 **Purchase Order Management (POL):**
@@ -313,11 +354,18 @@ This section shapes all functional and non-functional requirements below.
 ## Functional Requirements
 
 ### 1. R&D Sample Development & Directory Management
-- **User R&D Responsibility:** Directory listing and sample development management
-- **New Client & Goods Development:** Process for onboarding new clients and developing new products
-- **Sample Process:** Development, review, and approval workflow
-- **Approval/Revision Loop:** If revision needed, return to client approval and reprocess
-- **Directory List Client:** Approved samples become client directory entries
+- **User-Specific Project Management:** Individual R&D users manage their own sample project portfolios with full ownership and isolation
+- **Directory List Revisions:** Single project directory lists support multiple revisions logged by revision date for complete audit trails
+- **Enhanced Item Properties:** Directory items include comprehensive properties (photos, code, item name, texture name, color name, material name, size information, notes)
+- **Set/Breakdown Models:** Support for composite items consisting of multiple components (tea pot + underliner, amenity bottle + stainless steel pump, etc.)
+- **Communication Flow:** Estimate List (draft) → Quotation (detailed properties) → Proforma (finished form) → Invoice (approved PO)
+- **Sales Manager Role:** CEO responsible for pricing from draft directory to invoice using advanced calculation formulas
+- **Pricing Calculation System:** Special formulas based on material factors, difficulty level, firing type, glaze level/technique parameters
+- **Multi-Currency Support:** Professional administration system for international clients
+- **Document Export:** PDF and Excel export support for all documents (Estimate Lists, Quotations, Proformas, Invoices)
+- **Client Onboarding:** Process for onboarding new clients and developing new products
+- **Sample Development Workflow:** Development, review, approval with revision loops and client feedback tracking
+- **Directory List Management:** Approved samples become client directory entries with revision history
 - **Proforma Generation:** Directory items automatically become proformas for clients
 
 ### 2. Purchase Order Management (POL)
@@ -422,6 +470,9 @@ This section shapes all functional and non-functional requirements below.
 - **Real-Time Updates:** Live production status across all user interfaces
 - **Single-Company Data Management:** Comprehensive data management for one ceramic craft company
 - **Export Capabilities:** Data export for reporting and analysis
+- **Pricing Calculation System:** Advanced pricing application with special formulas based on material factors, difficulty level, firing type, and glaze level/technique parameters
+- **Multi-Currency Support:** Professional administration system supporting multiple currencies for quotations, proformas, and invoices
+- **Document Export Features:** All documents (Estimate Lists, Quotations, Proformas, Invoices) support PDF and Excel export formats
 
 ---
 

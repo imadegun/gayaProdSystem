@@ -68,7 +68,7 @@ So that all users receive live production status updates.
 
 ## Epic 2: Client Management & Sales Workflow
 
-**Goal:** Enable end-to-end client lifecycle management from R&D onboarding through order fulfillment, including stock management integration.
+**Goal:** Enable comprehensive client lifecycle management from R&D onboarding through professional sales documentation, including user-specific project management, revision tracking, advanced pricing, and multi-currency support.
 
 ### Story 2.1: R&D Client Onboarding
 As an R&D user,
@@ -85,21 +85,167 @@ So that development workflows can be initiated properly.
 
 **Technical Notes:** Client table integration with existing schema, region/department reference data.
 
-### Story 2.2: Sample Development Workflow
+### Story 2.2: User-Specific Sample Project Management
 As an R&D user,
-I want to manage sample development with approval loops,
-So that approved samples become directory listings.
+I want to manage my own sample project portfolio,
+So that I can maintain separate projects with full ownership and isolation.
 
 **Acceptance Criteria:**
-**Given** new client onboarded
-**When** sample development is initiated
-**Then** workflow progresses through draft → development → review → approval
-**And** revision loop returns to client approval if needed
-**And** approved samples automatically become directory entries
+**Given** R&D user role assigned
+**When** user accesses sample projects
+**Then** individual project portfolio is displayed
+**And** user can create, edit, and manage only their own projects
+**And** project isolation prevents cross-user access
+**And** project ownership is clearly tracked
 
 **Prerequisites:** Story 2.1
 
-**Technical Notes:** Status tracking system, approval workflow, integration with product collections, file attachment support.
+**Technical Notes:** User-based project filtering, ownership validation, project isolation logic, portfolio dashboard.
+
+### Story 2.3: Directory List Revision Management
+As an R&D user,
+I want to manage multiple revisions of directory lists,
+So that I can track the complete history from draft to final approval.
+
+**Acceptance Criteria:**
+**Given** active sample project
+**When** directory list is modified
+**Then** new revision is created with timestamp
+**And** revision history is maintained chronologically
+**And** users can view and compare all revisions
+**And** audit trail shows who made each revision and when
+
+**Prerequisites:** Story 2.2
+
+**Technical Notes:** Revision tracking system, version comparison interface, timestamp logging, audit trail implementation.
+
+### Story 2.4: Enhanced Directory Item Properties
+As an R&D user,
+I want to manage comprehensive item properties,
+So that all necessary product information is captured.
+
+**Acceptance Criteria:**
+**Given** directory item creation/editing
+**When** user enters item details
+**Then** comprehensive properties are supported: photos, code, item name, texture name, color name, material name, size information, notes
+**And** photo upload and management works seamlessly
+**And** all properties are searchable and filterable
+**And** data validation ensures required fields are completed
+
+**Prerequisites:** Story 2.3
+
+**Technical Notes:** Enhanced form fields, photo upload integration, property validation, search/filter implementation.
+
+### Story 2.5: Set/Breakdown Model Management
+As an R&D user,
+I want to create composite set products,
+So that complex multi-part items can be properly managed.
+
+**Acceptance Criteria:**
+**Given** directory item creation
+**When** user selects set/breakdown model type
+**Then** component management interface is available
+**And** main item and sub-components can be defined
+**And** examples supported: tea pot + underliner, amenity bottle + stainless steel pump, sink + kitchen, mug + wooden lid
+**And** assembly relationships are tracked for production
+**And** pricing calculations account for all components
+
+**Prerequisites:** Story 2.4
+
+**Technical Notes:** Component relationship modeling, assembly tracking, hierarchical item structure, production integration.
+
+### Story 2.6: Document Communication Flow
+As a sales manager,
+I want to manage the complete document flow,
+So that client communication follows professional standards.
+
+**Acceptance Criteria:**
+**Given** directory list approval
+**When** sales process begins
+**Then** Estimate List (draft directory) is generated and emailed to client
+**And** approved Estimate becomes Quotation with detailed properties
+**And** Quotation approval creates Proforma in finished form
+**And** Proforma approval becomes Invoice (Purchase Order)
+**And** all documents maintain revision history and timestamps
+**And** email integration supports professional client communication
+
+**Prerequisites:** Story 2.5
+
+**Technical Notes:** Document generation workflow, email integration, status tracking, revision management across document types.
+
+### Story 2.7: Advanced Pricing Calculation System
+As a sales manager,
+I want to calculate prices using special formulas,
+So that pricing accurately reflects production complexity and costs.
+
+**Acceptance Criteria:**
+**Given** directory item with specifications
+**When** pricing calculation is initiated
+**Then** special formulas are applied based on:
+  - Material factors (clay type, glaze quality, firing requirements)
+  - Difficulty level (complexity of design and production)
+  - Firing type (biscuit, high, luster firing specifications)
+  - Glaze level/technique (application methods, decorative complexity)
+**And** calculation results are displayed with breakdown
+**And** pricing can be adjusted and saved
+**And** integration with document generation works seamlessly
+
+**Prerequisites:** Story 2.6
+
+**Technical Notes:** Formula engine implementation, parameter-based calculations, pricing breakdown display, document integration.
+
+### Story 2.8: Multi-Currency Administration
+As a sales manager,
+I want to manage documents in multiple currencies,
+So that international clients can be served professionally.
+
+**Acceptance Criteria:**
+**Given** document creation
+**When** currency selection is made
+**Then** all monetary values display in selected currency
+**And** automatic conversion is supported with exchange rates
+**And** currency formatting follows international standards
+**And** historical exchange rates are maintained for audit purposes
+**And** currency settings persist across document revisions
+
+**Prerequisites:** Story 2.7
+
+**Technical Notes:** Currency conversion service, exchange rate management, international formatting, historical rate storage.
+
+### Story 2.9: Document Export System
+As a sales manager,
+I want to export documents in professional formats,
+So that client communication meets business standards.
+
+**Acceptance Criteria:**
+**Given** completed document (Estimate, Quotation, Proforma, Invoice)
+**When** export is requested
+**Then** PDF format is generated with professional layout
+**And** Excel format is available with structured data
+**And** exports maintain all formatting and data integrity
+**And** file naming follows standard conventions
+**And** bulk export is supported for multiple documents
+
+**Prerequisites:** Story 2.8
+
+**Technical Notes:** PDF generation library integration, Excel export functionality, template management, bulk processing.
+
+### Story 2.10: Sales Proforma & Purchase Order Management
+As a sales admin,
+I want to generate proformas and manage purchase orders,
+So that client orders transition smoothly to production.
+
+**Acceptance Criteria:**
+**Given** approved directory items
+**When** sales admin creates proforma
+**Then** professional proforma is generated
+**And** client communication is tracked
+**And** deposit payment status is monitored
+**And** approved orders automatically initiate production workflow
+
+**Prerequisites:** Story 2.9
+
+**Technical Notes:** Proforma generation from directory data, payment integration, order status tracking, production workflow triggers.
 
 ### Story 2.3: Sales Proforma & Purchase Order Management
 As a sales admin,
@@ -506,4 +652,4 @@ So that documents and images are stored and accessed properly.
 
 ---
 
-_Epics are sequenced for logical dependency flow: Foundation enables Client Management, which enables Product Management, which enables Production tracking, Quality Control, and Reporting. Stock management is integrated throughout QC processes. Each epic contains vertically-sliced stories completable by single dev agents within focused sessions._
+_Epics are sequenced for logical dependency flow: Foundation enables Client Management (now enhanced with user-specific R&D projects, revision tracking, advanced pricing, and professional document management), which enables Product Management, which enables Production tracking, Quality Control, and Reporting. Stock management is integrated throughout QC processes. Each epic contains vertically-sliced stories completable by single dev agents within focused sessions._

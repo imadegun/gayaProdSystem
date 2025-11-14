@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
           employee: recap.workPlanAssignment.employee.firstName + ' ' + recap.workPlanAssignment.employee.lastName,
           stage: recap.workPlanAssignment.productionStage.name
         }, user);
-        emitNotification(io, notification);
+        emitNotification(notification);
       }
     } catch (error) {
       console.error('Error emitting notification:', error);

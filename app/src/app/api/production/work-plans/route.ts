@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
           weekEnd: workPlan.weekEnd,
           planType: workPlan.planType
         }, user);
-        emitNotification(io, notification);
+        emitNotification(notification);
       }
     } catch (error) {
       console.error('Error emitting work plan notification:', error);
