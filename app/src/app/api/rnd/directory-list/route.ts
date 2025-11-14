@@ -5,14 +5,24 @@ import { requireRole } from "@/lib/auth-utils";
 export async function GET(request: NextRequest) {
   try {
     // Require R&D role
-    await requireRole(request, "R&D");
+    const user = await requireRole(request, "R&D");
 
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
+    const includeRevisions = searchParams.get("includeRevisions") === "true";
 
     const where: any = {};
     if (projectId) {
+      // Ensure user can only access their own projects
       where.projectId = parseInt(projectId);
+      where.project = {
+        createdBy: parseInt(user.id)
+      };
+    } else {
+      // If no project specified, show all user's projects' directory lists
+      where.project = {
+        createdBy: parseInt(user.id)
+      };
     }
 
     const directoryLists = await prisma.directoryList.findMany({
@@ -28,9 +38,21 @@ export async function GET(request: NextRequest) {
               }
             }
           }
-        }
+        },
+        ...(includeRevisions && {
+          revisions: {
+            orderBy: { revisionNumber: "asc" }
+          },
+          parent: true
+        }),
+        estimates: true,
+        quotations: true,
+        proformas: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        { revisionNumber: "desc" },
+        { createdAt: "desc" }
+      ],
     });
 
     return NextResponse.json({ directoryLists });
@@ -52,9 +74,17 @@ export async function POST(request: NextRequest) {
     const {
       projectId,
       itemName,
+      itemCode,
       description,
       collectCode,
       quantity,
+      // Enhanced item properties
+      photos,
+      textureName,
+      colorName,
+      materialName,
+      sizeInfo,
+      // Technical specifications
       clay,
       glaze,
       texture,
@@ -63,7 +93,12 @@ export async function POST(request: NextRequest) {
       luster,
       dimensions,
       weight,
-      notes
+      notes,
+      // Set/Breakdown model support
+      isSet,
+      components,
+      // Revision support
+      parentId
     } = body;
 
     // Validate required fields
@@ -77,7 +112,7 @@ export async function POST(request: NextRequest) {
     // Verify project exists and belongs to R&D user
     const project = await prisma.rnDProject.findFirst({
       where: {
-        id: projectId,
+        id: parseInt(projectId),
         createdBy: parseInt(user.id),
       }
     });
@@ -89,14 +124,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle revision logic
+    let revisionNumber = 1;
+    if (parentId) {
+      // This is a revision of an existing item
+      const parentItem = await prisma.directoryList.findUnique({
+        where: { id: parseInt(parentId) },
+        select: { revisionNumber: true }
+      });
+      if (parentItem) {
+        revisionNumber = parentItem.revisionNumber + 1;
+      }
+    }
+
     // Create directory list item
     const directoryList = await prisma.directoryList.create({
       data: {
-        projectId,
+        projectId: parseInt(projectId),
+        revisionNumber,
+        parentId: parentId ? parseInt(parentId) : null,
         itemName,
+        itemCode,
         description,
         collectCode,
         quantity: quantity || 1,
+        // Enhanced properties
+        photos,
+        textureName,
+        colorName,
+        materialName,
+        sizeInfo,
+        // Technical specs
         clay,
         glaze,
         texture,
@@ -106,6 +164,9 @@ export async function POST(request: NextRequest) {
         dimensions,
         weight,
         notes,
+        // Set/Breakdown support
+        isSet: isSet || false,
+        components,
       },
       include: {
         project: {
@@ -118,7 +179,9 @@ export async function POST(request: NextRequest) {
               }
             }
           }
-        }
+        },
+        revisions: true,
+        parent: true,
       }
     });
 

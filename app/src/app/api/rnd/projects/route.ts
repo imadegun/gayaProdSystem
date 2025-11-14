@@ -5,9 +5,13 @@ import { requireRole } from "@/lib/auth-utils";
 export async function GET(request: NextRequest) {
   try {
     // Require R&D role
-    await requireRole(request, "R&D");
+    const user = await requireRole(request, "R&D");
 
+    // User-specific project management - users only see their own projects
     const projects = await prisma.rnDProject.findMany({
+      where: {
+        createdBy: parseInt(user.id), // Filter by user ownership
+      },
       include: {
         client: {
           select: {
@@ -23,7 +27,12 @@ export async function GET(request: NextRequest) {
             email: true,
           }
         },
-        directoryLists: true,
+        directoryLists: {
+          include: {
+            revisions: true, // Include revision history
+          }
+        },
+        estimates: true, // Include new estimates
         quotations: true,
         samples: true,
         proformas: true,

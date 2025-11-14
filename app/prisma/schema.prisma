@@ -475,6 +475,7 @@ model User {
   rndProjects   RnDProject[] @relation("RnDCreatedBy")
   quotations    Quotation[]  @relation("QuotationCreatedBy")
   proformas     Proforma[]   @relation("ProformaCreatedBy")
+  estimates     Estimate[]   @relation("EstimateCreatedBy")
   purchaseOrderStatusHistory PurchaseOrderStatusHistory[]
 }
 
@@ -721,7 +722,7 @@ model RnDProject {
   clientId    String   @map("client_id")
   projectName String   @map("project_name")
   description String?
-  status      String   @default("draft_directory") @map("status") // draft_directory, quotation_sent, quotation_approved, sample_development, sample_completed, proforma_created, client_approved, client_revised, cancelled
+  status      String   @default("draft_directory") @map("status") // draft_directory, estimate_created, quotation_sent, quotation_approved, sample_development, sample_completed, proforma_created, client_approved, client_revised, cancelled
   workflowStep String? @map("workflow_step") // Current step in workflow
   createdBy   Int      @map("created_by")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -730,36 +731,112 @@ model RnDProject {
   client      Client   @relation(fields: [clientId], references: [clientCode])
   creator     User     @relation("RnDCreatedBy", fields: [createdBy], references: [id])
   directoryLists DirectoryList[]
+  estimates    Estimate[]
   quotations   Quotation[]
   samples      Sample[]
   proformas    Proforma[]
 }
 
-// Sample Development Workflow Tables
-model DirectoryList {
+// Pricing and Currency Support
+model Currency {
   id          Int      @id @default(autoincrement())
-  projectId   Int      @map("project_id")
-  itemName    String   @map("item_name")
-  description String?  @map("description")
-  collectCode String?  @map("collect_code") // Reference to TblcollectMaster
-  quantity    Int      @default(1) @map("quantity")
-  status      String   @default("draft") @map("status") // draft, approved, rejected
-  clay        String?  @map("clay")
-  glaze       String?  @map("glaze")
-  texture     String?  @map("texture")
-  engobe      String?  @map("engobe")
-  firingType  String?  @map("firing_type")
-  luster      String?  @map("luster")
-  dimensions  Json?    @map("dimensions") // Width, Height, Length, Diameter
-  weight      Float?   @map("weight")
-  notes       String?  @map("notes")
+  code        String   @unique @map("code") // USD, EUR, IDR, etc.
+  name        String   @map("name")
+  symbol      String   @map("symbol") // $, €, Rp, etc.
+  exchangeRate Float   @default(1.0) @map("exchange_rate") // Rate to base currency
+  isBase      Boolean  @default(false) @map("is_base") // Base currency flag
+  isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  project     RnDProject @relation(fields: [projectId], references: [id])
   quotations  Quotation[]
-  samples     Sample[]
   proformas   Proforma[]
+  estimates   Estimate[]
+
+  @@map("currencies")
+}
+
+model PricingFormula {
+  id              Int      @id @default(autoincrement())
+  name            String   @map("name")
+  description     String?  @map("description")
+  formulaType     String   @map("formula_type") // material_factor, difficulty_level, firing_type, glaze_level
+  parameters      Json     @map("parameters") // Formula parameters and calculations
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_formulas")
+}
+
+// Sample Development Workflow Tables
+// Estimate List - Draft directory list sent to client
+model Estimate {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  estimateNumber String  @unique @map("estimate_number")
+  directoryListId Int    @map("directory_list_id")
+  title         String   @map("title")
+  description   String?  @map("description")
+  totalAmount   Float?   @map("total_amount")
+  currencyId    Int?     @map("currency_id")
+  status        String   @default("draft") @map("status") // draft, sent, approved, rejected, revised
+  sentDate      DateTime? @map("sent_date")
+  responseDate  DateTime? @map("response_date")
+  clientResponse String? @map("client_response") // ok_all, ok_selected, revised, cancelled
+  notes         String?  @map("notes")
+  attachments   Json?    @map("attachments") // Array of file URLs
+  createdBy     Int      @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  project       RnDProject @relation(fields: [projectId], references: [id])
+  directoryList DirectoryList @relation(fields: [directoryListId], references: [id])
+  currency      Currency? @relation(fields: [currencyId], references: [id])
+  creator       User      @relation("EstimateCreatedBy", fields: [createdBy], references: [id])
+
+  @@map("estimates")
+}
+model DirectoryList {
+  id              Int      @id @default(autoincrement())
+  projectId       Int      @map("project_id")
+  revisionNumber  Int      @default(1) @map("revision_number")
+  parentId        Int?     @map("parent_id") // For revision tracking
+  itemName        String   @map("item_name")
+  itemCode        String?  @map("item_code") // New field for item code
+  description     String?  @map("description")
+  collectCode     String?  @map("collect_code") // Reference to TblcollectMaster
+  quantity        Int      @default(1) @map("quantity")
+  status          String   @default("draft") @map("status") // draft, approved, rejected
+  // Enhanced item properties
+  photos          Json?    @map("photos") // Array of photo URLs
+  textureName     String?  @map("texture_name")
+  colorName       String?  @map("color_name")
+  materialName    String?  @map("material_name")
+  sizeInfo        String?  @map("size_info") // Size information
+  // Technical specifications
+  clay            String?  @map("clay")
+  glaze           String?  @map("glaze")
+  texture         String?  @map("texture")
+  engobe          String?  @map("engobe")
+  firingType      String?  @map("firing_type")
+  luster          String?  @map("luster")
+  dimensions      Json?    @map("dimensions") // Width, Height, Length, Diameter
+  weight          Float?   @map("weight")
+  notes           String?  @map("notes")
+  // Set/Breakdown model support
+  isSet           Boolean  @default(false) @map("is_set") // Indicates if this is a set/breakdown item
+  components      Json?    @map("components") // Array of component items for sets
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  project         RnDProject @relation(fields: [projectId], references: [id])
+  parent          DirectoryList? @relation("DirectoryRevisions", fields: [parentId], references: [id])
+  revisions       DirectoryList[] @relation("DirectoryRevisions")
+  estimates       Estimate[]
+  quotations      Quotation[]
+  samples         Sample[]
+  proformas       Proforma[]
   purchaseOrderItems PurchaseOrderItem[]
 
   @@map("directory_lists")
@@ -773,6 +850,7 @@ model Quotation {
   title         String   @map("title")
   description   String?  @map("description")
   totalAmount   Float?   @map("total_amount")
+  currencyId    Int?     @map("currency_id")
   status        String   @default("draft") @map("status") // draft, sent, approved, rejected, revised
   sentDate      DateTime? @map("sent_date")
   responseDate  DateTime? @map("response_date")
@@ -785,6 +863,7 @@ model Quotation {
 
   project       RnDProject @relation(fields: [projectId], references: [id])
   directoryList DirectoryList? @relation(fields: [directoryListId], references: [id])
+  currency      Currency? @relation(fields: [currencyId], references: [id])
   creator       User      @relation("QuotationCreatedBy", fields: [createdBy], references: [id])
 
   @@map("quotations")
@@ -817,6 +896,7 @@ model Proforma {
   title         String   @map("title")
   description   String?  @map("description")
   totalAmount   Float?   @map("total_amount")
+  currencyId    Int?     @map("currency_id")
   status        String   @default("draft") @map("status") // draft, sent, approved, rejected
   sentDate      DateTime? @map("sent_date")
   responseDate  DateTime? @map("response_date")
@@ -831,6 +911,7 @@ model Proforma {
 
   project       RnDProject @relation(fields: [projectId], references: [id])
   directoryList DirectoryList? @relation(fields: [directoryListId], references: [id])
+  currency      Currency? @relation(fields: [currencyId], references: [id])
   creator       User      @relation("ProformaCreatedBy", fields: [createdBy], references: [id])
   purchaseOrders PurchaseOrder[]
 
