@@ -11,6 +11,11 @@
 
 This document provides the complete epic and story breakdown for gayaProdSystem, decomposing the requirements from the [PRD](./PRD.md) into implementable stories. The system transforms artisanal ceramic production into a sophisticated, data-driven enterprise platform with stock management functionality.
 
+**Key Flow Clarification:**
+- **R&D Collections**: Development-stage directory lists created during sample development (pre-production)
+- **Client Collections**: Production-ready collections created only when R&D samples are approved AND ordered via Purchase Orders
+- **Transition Point**: R&D data becomes client collection data only upon Purchase Order approval
+
 The epic structure follows natural groupings based on business capabilities: Foundation (database migration and infrastructure), Client Management (R&D and sales workflows), Product Management (collections and production), Quality Assurance (QC and stock), and Support Systems (users, employees, reporting).
 
 ---
@@ -268,23 +273,42 @@ So that client orders transition smoothly to production.
 
 ## Epic 3: Product Collections & Catalog Management
 
-**Goal:** Provide comprehensive product collection management with public access and client attribution, serving as the foundation for production workflows.
+**Goal:** Provide comprehensive product collection management with public access and client attribution, serving as the foundation for production workflows. Client collections are created from approved R&D collections only when samples become orders via Purchase Orders.
 
-### Story 3.1: Collection Type Management
+### Story 3.1: Collection Creation from R&D Orders
+As a system administrator,
+I want to create client collections from approved R&D samples,
+So that only ordered products become production-ready client collections.
+
+**Acceptance Criteria:**
+**Given** R&D collection with approved Purchase Order
+**When** order is confirmed
+**Then** R&D collection data transitions to client collection
+**And** collection type is assigned (Exclusive, Exclusive-Group, General)
+**And** client ownership is established
+**And** technical specifications are preserved from R&D
+**And** collection becomes available for production workflows
+
+**Prerequisites:** Story 2.10
+
+**Technical Notes:** Data transition logic, collection type assignment, ownership establishment, production workflow integration.
+
+### Story 3.1.1: Collection Type Management
 As a product manager,
 I want to manage collection types (Exclusive, Exclusive-Group, General),
 So that products are properly attributed to clients.
 
 **Acceptance Criteria:**
-**Given** product collection data
+**Given** client collection created from R&D order
 **When** collection type is assigned
-**Then** client ownership is established
+**Then** Exclusive collections link to specific clients
 **And** Exclusive-Group collections link to client groups
 **And** General collections allow multi-client access
+**And** regional and departmental attributes are maintained
 
-**Prerequisites:** Story 1.1
+**Prerequisites:** Story 3.1
 
-**Technical Notes:** Collection type validation, client group management, ownership rules enforcement.
+**Technical Notes:** Collection type validation, client group management, ownership rules enforcement, regional/departmental organization.
 
 ### Story 3.2: Public Product Catalog
 As a client,
@@ -652,4 +676,4 @@ So that documents and images are stored and accessed properly.
 
 ---
 
-_Epics are sequenced for logical dependency flow: Foundation enables Client Management (now enhanced with user-specific R&D projects, revision tracking, advanced pricing, and professional document management), which enables Product Management, which enables Production tracking, Quality Control, and Reporting. Stock management is integrated throughout QC processes. Each epic contains vertically-sliced stories completable by single dev agents within focused sessions._
+_Epics are sequenced for logical dependency flow: Foundation enables Client Management (R&D collections in development stage), which enables Product Management (client collections created only from approved orders), which enables Production tracking, Quality Control, and Reporting. The critical transition point is when R&D collections become client collections only upon Purchase Order approval. Stock management is integrated throughout QC processes. Each epic contains vertically-sliced stories completable by single dev agents within focused sessions._

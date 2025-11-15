@@ -15,6 +15,12 @@ Build an enterprise application Product Collections Management & Production Trac
 1. **R&D (Research & Development) Sample Development & Directory List**
     Enhanced sample development flow with user-specific project management and revision tracking:
 
+    **R&D Collections vs Client Collections Flow:**
+    - **R&D Collections (Development Stage)**: Directory lists created during sample development are R&D collections - they are in development/pre-production stage
+    - **Client Collections (Production Stage)**: Only when samples are approved AND ordered by client do they become client collections
+    - **Transition Point**: R&D collection data becomes client collection data only upon Purchase Order approval
+    - **R&D Reference Collections**: Non-approved samples remain as R&D reference collections for future use
+
     **User-Specific Sample Project Management:**
     - Within the R&D User role, individual users are responsible for managing their own sample projects
     - Each R&D user maintains separate project portfolios with full ownership and tracking
@@ -56,15 +62,15 @@ Build an enterprise application Product Collections Management & Production Trac
     6. Completed samples update directory list with final specifications
     7. Sales Manager creates Proforma from approved directory items
     8. Client response options:
-       - "Samples OK for all models": Proceed to Invoice (Purchase Order)
-       - "Samples OK with some selected models": Update Proforma → Invoice, R&D updates directory for approved models only
+       - "Samples OK for all models": Proceed to Invoice (Purchase Order) → **R&D Collection becomes Client Collection**
+       - "Samples OK with some selected models": Update Proforma → Invoice, R&D updates directory for approved models only → **Only approved models become Client Collection**
        - "Revised samples": Return to revision loop with new directory version
-       - "Samples Cancel": Project termination
-       - "Samples OK but not ordered": Archive as potential future opportunity
+       - "Samples Cancel": Project termination → **R&D Collection remains as reference only**
+       - "Samples OK but not ordered": Archive as potential future opportunity → **R&D Collection remains as reference only**
     9. All documents maintain update timestamps and revision history
     10. Directory lists include detailed technical specifications (clay, glaze, texture, engobe, firing type, luster, etc.)
-    11. Approved/ordered models become client product collections
-    12. Non-approved models become R&D reference collections
+    11. **Approved/ordered models become client product collections** (production-ready)
+    12. **Non-approved models become R&D reference collections** (development archive)
 
 2. **Purchase Order Management (POL)**
    - The sales user will update the order status to the client when the order is nearly complete or approximately 80% complete and will also request payment.
@@ -74,13 +80,19 @@ Build an enterprise application Product Collections Management & Production Trac
    
 
 3. **Product Collections**
-   - Directory approved becomes client collection product with specification and technical process details
-   - Frontend access (no login needed) with professional table list: filter, search, sort, pagination
-   - Data uses existing MySQL database, will migrate to PostgreSQL for complex query logic and stability performance
-   - All Products Collections have own Clients
-   - Client Product collections types: "Exclusive", "Exclusive-Group", "General"
-   - Clients Region (e.g., Bvlgari: Tokyo, Maldive, Paris, Bali, Milan)
-   - Client has Departments (e.g., Spa, F&B, Restaurant, Bathroom, Public Area)
+    - **Source**: Client collections are created from approved R&D collections when samples become orders/purchase orders
+    - **Transition Process**: R&D directory list data becomes client collection data only upon Purchase Order approval
+    - **Collection Types**:
+      - **Exclusive**: Products collected only by the specific client (from their approved orders)
+      - **Exclusive-Group**: Products collected by clients in the same group (e.g., Bvlgari-Bali, Bvlgari-Tokyo)
+      - **General**: Products that can be collected by other clients (from approved samples not exclusively owned)
+    - **Data Flow**: R&D Collection (development) → Client Approval → Purchase Order → Client Collection (production)
+    - **Technical Details**: Client collections include complete specification and technical process details from R&D
+    - **Frontend Access**: No login needed professional table interface with filter, search, sort, pagination
+    - **Database**: Uses existing MySQL database (gayafusionall schema), will migrate to PostgreSQL for complex query logic and performance
+    - **Client Attribution**: All product collections belong to specific clients via ClientCode and ClientDescription fields
+    - **Regional Organization**: Clients organized by regions (e.g., Bvlgari: Tokyo, Maldive, Paris, Bali, Milan)
+    - **Department Classification**: Client departments (e.g., Spa, F&B, Restaurant, Bathroom, Public Area)
 
 4. **Production Process & Tracking System**
    - Production divided into 3 user groups: Forming Section, Glaze Section, QC & Packaging Parts
@@ -374,16 +386,20 @@ This section shapes all functional and non-functional requirements below.
 - **Order Transition:** Seamless handoff from paid orders to production workflow
 
 ### 3. Product Collections Management
-- **Collection Creation:** Approved directory becomes client collection product with detailed specifications and technical processes
+- **Collection Creation Process:**
+  - R&D collections (directory lists) remain in development stage until ordered
+  - Only upon Purchase Order approval do R&D collections transition to client collections
+  - Client collections are production-ready versions of approved R&D samples
+- **Collection Types:**
+  - **Exclusive:** Products from client's approved orders (direct R&D to client collection transition)
+  - **Exclusive-Group:** Products shared within client groups (e.g., Bvlgari-Bali, Bvlgari-Tokyo)
+  - **General:** Products available to other clients (from non-exclusive approved samples)
+- **Data Transition:** R&D directory specifications become client collection technical processes
 - **Public Frontend Access:** No-login required professional table interface with filter, search, sort, pagination
 - **Database Strategy:** Utilize existing MySQL database (gayafusionall schema), migrate to PostgreSQL for complex query logic and performance stability
 - **Client Ownership:** All product collections belong to specific clients via ClientCode and ClientDescription fields
-- **Collection Types:**
-  - **Exclusive:** Products collected only by the specific client
-  - **Exclusive-Group:** Products collected by clients in the same group (e.g., Bvlgari-Bali, Bvlgari-Tokyo)
-  - **General:** Products that can be collected by other clients
-- **Client Regions:** Geographic regions (e.g., Bvlgari: Tokyo, Maldive, Paris, Bali, Milan)
-- **Client Departments:** Functional areas (e.g., Spa, F&B, Restaurant, Bathroom, Public Area)
+- **Regional Organization:** Geographic regions (e.g., Bvlgari: Tokyo, Maldive, Paris, Bali, Milan)
+- **Department Classification:** Functional areas (e.g., Spa, F&B, Restaurant, Bathroom, Public Area)
 - **Existing Schema Integration:**
   - **tblcollect_master:** Main collection table with comprehensive product specifications
   - **tblcollect_category, tblcollect_color, tblcollect_design, tblcollect_material, tblcollect_name, tblcollect_size, tblcollect_texture:** Reference tables for product attributes
