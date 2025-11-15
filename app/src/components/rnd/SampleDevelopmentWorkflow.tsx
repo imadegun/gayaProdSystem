@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Send, CheckCircle, XCircle, Clock, FileText, Package, Eye } from "lucide-react";
+import { Plus, Send, CheckCircle, XCircle, Clock, FileText, Package, Eye, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 interface RnDProject {
@@ -31,22 +31,23 @@ interface RnDProject {
 }
 
 interface DirectoryList {
-  id: number;
-  itemName: string;
-  description?: string;
-  collectCode?: string;
-  quantity: number;
-  status: string;
-  clay?: string;
-  glaze?: string;
-  texture?: string;
-  engobe?: string;
-  firingType?: string;
-  luster?: string;
-  dimensions?: any;
-  weight?: number;
-  notes?: string;
-}
+   id: number;
+   itemName: string;
+   itemCode?: string;
+   description?: string;
+   collectCode?: string;
+   quantity: number;
+   status: string;
+   clay?: string;
+   glaze?: string;
+   texture?: string;
+   engobe?: string;
+   firingType?: string;
+   luster?: string;
+   dimensions?: any;
+   weight?: number;
+   notes?: string;
+ }
 
 interface Quotation {
   id: number;
@@ -88,10 +89,11 @@ interface SampleDevelopmentWorkflowProps {
 }
 
 export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: SampleDevelopmentWorkflowProps) {
-  const [activeTab, setActiveTab] = useState("directory");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState<"directory" | "quotation" | "sample" | "proforma">("directory");
-  const [formData, setFormData] = useState<any>({});
+   const [activeTab, setActiveTab] = useState("directory");
+   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+   const [dialogType, setDialogType] = useState<"directory" | "quotation" | "sample" | "proforma">("directory");
+   const [formData, setFormData] = useState<any>({});
+   const [editingItem, setEditingItem] = useState<DirectoryList | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -111,22 +113,53 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
 
   const handleWorkflowAction = async (action: string, data?: any) => {
     try {
-      const response = await fetch("/api/rnd/workflow", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          projectId: project.id,
-          action,
-          data,
-        }),
-      });
+      let response;
+      if (action === "create_directory") {
+        // Use the directory-list API directly for creating items
+        response = await fetch("/api/rnd/directory-list", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId: project.id,
+            ...data.items[0], // Extract the first item from the array
+          }),
+        });
+      } else if (action === "update_directory") {
+        // Update directory item
+        response = await fetch(`/api/rnd/directory-list/${data.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+      } else if (action === "delete_directory") {
+        // Delete directory item
+        response = await fetch(`/api/rnd/directory-list/${data.id}`, {
+          method: "DELETE",
+        });
+      } else {
+        // Use workflow API for other actions
+        response = await fetch("/api/rnd/workflow", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId: project.id,
+            action,
+            data,
+          }),
+        });
+      }
 
       if (response.ok) {
         onProjectUpdate();
         setIsCreateDialogOpen(false);
         setFormData({});
+        setEditingItem(null);
       } else {
         const error = await response.json();
         alert(`Error: ${error.error}`);
@@ -137,24 +170,64 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
     }
   };
 
+  const handleEditItem = (item: DirectoryList) => {
+    setEditingItem(item);
+    setFormData({
+      id: item.id,
+      itemName: item.itemName,
+      itemCode: item.itemCode,
+      description: item.description,
+      collectCode: item.collectCode,
+      quantity: item.quantity,
+      clay: item.clay,
+      glaze: item.glaze,
+      texture: item.texture,
+      engobe: item.engobe,
+      firingType: item.firingType,
+      luster: item.luster,
+      dimensions: item.dimensions,
+      weight: item.weight,
+      notes: item.notes,
+    });
+    setDialogType("directory");
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleDeleteItem = async (item: DirectoryList) => {
+    if (confirm(`Are you sure you want to delete "${item.itemName}"?`)) {
+      await handleWorkflowAction("delete_directory", { id: item.id });
+    }
+  };
+
   const renderDirectoryList = () => (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Directory List</h3>
-        <Dialog open={isCreateDialogOpen && dialogType === "directory"} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setDialogType("directory"); setIsCreateDialogOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Directory Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add Directory Item</DialogTitle>
-              <DialogDescription>
-                Create a new item for the sample directory list
-              </DialogDescription>
-            </DialogHeader>
+        <Dialog open={isCreateDialogOpen && dialogType === "directory"} onOpenChange={(open) => {
+          setIsCreateDialogOpen(open);
+          if (!open) {
+            setEditingItem(null);
+            setFormData({});
+          }
+        }}>
+           <DialogTrigger asChild>
+             <Button onClick={() => {
+               setDialogType("directory");
+               setEditingItem(null);
+               setFormData({});
+               setIsCreateDialogOpen(true);
+             }}>
+               <Plus className="h-4 w-4 mr-2" />
+               Add Directory Item
+             </Button>
+           </DialogTrigger>
+           <DialogContent className="max-w-2xl">
+             <DialogHeader>
+               <DialogTitle>{editingItem ? "Edit Directory Item" : "Add Directory Item"}</DialogTitle>
+               <DialogDescription>
+                 {editingItem ? "Update the directory item details" : "Create a new item for the sample directory list"}
+               </DialogDescription>
+             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -165,6 +238,18 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
                     onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="itemCode">Item Code</Label>
+                  <Input
+                    id="itemCode"
+                    value={formData.itemCode || ""}
+                    onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })}
+                    placeholder={editingItem ? "Cannot change item code" : "Auto-generated if empty"}
+                    disabled={!!editingItem}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="collectCode">Collect Code</Label>
                   <Input
@@ -214,8 +299,11 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => handleWorkflowAction("create_directory", { items: [formData] })}>
-                Create Item
+              <Button onClick={() => handleWorkflowAction(
+                editingItem ? "update_directory" : "create_directory",
+                editingItem ? formData : { items: [formData] }
+              )}>
+                {editingItem ? "Update Item" : "Create Item"}
               </Button>
             </div>
           </DialogContent>
@@ -228,17 +316,20 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
             <TableHeader>
               <TableRow>
                 <TableHead>Item Name</TableHead>
+                <TableHead>Item Code</TableHead>
                 <TableHead>Collect Code</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Clay</TableHead>
                 <TableHead>Glaze</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {project.directoryLists.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.itemName}</TableCell>
+                  <TableCell>{item.itemCode || "-"}</TableCell>
                   <TableCell>{item.collectCode || "-"}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
                   <TableCell>{item.clay || "-"}</TableCell>
@@ -247,6 +338,25 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
                     <Badge variant={item.status === "approved" ? "default" : "secondary"}>
                       {item.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditItem(item)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteItem(item)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

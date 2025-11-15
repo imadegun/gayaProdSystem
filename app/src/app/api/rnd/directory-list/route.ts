@@ -137,6 +137,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Auto-generate item code if not provided
+    let finalItemCode: string;
+    if (itemCode) {
+      finalItemCode = itemCode;
+    } else {
+      // Generate code in format: GC-001 (two capital letters, dash, three digits)
+      const lastItem = await prisma.directoryList.findFirst({
+        orderBy: { id: 'desc' },
+        select: { itemCode: true }
+      });
+
+      let nextNumber = 1;
+      if (lastItem?.itemCode && lastItem.itemCode.startsWith('GC-')) {
+        const lastNumber = parseInt(lastItem.itemCode.split('-')[1]);
+        if (!isNaN(lastNumber)) {
+          nextNumber = lastNumber + 1;
+        }
+      }
+
+      finalItemCode = `GC-${String(nextNumber).padStart(3, '0')}`;
+    }
+
     // Create directory list item
     const directoryList = await prisma.directoryList.create({
       data: {
@@ -144,7 +166,7 @@ export async function POST(request: NextRequest) {
         revisionNumber,
         parentId: parentId ? parseInt(parentId) : null,
         itemName,
-        itemCode,
+        itemCode: finalItemCode,
         description,
         collectCode,
         quantity: quantity || 1,

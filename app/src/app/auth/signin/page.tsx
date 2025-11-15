@@ -38,7 +38,7 @@ export default function SignIn() {
           // Redirect based on role
           switch (session.user.role) {
             case "R&D":
-              router.push("/rd");
+              router.push("/rnd");
               break;
             case "Sales":
               router.push("/sales");
