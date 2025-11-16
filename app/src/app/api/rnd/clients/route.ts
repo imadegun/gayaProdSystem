@@ -28,14 +28,40 @@ export async function POST(request: NextRequest) {
     await requireRole(request, "R&D");
 
     const body = await request.json();
-    const { clientCode, clientDescription, region, department, contactPerson, email, phone, address } = body;
+    let { clientCode } = body;
+    const { clientDescription, region, department, contactPerson, email, phone, address } = body;
 
     // Validate required fields
-    if (!clientCode || !clientDescription) {
+    if (!clientDescription) {
       return NextResponse.json(
-        { error: "Client code and description are required" },
+        { error: "Client description is required" },
         { status: 400 }
       );
+    }
+
+    // Auto-generate client code if not provided
+    if (!clientCode) {
+      const lastClient = await prisma.client.findFirst({
+        orderBy: { clientCode: 'desc' },
+        select: { clientCode: true }
+      });
+
+      let nextNumber = 1;
+      if (lastClient?.clientCode && lastClient.clientCode.includes('-')) {
+        const parts = lastClient.clientCode.split('-');
+        if (parts.length === 2) {
+          const lastNumber = parseInt(parts[1]);
+          if (!isNaN(lastNumber)) {
+            nextNumber = lastNumber + 1;
+          }
+        }
+      }
+
+      // Generate two random capital letters
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const randomChars = letters[Math.floor(Math.random() * 26)] + letters[Math.floor(Math.random() * 26)];
+
+      clientCode = `${randomChars}-${String(nextNumber).padStart(3, '0')}`;
     }
 
     // Check if client code already exists

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Send, CheckCircle, XCircle, Clock, FileText, Package, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Send, CheckCircle, XCircle, Clock, FileText, Package, Eye, Edit, Trash2, Upload, Image } from "lucide-react";
 import { format } from "date-fns";
 
 interface RnDProject {
@@ -31,23 +31,24 @@ interface RnDProject {
 }
 
 interface DirectoryList {
-   id: number;
-   itemName: string;
-   itemCode?: string;
-   description?: string;
-   collectCode?: string;
-   quantity: number;
-   status: string;
-   clay?: string;
-   glaze?: string;
-   texture?: string;
-   engobe?: string;
-   firingType?: string;
-   luster?: string;
-   dimensions?: any;
-   weight?: number;
-   notes?: string;
- }
+    id: number;
+    itemName: string;
+    itemCode?: string;
+    description?: string;
+    collectCode?: string;
+    quantity: number;
+    status: string;
+    photos?: string[];
+    clay?: string;
+    glaze?: string;
+    texture?: string;
+    engobe?: string;
+    firingType?: string;
+    luster?: string;
+    dimensions?: any;
+    weight?: number;
+    notes?: string;
+  }
 
 interface Quotation {
   id: number;
@@ -179,6 +180,7 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
       description: item.description,
       collectCode: item.collectCode,
       quantity: item.quantity,
+      photos: item.photos || [],
       clay: item.clay,
       glaze: item.glaze,
       texture: item.texture,
@@ -267,6 +269,33 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
+              <div>
+                <Label htmlFor="photos">Photos</Label>
+                <Input
+                  id="photos"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    // For now, just store file names or URLs - in production, upload to server
+                    const photoUrls = files.map(file => URL.createObjectURL(file));
+                    setFormData({ ...formData, photos: photoUrls });
+                  }}
+                />
+                {formData.photos && formData.photos.length > 0 && (
+                  <div className="mt-2 flex gap-2 flex-wrap">
+                    {formData.photos.map((photo: string, index: number) => (
+                      <img
+                        key={index}
+                        src={photo}
+                        alt={`Photo ${index + 1}`}
+                        className="w-16 h-16 object-cover rounded border"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="quantity">Quantity</Label>
@@ -318,6 +347,7 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
                 <TableHead>Item Name</TableHead>
                 <TableHead>Item Code</TableHead>
                 <TableHead>Collect Code</TableHead>
+                <TableHead>Photos</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Clay</TableHead>
                 <TableHead>Glaze</TableHead>
@@ -327,42 +357,61 @@ export default function SampleDevelopmentWorkflow({ project, onProjectUpdate }: 
             </TableHeader>
             <TableBody>
               {project.directoryLists.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.itemName}</TableCell>
-                  <TableCell>{item.itemCode || "-"}</TableCell>
-                  <TableCell>{item.collectCode || "-"}</TableCell>
-                  <TableCell>{item.quantity}</TableCell>
-                  <TableCell>{item.clay || "-"}</TableCell>
-                  <TableCell>{item.glaze || "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.status === "approved" ? "default" : "secondary"}>
-                      {item.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditItem(item)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteItem(item)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                 <TableRow key={item.id}>
+                   <TableCell className="font-medium">{item.itemName}</TableCell>
+                   <TableCell>{item.itemCode || "-"}</TableCell>
+                   <TableCell>{item.collectCode || "-"}</TableCell>
+                   <TableCell>
+                     {item.photos && item.photos.length > 0 ? (
+                       <div className="flex gap-1">
+                         {item.photos.slice(0, 3).map((photo: string, index: number) => (
+                           <img
+                             key={index}
+                             src={photo}
+                             alt={`Photo ${index + 1}`}
+                             className="w-8 h-8 object-cover rounded border"
+                           />
+                         ))}
+                         {item.photos.length > 3 && (
+                           <span className="text-xs text-muted-foreground">+{item.photos.length - 3}</span>
+                         )}
+                       </div>
+                     ) : (
+                       <span className="text-muted-foreground">-</span>
+                     )}
+                   </TableCell>
+                   <TableCell>{item.quantity}</TableCell>
+                   <TableCell>{item.clay || "-"}</TableCell>
+                   <TableCell>{item.glaze || "-"}</TableCell>
+                   <TableCell>
+                     <Badge variant={item.status === "approved" ? "default" : "secondary"}>
+                       {item.status}
+                     </Badge>
+                   </TableCell>
+                   <TableCell>
+                     <div className="flex gap-2">
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         onClick={() => handleEditItem(item)}
+                       >
+                         <Edit className="h-4 w-4" />
+                       </Button>
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         onClick={() => handleDeleteItem(item)}
+                         className="text-red-600 hover:text-red-700"
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </TableCell>
+                 </TableRow>
+               ))}
               {project.directoryLists.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     No directory items created yet
                   </TableCell>
                 </TableRow>

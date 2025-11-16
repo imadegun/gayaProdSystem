@@ -86,13 +86,12 @@ export default function ClientOnboardingForm({ onClientCreated }: ClientOnboardi
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="clientCode">Client Code *</Label>
+              <Label htmlFor="clientCode">Client Code</Label>
               <Input
                 id="clientCode"
                 value={formData.clientCode}
                 onChange={(e) => handleChange("clientCode", e.target.value)}
-                placeholder="e.g., BG001"
-                required
+                placeholder="Auto-generated if empty (e.g., AB-001)"
               />
             </div>
             <div className="space-y-2">

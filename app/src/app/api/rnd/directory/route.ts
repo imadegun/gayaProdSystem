@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get("projectId");
     const includeRevisions = searchParams.get("includeRevisions") === "true";
 
-    const where: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: Record<string, any> = {};
     if (projectId) {
       // Ensure user can only access their own projects
       where.projectId = parseInt(projectId);
