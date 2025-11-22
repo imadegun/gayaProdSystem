@@ -474,14 +474,15 @@ async function main() {
     create: {
       projectId: rndProject.id,
       itemName: 'Modern White Plate - Medium',
-      description: 'Contemporary design with clean lines',
       collectCode: product.collectCode,
       quantity: 100,
-      clay: 'Porcelain Clay',
-      glaze: 'Clear Gloss',
+      clayIds: [1], // Reference to CLAY001
+      glazeIds: [1], // Reference to GLAZE001
       firingType: 'high_fire',
       dimensions: { width: 25, height: 2, length: 25 },
       weight: 0.8,
+      technotes: 'Contemporary design with clean lines',
+      isDecor: false,
       status: 'approved',
     },
   });
@@ -492,14 +493,15 @@ async function main() {
     create: {
       projectId: rndProject.id,
       itemName: 'Modern Black Plate - Medium',
-      description: 'Contemporary design in matte black',
       collectCode: generalProduct.collectCode,
       quantity: 50,
-      clay: 'Porcelain Clay',
-      glaze: 'Matte Black',
+      clayIds: [1], // Reference to CLAY001
+      glazeIds: [1], // Reference to GLAZE001
       firingType: 'high_fire',
       dimensions: { width: 25, height: 2, length: 25 },
       weight: 0.8,
+      technotes: 'Contemporary design in matte black',
+      isDecor: false,
       status: 'approved',
     },
   });

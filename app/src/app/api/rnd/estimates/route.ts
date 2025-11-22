@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         directoryList: {
           select: {
             itemName: true,
-            itemCode: true,
+            collectCode: true,
             photos: true,
             textureName: true,
             colorName: true,
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         directoryList: {
           select: {
             itemName: true,
-            itemCode: true,
+            collectCode: true,
             photos: true,
             quantity: true,
             isSet: true,

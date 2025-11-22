@@ -71,11 +71,6 @@ export async function GET(request: NextRequest) {
             email: true,
           }
         },
-        directoryLists: {
-          include: {
-            revisions: true,
-          }
-        },
         estimates: true,
         quotations: true,
         samples: true,

@@ -76,19 +76,25 @@ export async function PUT(
     const body = await request.json();
     const {
       itemName,
-      description,
       collectCode,
       quantity,
       status,
-      clay,
-      glaze,
-      texture,
-      engobe,
+      // Enhanced properties
+      textureName,
+      colorName,
+      materialName,
+      sizeInfo,
+      // Technical specs
+      clayIds,
+      glazeIds,
+      engobeIds,
+      lusterIds,
       firingType,
-      luster,
+      stainOxideId,
       dimensions,
       weight,
-      notes
+      technotes,
+      isDecor,
     } = body;
 
     // Verify the directory list item exists and user has access
@@ -113,19 +119,25 @@ export async function PUT(
       where: { id: directoryId },
       data: {
         itemName,
-        description,
         collectCode,
         quantity,
         status,
-        clay,
-        glaze,
-        texture,
-        engobe,
+        // Enhanced properties
+        textureName,
+        colorName,
+        materialName,
+        sizeInfo,
+        // Technical specs
+        clayIds,
+        glazeIds,
+        engobeIds,
+        lusterIds,
         firingType,
-        luster,
+        stainOxideId,
         dimensions,
         weight,
-        notes,
+        technotes,
+        isDecor,
       },
       include: {
         project: {

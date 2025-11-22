@@ -75,8 +75,6 @@ export async function POST(request: NextRequest) {
     const {
       projectId,
       itemName,
-      itemCode,
-      description,
       collectCode,
       quantity,
       // Enhanced item properties
@@ -85,15 +83,17 @@ export async function POST(request: NextRequest) {
       colorName,
       materialName,
       sizeInfo,
-      // Technical specifications
-      clay,
-      glaze,
-      texture,
-      engobe,
+      // Technical specifications (JSON arrays for multiple materials)
+      clayIds,
+      glazeIds,
+      engobeIds,
+      lusterIds,
       firingType,
-      luster,
+      stainOxideId,
       dimensions,
       weight,
+      technotes,
+      isDecor,
       notes,
       // Set/Breakdown model support
       isSet,
@@ -138,35 +138,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Auto-generate CodeClient if not provided
-    let finalItemCode: string;
-    if (itemCode) {
-      finalItemCode = itemCode;
-    } else {
-      // Generate code in format: XX-001 (two random capital letters, dash, auto increment minimum 3 digits)
-      const lastItem = await prisma.directoryList.findFirst({
-        orderBy: { id: 'desc' },
-        select: { itemCode: true }
-      });
-
-      let nextNumber = 1;
-      if (lastItem?.itemCode && lastItem.itemCode.includes('-')) {
-        const parts = lastItem.itemCode.split('-');
-        if (parts.length === 2) {
-          const lastNumber = parseInt(parts[1]);
-          if (!isNaN(lastNumber)) {
-            nextNumber = lastNumber + 1;
-          }
-        }
-      }
-
-      // Generate two random capital letters
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      const randomChars = letters[Math.floor(Math.random() * 26)] + letters[Math.floor(Math.random() * 26)];
-
-      finalItemCode = `${randomChars}-${String(nextNumber).padStart(3, '0')}`;
-    }
-
     // Create directory list item
     const directoryList = await prisma.directoryList.create({
       data: {
@@ -174,8 +145,6 @@ export async function POST(request: NextRequest) {
         revisionNumber,
         parentId: parentId ? parseInt(parentId) : null,
         itemName,
-        itemCode: finalItemCode,
-        description,
         collectCode,
         quantity: quantity || 1,
         // Enhanced properties
@@ -184,15 +153,17 @@ export async function POST(request: NextRequest) {
         colorName,
         materialName,
         sizeInfo,
-        // Technical specs
-        clay,
-        glaze,
-        texture,
-        engobe,
+        // Technical specs (JSON arrays for multiple materials)
+        clayIds: clayIds || [],
+        glazeIds: glazeIds || [],
+        engobeIds: engobeIds || [],
+        lusterIds: lusterIds || [],
         firingType,
-        luster,
+        stainOxideId: stainOxideId ? parseInt(stainOxideId) : null,
         dimensions,
-        weight,
+        weight: weight ? parseFloat(weight) : null,
+        technotes,
+        isDecor: isDecor || false,
         notes,
         // Set/Breakdown support
         isSet: isSet || false,
@@ -210,6 +181,14 @@ export async function POST(request: NextRequest) {
             }
           }
         },
+        // Single material relations - temporarily commented out due to schema issues
+        // stainOxide: {
+        //   select: {
+        //     id: true,
+        //     stainOxideCode: true,
+        //     stainOxideDescription: true,
+        //   }
+        // },
         revisions: true,
         parent: true,
       }

@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
         directoryList: {
           select: {
             itemName: true,
-            description: true,
             collectCode: true,
+            technotes: true,
           }
         },
         creator: {
@@ -177,8 +177,8 @@ export async function POST(request: NextRequest) {
         directoryList: {
           select: {
             itemName: true,
-            description: true,
             collectCode: true,
+            technotes: true,
           }
         },
         creator: {

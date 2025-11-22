@@ -72,18 +72,18 @@ export async function POST(request: NextRequest) {
             data: {
               projectId,
               itemName: item.itemName,
-              description: item.description,
               collectCode: item.collectCode,
               quantity: item.quantity || 1,
-              clay: item.clay,
-              glaze: item.glaze,
-              texture: item.texture,
-              engobe: item.engobe,
+              clayIds: item.clayIds,
+              glazeIds: item.glazeIds,
+              engobeIds: item.engobeIds,
+              lusterIds: item.lusterIds,
               firingType: item.firingType,
-              luster: item.luster,
+              stainOxideId: item.stainOxideId,
               dimensions: item.dimensions,
               weight: item.weight,
-              notes: item.notes,
+              technotes: item.technotes,
+              isDecor: item.isDecor,
             }
           });
           directoryItems.push(directoryItem);
