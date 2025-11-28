@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Edit, Trash2, Image, Eye } from "lucide-react";
+import { Plus, FileText, Edit, Trash2, Image, Eye, Upload, X } from "lucide-react";
 
 interface DirectoryList {
   id: number;
@@ -187,7 +187,7 @@ export default function RNDDirectoryPage() {
           setFormModalOpen(true);
         }}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Directory Item
+          Add Item
         </Button>
       </div>
 
@@ -197,17 +197,11 @@ export default function RNDDirectoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[100px]">Photo</TableHead>
-                  <TableHead className="min-w-[120px]">Code</TableHead>
-                  <TableHead className="min-w-[200px]">Category</TableHead>
-                  <TableHead className="min-w-[120px]">Size Info</TableHead>
-                  <TableHead className="min-w-[100px]">Materials</TableHead>
-                  <TableHead className="min-w-[100px]">Color</TableHead>
-                  <TableHead className="min-w-[100px]">Texture</TableHead>
-                  <TableHead className="min-w-[120px]">Final Size</TableHead>
-                  <TableHead className="min-w-[80px]">Qty</TableHead>
-                  <TableHead className="min-w-[150px]">Notes</TableHead>
-                  <TableHead className="min-w-[120px]">Actions</TableHead>
+                  <TableHead className="w-[80px]">Photo</TableHead>
+                  <TableHead className="w-[120px]">Code</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="w-[120px]">Color</TableHead>
+                  <TableHead className="w-[120px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -215,34 +209,37 @@ export default function RNDDirectoryPage() {
                   <TableRow key={item.id}>
                     <TableCell>
                       {item.photos && item.photos.length > 0 ? (
-                        <div className="flex gap-1">
-                          {item.photos.slice(0, 1).map((photo: string, index: number) => (
-                            <img
-                              key={index}
-                              src={photo}
-                              alt={`Photo ${index + 1}`}
-                              className="w-12 h-12 object-cover rounded border"
-                            />
-                          ))}
+                        <div className="flex items-center gap-1">
+                          <img
+                            src={item.photos[0]}
+                            alt={item.itemName}
+                            className="w-12 h-12 object-cover rounded border cursor-pointer hover:opacity-80"
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setDetailModalOpen(true);
+                            }}
+                          />
                           {item.photos.length > 1 && (
-                            <span className="text-xs text-muted-foreground">+{item.photos.length - 1}</span>
+                            <span className="text-xs text-muted-foreground bg-gray-100 px-1 rounded">+{item.photos.length - 1}</span>
                           )}
                         </div>
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-100 rounded border flex items-center justify-center">
+                          <Image className="h-5 w-5 text-gray-400" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">{item.collectCode || "-"}</TableCell>
+                    <TableCell className="font-medium">{item.itemName}</TableCell>
+                    <TableCell>
+                      {item.colorName ? (
+                        <Badge variant="outline">{item.colorName}</Badge>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
                     </TableCell>
-                    <TableCell>{item.collectCode || "-"}</TableCell>
-                    <TableCell className="font-medium">{item.itemName}</TableCell>
-                    <TableCell>{item.sizeInfo || "-"}</TableCell>
-                    <TableCell>{item.materialName || "-"}</TableCell>
-                    <TableCell>{item.colorName || "-"}</TableCell>
-                    <TableCell>{item.textureName || "-"}</TableCell>
-                    <TableCell>{item.dimensions ? JSON.stringify(item.dimensions) : "-"}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{item.notes || "-"}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -250,6 +247,7 @@ export default function RNDDirectoryPage() {
                             setSelectedItem(item);
                             setDetailModalOpen(true);
                           }}
+                          title="View Details"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -260,6 +258,7 @@ export default function RNDDirectoryPage() {
                             setEditingItem(item);
                             setFormModalOpen(true);
                           }}
+                          title="Edit"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -268,6 +267,7 @@ export default function RNDDirectoryPage() {
                           size="sm"
                           className="text-red-600 hover:text-red-700"
                           onClick={() => handleDelete(item.id)}
+                          title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -277,7 +277,7 @@ export default function RNDDirectoryPage() {
                 ))}
                 {directoryLists.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       No directory items created yet
                     </TableCell>
                   </TableRow>
@@ -300,83 +300,157 @@ export default function RNDDirectoryPage() {
 
           {selectedItem && (
             <div className="space-y-6">
-              {/* Basic Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Basic Information</h4>
-                  <div className="space-y-2 text-sm">
-                    <div><strong>Item Name:</strong> {selectedItem.itemName}</div>
-                    <div><strong>Collect Code:</strong> {selectedItem.collectCode || "N/A"}</div>
-                    <div><strong>Quantity:</strong> {selectedItem.quantity}</div>
-                    <div><strong>Status:</strong> <Badge variant={selectedItem.status === "approved" ? "default" : "secondary"}>{selectedItem.status}</Badge></div>
-                    <div><strong>Is Decorative:</strong> {selectedItem.isDecor ? "Yes" : "No"}</div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2">Project Information</h4>
-                  <div className="space-y-2 text-sm">
-                    <div><strong>Project:</strong> {selectedItem.project.projectName}</div>
-                    <div><strong>Client:</strong> {selectedItem.project.client.clientDescription}</div>
-                    <div><strong>Client Code:</strong> {selectedItem.project.client.clientCode}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Enhanced Properties */}
-              <div>
-                <h4 className="font-semibold mb-2">Enhanced Properties</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div><strong>Texture:</strong> {selectedItem.textureName || "N/A"}</div>
-                  <div><strong>Color:</strong> {selectedItem.colorName || "N/A"}</div>
-                  <div><strong>Material:</strong> {selectedItem.materialName || "N/A"}</div>
-                  <div><strong>Size:</strong> {selectedItem.sizeInfo || "N/A"}</div>
-                </div>
-              </div>
-
-              {/* Technical Specifications */}
-              <div>
-                <h4 className="font-semibold mb-2">Technical Specifications</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <div><strong>Clay:</strong> {selectedItem.clayIds && selectedItem.clayIds.length > 0 ? `${selectedItem.clayIds.length} selected` : "N/A"}</div>
-                  <div><strong>KG:</strong> {selectedItem.weight ? `${selectedItem.weight}g` : "N/A"}</div>
-                  <div><strong>Is Decor:</strong> {selectedItem.isDecor ? "Yes" : "No"}</div>
-                  <div><strong>Engobe:</strong> {selectedItem.engobeIds && selectedItem.engobeIds.length > 0 ? `${selectedItem.engobeIds.length} selected` : "N/A"}</div>
-                  <div><strong>Glaze:</strong> {selectedItem.glazeIds && selectedItem.glazeIds.length > 0 ? `${selectedItem.glazeIds.length} selected` : "N/A"}</div>
-                  <div><strong>Stain Oxide:</strong> {selectedItem.stainOxide ? `${selectedItem.stainOxide.stainOxideCode} - ${selectedItem.stainOxide.stainOxideDescription}` : "N/A"}</div>
-                  <div><strong>Firing:</strong> {selectedItem.firingType || "N/A"}</div>
-                  <div><strong>Luster:</strong> {selectedItem.lusterIds && selectedItem.lusterIds.length > 0 ? `${selectedItem.lusterIds.length} selected` : "N/A"}</div>
-                  <div className="col-span-2 md:col-span-3"><strong>Technical Notes:</strong> {selectedItem.technotes || "N/A"}</div>
-                </div>
-              </div>
-
-              {/* Photos */}
+              {/* Photos Section - Prominent at top */}
               {selectedItem.photos && selectedItem.photos.length > 0 && (
                 <div>
-                  <h4 className="font-semibold mb-2">Photos</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <h4 className="font-semibold mb-3">Photos</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {selectedItem.photos.map((photo: string, index: number) => (
                       <img
                         key={index}
                         src={photo}
                         alt={`Photo ${index + 1}`}
-                        className="w-full h-32 object-cover rounded border"
+                        className="w-full h-32 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => window.open(photo, '_blank')}
                       />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Additional Information */}
-              <div>
-                <h4 className="font-semibold mb-2">Additional Information</h4>
-                <div className="text-sm">
-                  <div><strong>Notes:</strong> {selectedItem.notes || "N/A"}</div>
-                  {selectedItem.isSet && (
-                    <div><strong>Set/Breakdown:</strong> Yes - {selectedItem.components ? JSON.stringify(selectedItem.components) : "Components not specified"}</div>
-                  )}
-                </div>
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Basic Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Category:</span> <span className="font-medium">{selectedItem.itemName}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Code:</span> <span className="font-mono">{selectedItem.collectCode || "N/A"}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Quantity:</span> <span>{selectedItem.quantity}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Status:</span> <Badge variant={selectedItem.status === "approved" ? "default" : "secondary"}>{selectedItem.status}</Badge></div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Project Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Project:</span> <span className="font-medium">{selectedItem.project.projectName}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Client:</span> <span>{selectedItem.project.client.clientDescription}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Client Code:</span> <span className="font-mono">{selectedItem.project.client.clientCode}</span></div>
+                  </CardContent>
+                </Card>
               </div>
+
+              {/* Properties Grid */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Properties</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Color</div>
+                      <div className="font-medium">{selectedItem.colorName || "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Texture</div>
+                      <div className="font-medium">{selectedItem.textureName || "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Material</div>
+                      <div className="font-medium">{selectedItem.materialName || "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Size Info</div>
+                      <div className="font-medium">{selectedItem.sizeInfo || "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Final Size</div>
+                      <div className="font-medium">{selectedItem.dimensions ? JSON.stringify(selectedItem.dimensions) : "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Weight (KG)</div>
+                      <div className="font-medium">{selectedItem.weight ? `${selectedItem.weight}` : "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Is Decor</div>
+                      <div className="font-medium">{selectedItem.isDecor ? "Yes" : "No"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Is Set</div>
+                      <div className="font-medium">{selectedItem.isSet ? "Yes" : "No"}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Technical Specifications */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Technical Specifications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Clay</div>
+                      <div className="font-medium">{selectedItem.clayIds && selectedItem.clayIds.length > 0 ? `${selectedItem.clayIds.length} selected` : "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Engobe</div>
+                      <div className="font-medium">{selectedItem.engobeIds && selectedItem.engobeIds.length > 0 ? `${selectedItem.engobeIds.length} selected` : "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Glaze</div>
+                      <div className="font-medium">{selectedItem.glazeIds && selectedItem.glazeIds.length > 0 ? `${selectedItem.glazeIds.length} selected` : "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Stain Oxide</div>
+                      <div className="font-medium">{selectedItem.stainOxide ? `${selectedItem.stainOxide.stainOxideCode} - ${selectedItem.stainOxide.stainOxideDescription}` : "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Luster</div>
+                      <div className="font-medium">{selectedItem.lusterIds && selectedItem.lusterIds.length > 0 ? `${selectedItem.lusterIds.length} selected` : "N/A"}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs uppercase">Firing</div>
+                      <div className="font-medium">{selectedItem.firingType || "N/A"}</div>
+                    </div>
+                  </div>
+                  {selectedItem.technotes && (
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="text-muted-foreground text-xs uppercase mb-1">Technical Notes</div>
+                      <div className="text-sm">{selectedItem.technotes}</div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Notes */}
+              {selectedItem.notes && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm">{selectedItem.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Set/Breakdown Components */}
+              {selectedItem.isSet && selectedItem.components && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Set Components</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-sm bg-gray-50 p-3 rounded">{JSON.stringify(selectedItem.components, null, 2)}</pre>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </DialogContent>
@@ -440,7 +514,11 @@ function DirectoryForm({
     technotes: editingItem?.technotes || "",
     isDecor: editingItem?.isDecor || false,
     notes: editingItem?.notes || "",
+    photos: editingItem?.photos || [],
   });
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [materials, setMaterials] = useState<{
     clays: Material[];
@@ -587,6 +665,48 @@ function DirectoryForm({
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingPhoto(true);
+    try {
+      const newPhotos: string[] = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Convert to base64 for simple storage (in production, use proper file upload)
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        newPhotos.push(base64);
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        photos: [...prev.photos, ...newPhotos]
+      }));
+    } catch (error) {
+      console.error("Error uploading photos:", error);
+      alert("Error uploading photos. Please try again.");
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -599,6 +719,7 @@ function DirectoryForm({
       lusterIds: formData.lusterIds.map(id => parseInt(id)),
       stainOxideId: formData.stainOxideId ? parseInt(formData.stainOxideId) : undefined,
       weight: formData.weight ? parseFloat(formData.weight.toString()) : undefined,
+      photos: formData.photos,
     });
   };
 
@@ -609,8 +730,9 @@ function DirectoryForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="photos">Photos</TabsTrigger>
           <TabsTrigger value="technical">Technical</TabsTrigger>
         </TabsList>
 
@@ -733,6 +855,54 @@ function DirectoryForm({
               rows={3}
             />
           </div>
+        </TabsContent>
+
+        <TabsContent value="photos" className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Product Photos</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handlePhotoUpload}
+                className="hidden"
+                id="photo-upload"
+              />
+              <label htmlFor="photo-upload" className="cursor-pointer">
+                <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                <p className="text-sm text-gray-600">
+                  {uploadingPhoto ? "Uploading..." : "Click to upload photos"}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB each</p>
+              </label>
+            </div>
+          </div>
+
+          {formData.photos.length > 0 && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">Uploaded Photos ({formData.photos.length})</label>
+              <div className="grid grid-cols-3 gap-3">
+                {formData.photos.map((photo, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={photo}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-24 object-cover rounded border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="technical" className="space-y-4">

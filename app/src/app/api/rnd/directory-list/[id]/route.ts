@@ -80,6 +80,7 @@ export async function PUT(
       quantity,
       status,
       // Enhanced properties
+      photos,
       textureName,
       colorName,
       materialName,
@@ -95,6 +96,7 @@ export async function PUT(
       weight,
       technotes,
       isDecor,
+      notes,
     } = body;
 
     // Verify the directory list item exists and user has access
@@ -123,6 +125,7 @@ export async function PUT(
         quantity,
         status,
         // Enhanced properties
+        photos,
         textureName,
         colorName,
         materialName,
@@ -138,6 +141,7 @@ export async function PUT(
         weight,
         technotes,
         isDecor,
+        notes,
       },
       include: {
         project: {

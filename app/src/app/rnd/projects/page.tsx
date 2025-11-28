@@ -678,25 +678,25 @@ export default function RNDProjectsPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-blue-600">{viewingProject.directoryLists.length}</div>
+                      <div className="text-2xl font-bold text-blue-600">{viewingProject.directoryLists?.length || 0}</div>
                       <div className="text-sm text-muted-foreground">Directory Items</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-green-600">{viewingProject.estimates.length}</div>
+                      <div className="text-2xl font-bold text-green-600">{viewingProject.estimates?.length || 0}</div>
                       <div className="text-sm text-muted-foreground">Estimates</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-purple-600">{viewingProject.quotations.length}</div>
+                      <div className="text-2xl font-bold text-purple-600">{viewingProject.quotations?.length || 0}</div>
                       <div className="text-sm text-muted-foreground">Quotations</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-orange-600">{viewingProject.samples.length}</div>
+                      <div className="text-2xl font-bold text-orange-600">{viewingProject.samples?.length || 0}</div>
                       <div className="text-sm text-muted-foreground">Samples</div>
                     </CardContent>
                   </Card>
