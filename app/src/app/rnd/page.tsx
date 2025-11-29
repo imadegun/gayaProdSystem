@@ -100,124 +100,124 @@ export default function RNDDashboard() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">R&D Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight">R&D Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
             Manage client onboarding, projects, and sample development
           </p>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
+            <CardTitle className="text-xs font-medium">Total Projects</CardTitle>
+            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalProjects}</div>
+          <CardContent className="pb-3 px-4">
+            <div className="text-xl font-bold">{stats.totalProjects}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
+            <CardTitle className="text-xs font-medium">Active Projects</CardTitle>
+            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeProjects}</div>
+          <CardContent className="pb-3 px-4">
+            <div className="text-xl font-bold">{stats.activeProjects}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
+            <CardTitle className="text-xs font-medium">Active Clients</CardTitle>
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeClients}</div>
+          <CardContent className="pb-3 px-4">
+            <div className="text-xl font-bold">{stats.activeClients}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed Samples</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
+            <CardTitle className="text-xs font-medium">Completed Samples</CardTitle>
+            <Package className="h-3.5 w-3.5 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.completedSamples}</div>
+          <CardContent className="pb-3 px-4">
+            <div className="text-xl font-bold">{stats.completedSamples}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="projects">Recent Projects</TabsTrigger>
-          <TabsTrigger value="clients">Recent Clients</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3">
+        <TabsList className="h-9">
+          <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+          <TabsTrigger value="projects" className="text-xs">Recent Projects</TabsTrigger>
+          <TabsTrigger value="clients" className="text-xs">Recent Clients</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <TabsContent value="overview" className="space-y-3 mt-3">
+          <div className="grid gap-3 md:grid-cols-2">
             <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common R&D tasks</CardDescription>
+              <CardHeader className="pb-2 pt-3 px-4">
+                <CardTitle className="text-sm">Quick Actions</CardTitle>
+                <CardDescription className="text-xs">Common R&D tasks</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="px-4 pb-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <button className="p-3 text-left border rounded-lg hover:bg-gray-50 transition-colors">
-                    <Plus className="h-5 w-5 mb-1" />
-                    <div className="text-sm font-medium">New Project</div>
+                  <button className="p-2 text-left border rounded-lg hover:bg-gray-50 transition-colors">
+                    <Plus className="h-4 w-4 mb-0.5" />
+                    <div className="text-xs font-medium">New Project</div>
                   </button>
-                  <button className="p-3 text-left border rounded-lg hover:bg-gray-50 transition-colors">
-                    <Users className="h-5 w-5 mb-1" />
-                    <div className="text-sm font-medium">Add Client</div>
+                  <button className="p-2 text-left border rounded-lg hover:bg-gray-50 transition-colors">
+                    <Users className="h-4 w-4 mb-0.5" />
+                    <div className="text-xs font-medium">Add Client</div>
                   </button>
-                  <button className="p-3 text-left border rounded-lg hover:bg-gray-50 transition-colors">
-                    <FileText className="h-5 w-5 mb-1" />
-                    <div className="text-sm font-medium">Directory List</div>
+                  <button className="p-2 text-left border rounded-lg hover:bg-gray-50 transition-colors">
+                    <FileText className="h-4 w-4 mb-0.5" />
+                    <div className="text-xs font-medium">Directory List</div>
                   </button>
-                  <button className="p-3 text-left border rounded-lg hover:bg-gray-50 transition-colors">
-                    <Calculator className="h-5 w-5 mb-1" />
-                    <div className="text-sm font-medium">Create Estimate</div>
+                  <button className="p-2 text-left border rounded-lg hover:bg-gray-50 transition-colors">
+                    <Calculator className="h-4 w-4 mb-0.5" />
+                    <div className="text-xs font-medium">Create Estimate</div>
                   </button>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Workflow Status</CardTitle>
-                <CardDescription>Current project statuses</CardDescription>
+              <CardHeader className="pb-2 pt-3 px-4">
+                <CardTitle className="text-sm">Workflow Status</CardTitle>
+                <CardDescription className="text-xs">Current project statuses</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="px-4 pb-3">
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Draft Projects</span>
-                    <Badge variant="secondary">
+                    <span className="text-xs">Draft Projects</span>
+                    <Badge variant="secondary" className="text-xs py-0 px-1.5">
                       {projects.filter(p => p.status === 'draft').length}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">In Development</span>
-                    <Badge variant="secondary">
+                    <span className="text-xs">In Development</span>
+                    <Badge variant="secondary" className="text-xs py-0 px-1.5">
                       {projects.filter(p => p.status === 'sample_development').length}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Awaiting Approval</span>
-                    <Badge variant="secondary">
+                    <span className="text-xs">Awaiting Approval</span>
+                    <Badge variant="secondary" className="text-xs py-0 px-1.5">
                       {projects.filter(p => p.status === 'quotation_sent').length}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Completed</span>
-                    <Badge variant="secondary">
+                    <span className="text-xs">Completed</span>
+                    <Badge variant="secondary" className="text-xs py-0 px-1.5">
                       {projects.filter(p => p.status === 'completed').length}
                     </Badge>
                   </div>
@@ -227,58 +227,58 @@ export default function RNDDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="projects" className="space-y-4">
+        <TabsContent value="projects" className="space-y-3 mt-3">
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Projects</CardTitle>
-              <CardDescription>Your latest R&D projects</CardDescription>
+            <CardHeader className="pb-2 pt-3 px-4">
+              <CardTitle className="text-sm">Recent Projects</CardTitle>
+              <CardDescription className="text-xs">Your latest R&D projects</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="px-4 pb-3">
+              <div className="space-y-2">
                 {projects.slice(0, 5).map((project) => (
-                  <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={project.id} className="flex items-center justify-between p-2 border rounded-lg">
                     <div>
-                      <h4 className="font-medium">{project.projectName}</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <h4 className="text-sm font-medium">{project.projectName}</h4>
+                      <p className="text-xs text-muted-foreground">
                         {project.client.clientDescription} • {project.creator.username}
                       </p>
                     </div>
-                    <Badge variant={project.status === "completed" ? "default" : "secondary"}>
+                    <Badge variant={project.status === "completed" ? "default" : "secondary"} className="text-xs py-0 px-1.5">
                       {project.status}
                     </Badge>
                   </div>
                 ))}
                 {projects.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">No projects yet</p>
+                  <p className="text-center text-muted-foreground text-sm py-6">No projects yet</p>
                 )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="clients" className="space-y-4">
+        <TabsContent value="clients" className="space-y-3 mt-3">
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Clients</CardTitle>
-              <CardDescription>Your client relationships</CardDescription>
+            <CardHeader className="pb-2 pt-3 px-4">
+              <CardTitle className="text-sm">Recent Clients</CardTitle>
+              <CardDescription className="text-xs">Your client relationships</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="px-4 pb-3">
+              <div className="space-y-2">
                 {clients.slice(0, 5).map((client) => (
-                  <div key={client.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={client.id} className="flex items-center justify-between p-2 border rounded-lg">
                     <div>
-                      <h4 className="font-medium">{client.clientDescription}</h4>
-                      <p className="text-sm text-muted-foreground">
+                      <h4 className="text-sm font-medium">{client.clientDescription}</h4>
+                      <p className="text-xs text-muted-foreground">
                         {client.clientCode} • {client.region || 'No region'}
                       </p>
                     </div>
-                    <Badge variant={client.isActive ? "default" : "secondary"}>
+                    <Badge variant={client.isActive ? "default" : "secondary"} className="text-xs py-0 px-1.5">
                       {client.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </div>
                 ))}
                 {clients.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">No clients yet</p>
+                  <p className="text-center text-muted-foreground text-sm py-6">No clients yet</p>
                 )}
               </div>
             </CardContent>

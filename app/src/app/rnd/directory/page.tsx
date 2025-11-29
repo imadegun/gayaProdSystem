@@ -174,19 +174,19 @@ export default function RNDDirectoryPage() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Directory Lists</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight">Directory Lists</h1>
+          <p className="text-sm text-muted-foreground">
             Manage your product directory items and specifications
           </p>
         </div>
-        <Button onClick={() => {
+        <Button size="sm" onClick={() => {
           setEditingItem(null);
           setFormModalOpen(true);
         }}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4 mr-1" />
           Add Item
         </Button>
       </div>
@@ -194,26 +194,29 @@ export default function RNDDirectoryPage() {
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="text-sm">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[80px]">Photo</TableHead>
-                  <TableHead className="w-[120px]">Code</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="w-[120px]">Color</TableHead>
-                  <TableHead className="w-[120px]">Actions</TableHead>
+                <TableRow className="h-9">
+                  <TableHead className="w-[60px] py-2 px-2">Photo</TableHead>
+                  <TableHead className="w-[100px] py-2 px-2">Code</TableHead>
+                  <TableHead className="py-2 px-2">Category</TableHead>
+                  <TableHead className="py-2 px-2">Info Size</TableHead>
+                  <TableHead className="py-2 px-2">Material</TableHead>
+                  <TableHead className="w-[100px] py-2 px-2">Color</TableHead>
+                  <TableHead className="py-2 px-2">Texture</TableHead>
+                  <TableHead className="w-[100px] py-2 px-2">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {directoryLists.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
+                  <TableRow key={item.id} className="h-12">
+                    <TableCell className="py-1 px-2">
                       {item.photos && item.photos.length > 0 ? (
                         <div className="flex items-center gap-1">
                           <img
                             src={item.photos[0]}
                             alt={item.itemName}
-                            className="w-12 h-12 object-cover rounded border cursor-pointer hover:opacity-80"
+                            className="w-10 h-10 object-cover rounded border cursor-pointer hover:opacity-80"
                             onClick={() => {
                               setSelectedItem(item);
                               setDetailModalOpen(true);
@@ -224,52 +227,58 @@ export default function RNDDirectoryPage() {
                           )}
                         </div>
                       ) : (
-                        <div className="w-12 h-12 bg-gray-100 rounded border flex items-center justify-center">
-                          <Image className="h-5 w-5 text-gray-400" />
+                        <div className="w-10 h-10 bg-gray-100 rounded border flex items-center justify-center">
+                          <Image className="h-4 w-4 text-gray-400" />
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-sm">{item.collectCode || "-"}</TableCell>
-                    <TableCell className="font-medium">{item.itemName}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-mono text-xs py-1 px-2">{item.collectCode || "-"}</TableCell>
+                    <TableCell className="font-medium py-1 px-2">{item.itemName}</TableCell>
+                    <TableCell className="font-medium py-1 px-2">{item.sizeInfo}</TableCell>
+                    <TableCell className="font-medium py-1 px-2">{item.materialName}</TableCell>
+                    <TableCell className="font-medium py-1 px-2">{item.colorName}</TableCell>
+                    {/* <TableCell className="py-1 px-2">
                       {item.colorName ? (
-                        <Badge variant="outline">{item.colorName}</Badge>
+                        <Badge variant="outline" className="text-xs py-0 px-1">{item.colorName}</Badge>
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        <span className="text-muted-foreground text-xs">-</span>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
+                    </TableCell> */}
+                    <TableCell className="font-medium py-1 px-2">{item.textureName}</TableCell>
+                    <TableCell className="py-1 px-2">
+                      <div className="flex gap-0.5">
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-7 w-7 p-0"
                           onClick={() => {
                             setSelectedItem(item);
                             setDetailModalOpen(true);
                           }}
                           title="View Details"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-7 w-7 p-0"
                           onClick={() => {
                             setEditingItem(item);
                             setFormModalOpen(true);
                           }}
                           title="Edit"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-red-600 hover:text-red-700"
+                          className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
                           onClick={() => handleDelete(item.id)}
                           title="Delete"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>
@@ -277,7 +286,7 @@ export default function RNDDirectoryPage() {
                 ))}
                 {directoryLists.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground text-sm">
                       No directory items created yet
                     </TableCell>
                   </TableRow>
@@ -288,182 +297,22 @@ export default function RNDDirectoryPage() {
         </CardContent>
       </Card>
 
-      {/* Technical Sheet Detail Modal */}
-      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Technical Sheet - {selectedItem?.itemName}</DialogTitle>
-            <DialogDescription>
-              Complete technical specifications and properties
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedItem && (
-            <div className="space-y-6">
-              {/* Photos Section - Prominent at top */}
-              {selectedItem.photos && selectedItem.photos.length > 0 && (
-                <div>
-                  <h4 className="font-semibold mb-3">Photos</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {selectedItem.photos.map((photo: string, index: number) => (
-                      <img
-                        key={index}
-                        src={photo}
-                        alt={`Photo ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => window.open(photo, '_blank')}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Basic Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Category:</span> <span className="font-medium">{selectedItem.itemName}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Code:</span> <span className="font-mono">{selectedItem.collectCode || "N/A"}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Quantity:</span> <span>{selectedItem.quantity}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Status:</span> <Badge variant={selectedItem.status === "approved" ? "default" : "secondary"}>{selectedItem.status}</Badge></div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Project Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Project:</span> <span className="font-medium">{selectedItem.project.projectName}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Client:</span> <span>{selectedItem.project.client.clientDescription}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Client Code:</span> <span className="font-mono">{selectedItem.project.client.clientCode}</span></div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Properties Grid */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Properties</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Color</div>
-                      <div className="font-medium">{selectedItem.colorName || "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Texture</div>
-                      <div className="font-medium">{selectedItem.textureName || "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Material</div>
-                      <div className="font-medium">{selectedItem.materialName || "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Size Info</div>
-                      <div className="font-medium">{selectedItem.sizeInfo || "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Final Size</div>
-                      <div className="font-medium">{selectedItem.dimensions ? JSON.stringify(selectedItem.dimensions) : "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Weight (KG)</div>
-                      <div className="font-medium">{selectedItem.weight ? `${selectedItem.weight}` : "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Is Decor</div>
-                      <div className="font-medium">{selectedItem.isDecor ? "Yes" : "No"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Is Set</div>
-                      <div className="font-medium">{selectedItem.isSet ? "Yes" : "No"}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Technical Specifications */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Technical Specifications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Clay</div>
-                      <div className="font-medium">{selectedItem.clayIds && selectedItem.clayIds.length > 0 ? `${selectedItem.clayIds.length} selected` : "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Engobe</div>
-                      <div className="font-medium">{selectedItem.engobeIds && selectedItem.engobeIds.length > 0 ? `${selectedItem.engobeIds.length} selected` : "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Glaze</div>
-                      <div className="font-medium">{selectedItem.glazeIds && selectedItem.glazeIds.length > 0 ? `${selectedItem.glazeIds.length} selected` : "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Stain Oxide</div>
-                      <div className="font-medium">{selectedItem.stainOxide ? `${selectedItem.stainOxide.stainOxideCode} - ${selectedItem.stainOxide.stainOxideDescription}` : "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Luster</div>
-                      <div className="font-medium">{selectedItem.lusterIds && selectedItem.lusterIds.length > 0 ? `${selectedItem.lusterIds.length} selected` : "N/A"}</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-muted-foreground text-xs uppercase">Firing</div>
-                      <div className="font-medium">{selectedItem.firingType || "N/A"}</div>
-                    </div>
-                  </div>
-                  {selectedItem.technotes && (
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="text-muted-foreground text-xs uppercase mb-1">Technical Notes</div>
-                      <div className="text-sm">{selectedItem.technotes}</div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Notes */}
-              {selectedItem.notes && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Notes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm">{selectedItem.notes}</p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Set/Breakdown Components */}
-              {selectedItem.isSet && selectedItem.components && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Set Components</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <pre className="text-sm bg-gray-50 p-3 rounded">{JSON.stringify(selectedItem.components, null, 2)}</pre>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Technical Sheet Detail Modal with Tabs */}
+      <DetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        selectedItem={selectedItem}
+        materials={null}
+      />
 
       {/* Create/Edit Form Modal */}
       <Dialog open={formModalOpen} onOpenChange={setFormModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">
               {editingItem ? "Edit Directory Item" : "Add Directory Item"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm">
               {editingItem ? "Update the directory item details" : "Create a new directory item"}
             </DialogDescription>
           </DialogHeader>
@@ -478,6 +327,287 @@ export default function RNDDirectoryPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// Detail Modal Component with Tabs
+function DetailModal({
+  open,
+  onOpenChange,
+  selectedItem,
+  materials
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedItem: DirectoryList | null;
+  materials: any;
+}) {
+  const [activeTab, setActiveTab] = useState("basic");
+  const [loadedMaterials, setLoadedMaterials] = useState<{
+    clays: any[];
+    glazes: any[];
+    engobes: any[];
+    lusters: any[];
+    stainOxides: any[];
+  }>({
+    clays: [],
+    glazes: [],
+    engobes: [],
+    lusters: [],
+    stainOxides: [],
+  });
+
+  // Fetch materials when modal opens
+  useEffect(() => {
+    if (open && selectedItem) {
+      fetchMaterialsForDetail();
+    }
+  }, [open, selectedItem]);
+
+  const fetchMaterialsForDetail = async () => {
+    try {
+      const [clayRes, glazeRes, engobeRes, lusterRes, stainOxideRes] = await Promise.all([
+        fetch("/api/rnd/materials/clay"),
+        fetch("/api/rnd/materials/glaze"),
+        fetch("/api/rnd/materials/engobe"),
+        fetch("/api/rnd/materials/luster"),
+        fetch("/api/rnd/materials/stainoxide"),
+      ]);
+
+      const [clayData, glazeData, engobeData, lusterData, stainOxideData] = await Promise.all([
+        clayRes.json(),
+        glazeRes.json(),
+        engobeRes.json(),
+        lusterRes.json(),
+        stainOxideRes.json(),
+      ]);
+
+      setLoadedMaterials({
+        clays: clayData.clays || [],
+        glazes: glazeData.glazes || [],
+        engobes: engobeData.engobes || [],
+        lusters: lusterData.lusters || [],
+        stainOxides: stainOxideData.stainOxides || [],
+      });
+    } catch (error) {
+      console.error("Error fetching materials:", error);
+    }
+  };
+
+  // Helper function to get material names by IDs
+  const getMaterialNames = (ids: number[] | undefined, materials: any[], codeField: string, descField: string) => {
+    if (!ids || ids.length === 0) return "N/A";
+    const names = ids.map(id => {
+      const material = materials.find((m: any) => m.id === id);
+      return material ? `${material[codeField]} - ${material[descField]}` : `ID: ${id}`;
+    });
+    return names.join(", ");
+  };
+
+  if (!selectedItem) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto p-4">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg">Technical Sheet - {selectedItem.itemName}</DialogTitle>
+          <DialogDescription className="text-sm">
+            Complete technical specifications and properties
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Main Layout: Image on left, Project info on right */}
+        <div className="flex gap-4 mb-4">
+          {/* Left side - Image thumbnail */}
+          <div className="flex-shrink-0 w-32">
+            {selectedItem.photos && selectedItem.photos.length > 0 ? (
+              <div className="space-y-2">
+                <img
+                  src={selectedItem.photos[0]}
+                  alt={selectedItem.itemName}
+                  className="w-32 h-32 object-cover rounded-lg border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => window.open(selectedItem.photos![0], '_blank')}
+                />
+                {selectedItem.photos.length > 1 && (
+                  <div className="flex gap-1 flex-wrap">
+                    {selectedItem.photos.slice(1, 4).map((photo: string, index: number) => (
+                      <img
+                        key={index}
+                        src={photo}
+                        alt={`Photo ${index + 2}`}
+                        className="w-9 h-9 object-cover rounded border cursor-pointer hover:opacity-80"
+                        onClick={() => window.open(photo, '_blank')}
+                      />
+                    ))}
+                    {selectedItem.photos.length > 4 && (
+                      <div className="w-9 h-9 bg-gray-100 rounded border flex items-center justify-center text-xs text-muted-foreground">
+                        +{selectedItem.photos.length - 4}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="w-32 h-32 bg-gray-100 rounded-lg border flex items-center justify-center">
+                <Image className="h-8 w-8 text-gray-400" />
+              </div>
+            )}
+          </div>
+
+          {/* Right side - Project Information */}
+          <div className="flex-1 min-w-0">
+            <div className="bg-gray-50 rounded-lg p-3 h-full">
+              <h4 className="font-semibold text-sm mb-2">Project Information</h4>
+              <div className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm">
+                <div className="flex justify-left">
+                  <span className="text-muted-foreground text-xs">Title:</span>
+                  <span className="font-medium text-xs truncate ml-2">{selectedItem.project.projectName}</span>
+                </div>
+                <div className="flex justify-left">
+                  <span className="text-muted-foreground text-xs">Client:</span>
+                  <span className="text-xs truncate ml-2">{selectedItem.project.client.clientDescription}</span>
+                </div>
+             
+                <div className="flex justify-left">
+                  <span className="text-muted-foreground text-xs">Status:</span>
+                  <Badge variant={selectedItem.status === "approved" ? "default" : "secondary"} className="text-xs py-0 px-1 h-5">{selectedItem.status}</Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs for detailed information */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-9">
+            <TabsTrigger value="basic" className="text-xs">Basic Information</TabsTrigger>
+            <TabsTrigger value="properties" className="text-xs">Properties</TabsTrigger>
+            <TabsTrigger value="technical" className="text-xs">Technical Spec</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="basic" className="mt-3 space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Category</div>
+                <div className="font-medium text-sm">{selectedItem.itemName}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Code</div>
+                <div className="font-mono text-sm">{selectedItem.collectCode || "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Quantity</div>
+                <div className="font-medium text-sm">{selectedItem.quantity}</div>
+              </div>
+              {/* <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Is Set</div>
+                <div className="font-medium text-sm">{selectedItem.isSet ? "Yes" : "No"}</div>
+              </div> */}
+            </div>
+
+            {/* Notes */}
+            {selectedItem.notes && (
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Notes</div>
+                <p className="text-sm">{selectedItem.notes}</p>
+              </div>
+            )}
+
+            {/* Set Components */}
+            {selectedItem.isSet && selectedItem.components && (
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Set Components</div>
+                <pre className="text-xs bg-white p-2 rounded border overflow-x-auto">{JSON.stringify(selectedItem.components, null, 2)}</pre>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="properties" className="mt-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Color</div>
+                <div className="font-medium text-sm">{selectedItem.colorName || "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Texture</div>
+                <div className="font-medium text-sm">{selectedItem.textureName || "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Material</div>
+                <div className="font-medium text-sm">{selectedItem.materialName || "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Size Info</div>
+                <div className="font-medium text-sm">{selectedItem.sizeInfo || "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Final Size</div>
+                <div className="font-medium text-sm">{selectedItem.dimensions ? JSON.stringify(selectedItem.dimensions) : "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Weight (KG)</div>
+                <div className="font-medium text-sm">{selectedItem.weight ? `${selectedItem.weight}` : "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Is Decor</div>
+                <div className="font-medium text-sm">{selectedItem.isDecor ? "Yes" : "No"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Is Set</div>
+                <div className="font-medium text-sm">{selectedItem.isSet ? "Yes" : "No"}</div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="technical" className="mt-3 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Clay</div>
+                <div className="font-medium text-sm">
+                  {getMaterialNames(selectedItem.clayIds, loadedMaterials.clays, 'clayCode', 'clayDescription')}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Engobe</div>
+                <div className="font-medium text-sm">
+                  {getMaterialNames(selectedItem.engobeIds, loadedMaterials.engobes, 'engobeCode', 'engobeDescription')}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Glaze</div>
+                <div className="font-medium text-sm">
+                  {getMaterialNames(selectedItem.glazeIds, loadedMaterials.glazes, 'glazeCode', 'glazeDescription')}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Stain Oxide</div>
+                <div className="font-medium text-sm">
+                  {selectedItem.stainOxide ? `${selectedItem.stainOxide.stainOxideCode} - ${selectedItem.stainOxide.stainOxideDescription}` : "N/A"}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Luster</div>
+                <div className="font-medium text-sm">
+                  {getMaterialNames(selectedItem.lusterIds, loadedMaterials.lusters, 'lustreCode', 'lustreDescription')}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Firing</div>
+                <div className="font-medium text-sm">{selectedItem.firingType || "N/A"}</div>
+              </div>
+            </div>
+
+            {/* Technical Notes */}
+            {selectedItem.technotes && (
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Technical Notes</div>
+                <p className="text-sm">{selectedItem.technotes}</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -728,22 +858,22 @@ function DirectoryForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="photos">Photos</TabsTrigger>
-          <TabsTrigger value="technical">Technical</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 h-9">
+          <TabsTrigger value="general" className="text-xs">General</TabsTrigger>
+          <TabsTrigger value="photos" className="text-xs">Photos</TabsTrigger>
+          <TabsTrigger value="technical" className="text-xs">Technical Sheet</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TabsContent value="general" className="space-y-3 mt-3">
+           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
              <div>
-               <label className="text-sm font-medium">Project</label>
+               <label className="text-xs font-medium">Project</label>
                <select
                  value={formData.projectId}
                  onChange={(e) => handleChange("projectId", e.target.value)}
-                 className="w-full p-2 border rounded"
+                 className="w-full p-1.5 text-sm border rounded"
                  required
                >
                  <option value="">Select Project</option>
@@ -756,31 +886,31 @@ function DirectoryForm({
              </div>
 
              <div>
-               <label className="text-sm font-medium">Category (Item Name)</label>
+               <label className="text-xs font-medium">Category (Item Name)</label>
                <input
                  type="text"
                  value={formData.itemName}
                  onChange={(e) => handleChange("itemName", e.target.value)}
-                 className="w-full p-2 border rounded"
+                 className="w-full p-1.5 text-sm border rounded"
                  required
                />
              </div>
 
-             <div className="md:col-span-2">
-               <label className="text-sm font-medium">Code</label>
-               <div className="flex gap-2">
+             <div>
+               <label className="text-xs font-medium">Code</label>
+               <div className="flex gap-1">
                  <input
                    type="text"
                    value={formData.collectCode}
                    onChange={(e) => handleChange("collectCode", e.target.value)}
-                   className="flex-1 p-2 border rounded"
-                   placeholder="Auto-generated or manual entry"
+                   className="flex-1 p-1.5 text-sm border rounded"
+                   placeholder="Auto or manual"
                  />
                  <Button
                    type="button"
                    variant="outline"
                    size="sm"
-                   className="whitespace-nowrap"
+                   className="text-xs h-8 px-2"
                    onClick={async () => {
                      const code = await generateCollectCode();
                      if (code) {
@@ -788,58 +918,58 @@ function DirectoryForm({
                      }
                    }}
                  >
-                   Generate
+                   Gen
                  </Button>
                </div>
              </div>
 
              <div>
-               <label className="text-sm font-medium">Size Info</label>
+               <label className="text-xs font-medium">Size Info</label>
                <input
                  type="text"
                  value={formData.sizeInfo}
                  onChange={(e) => handleChange("sizeInfo", e.target.value)}
-                 className="w-full p-2 border rounded"
+                 className="w-full p-1.5 text-sm border rounded"
                />
              </div>
 
              <div>
-               <label className="text-sm font-medium">Materials</label>
+               <label className="text-xs font-medium">Materials</label>
                <input
                  type="text"
                  value={formData.materialName}
                  onChange={(e) => handleChange("materialName", e.target.value)}
-                 className="w-full p-2 border rounded"
+                 className="w-full p-1.5 text-sm border rounded"
                />
              </div>
 
              <div>
-               <label className="text-sm font-medium">Color</label>
+               <label className="text-xs font-medium">Color</label>
                <input
                  type="text"
                  value={formData.colorName}
                  onChange={(e) => handleChange("colorName", e.target.value)}
-                 className="w-full p-2 border rounded"
+                 className="w-full p-1.5 text-sm border rounded"
                />
              </div>
 
              <div>
-               <label className="text-sm font-medium">Texture</label>
+               <label className="text-xs font-medium">Texture</label>
                <input
                  type="text"
                  value={formData.textureName}
                  onChange={(e) => handleChange("textureName", e.target.value)}
-                 className="w-full p-2 border rounded"
+                 className="w-full p-1.5 text-sm border rounded"
                />
              </div>
 
              <div>
-               <label className="text-sm font-medium">Qty</label>
+               <label className="text-xs font-medium">Qty</label>
                <input
                  type="number"
                  value={formData.quantity}
                  onChange={(e) => handleChange("quantity", e.target.value)}
-                 className="w-full p-2 border rounded"
+                 className="w-full p-1.5 text-sm border rounded"
                  min="1"
                  required
                />
@@ -847,20 +977,20 @@ function DirectoryForm({
            </div>
 
           <div>
-            <label className="text-sm font-medium">Notes</label>
+            <label className="text-xs font-medium">Notes</label>
             <textarea
               value={formData.notes}
               onChange={(e) => handleChange("notes", e.target.value)}
-              className="w-full p-2 border rounded"
-              rows={3}
+              className="w-full p-1.5 text-sm border rounded"
+              rows={2}
             />
           </div>
         </TabsContent>
 
-        <TabsContent value="photos" className="space-y-4">
+        <TabsContent value="photos" className="space-y-3 mt-3">
           <div>
-            <label className="text-sm font-medium mb-2 block">Product Photos</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <label className="text-xs font-medium mb-1 block">Product Photos</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -871,32 +1001,32 @@ function DirectoryForm({
                 id="photo-upload"
               />
               <label htmlFor="photo-upload" className="cursor-pointer">
-                <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600">
+                <Upload className="h-6 w-6 mx-auto text-gray-400 mb-1" />
+                <p className="text-xs text-gray-600">
                   {uploadingPhoto ? "Uploading..." : "Click to upload photos"}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB each</p>
+                <p className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</p>
               </label>
             </div>
           </div>
 
           {formData.photos.length > 0 && (
             <div>
-              <label className="text-sm font-medium mb-2 block">Uploaded Photos ({formData.photos.length})</label>
-              <div className="grid grid-cols-3 gap-3">
+              <label className="text-xs font-medium mb-1 block">Uploaded Photos ({formData.photos.length})</label>
+              <div className="grid grid-cols-4 gap-2">
                 {formData.photos.map((photo, index) => (
                   <div key={index} className="relative group">
                     <img
                       src={photo}
                       alt={`Photo ${index + 1}`}
-                      className="w-full h-24 object-cover rounded border"
+                      className="w-full h-16 object-cover rounded border"
                     />
                     <button
                       type="button"
                       onClick={() => removePhoto(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-2.5 w-2.5" />
                     </button>
                   </div>
                 ))}
@@ -905,12 +1035,12 @@ function DirectoryForm({
           )}
         </TabsContent>
 
-        <TabsContent value="technical" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <TabsContent value="technical" className="space-y-3 mt-3">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-sm font-medium">Clay</label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
+              <label className="text-xs font-medium">Clay</label>
+              <div className="space-y-1">
+                <div className="flex gap-1">
                   <Select
                     value=""
                     onValueChange={(value) => {
@@ -919,14 +1049,14 @@ function DirectoryForm({
                       }
                     }}
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select clay material" />
+                    <SelectTrigger className="flex-1 h-8 text-xs">
+                      <SelectValue placeholder="Select clay" />
                     </SelectTrigger>
                     <SelectContent>
                       {materials.clays
                         .filter((clay: any) => !formData.clayIds.includes(clay.id.toString()))
                         .map((clay: any) => (
-                          <SelectItem key={clay.id} value={clay.id.toString()}>
+                          <SelectItem key={clay.id} value={clay.id.toString()} className="text-xs">
                             {clay.clayCode} - {clay.clayDescription}
                           </SelectItem>
                         ))}
@@ -936,22 +1066,23 @@ function DirectoryForm({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => setShowAddMaterial(prev => ({ ...prev, clay: !prev.clay }))}
                   >
                     +
                   </Button>
                 </div>
                 {formData.clayIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-0.5">
                     {formData.clayIds.map((id) => {
                       const clay = materials.clays.find((c: any) => c.id.toString() === id);
                       return (
-                        <Badge key={id} variant="secondary" className="text-xs">
-                          {clay ? `${clay.clayCode} - ${clay.clayDescription}` : id}
+                        <Badge key={id} variant="secondary" className="text-xs py-0 px-1">
+                          {clay ? `${clay.clayCode}` : id}
                           <button
                             type="button"
                             onClick={() => handleChange("clayIds", formData.clayIds.filter(cid => cid !== id))}
-                            className="ml-1 text-red-500 hover:text-red-700"
+                            className="ml-0.5 text-red-500 hover:text-red-700"
                           >
                             ×
                           </button>
@@ -961,7 +1092,7 @@ function DirectoryForm({
                   </div>
                 )}
                 {showAddMaterial.clay && (
-                  <div className="mt-2 p-2 border rounded bg-gray-50">
+                  <div className="p-1.5 border rounded bg-gray-50 space-y-1">
                     <input
                       type="text"
                       placeholder="Code"
@@ -970,7 +1101,7 @@ function DirectoryForm({
                         ...prev,
                         clay: { ...prev.clay, code: e.target.value }
                       }))}
-                      className="w-full p-1 mb-1 border rounded text-sm"
+                      className="w-full p-1 text-xs border rounded"
                     />
                     <input
                       type="text"
@@ -980,11 +1111,12 @@ function DirectoryForm({
                         ...prev,
                         clay: { ...prev.clay, description: e.target.value }
                       }))}
-                      className="w-full p-1 mb-1 border rounded text-sm"
+                      className="w-full p-1 text-xs border rounded"
                     />
                     <Button
                       type="button"
                       size="sm"
+                      className="h-6 text-xs"
                       onClick={async () => {
                         try {
                           const response = await fetch("/api/rnd/materials/clay", {
@@ -999,7 +1131,6 @@ function DirectoryForm({
                           if (response.ok) {
                             const newClayData = await response.json();
                             await fetchMaterials();
-                            // Auto-select the newly created material
                             if (newClayData.clay && !formData.clayIds.includes(newClayData.clay.id.toString())) {
                               handleChange("clayIds", [...formData.clayIds, newClayData.clay.id.toString()]);
                             }
@@ -1011,7 +1142,7 @@ function DirectoryForm({
                         }
                       }}
                     >
-                      Add Clay
+                      Add
                     </Button>
                   </div>
                 )}
@@ -1019,29 +1150,30 @@ function DirectoryForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium">KG (Weight)</label>
+              <label className="text-xs font-medium">KG (Weight)</label>
               <input
                 type="number"
                 value={formData.weight}
                 onChange={(e) => handleChange("weight", e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full p-1.5 text-sm border rounded"
                 step="0.01"
               />
             </div>
 
-            <div className="flex items-center">
-              <label className="text-sm font-medium mr-2">Is Decor:</label>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium">Is Decor:</label>
               <input
                 type="checkbox"
                 checked={formData.isDecor}
                 onChange={(e) => handleChange("isDecor", e.target.checked)}
+                className="h-4 w-4"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium">Engobe</label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
+              <label className="text-xs font-medium">Engobe</label>
+              <div className="space-y-1">
+                <div className="flex gap-1">
                   <Select
                     value=""
                     onValueChange={(value) => {
@@ -1050,14 +1182,14 @@ function DirectoryForm({
                       }
                     }}
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select engobe material" />
+                    <SelectTrigger className="flex-1 h-8 text-xs">
+                      <SelectValue placeholder="Select engobe" />
                     </SelectTrigger>
                     <SelectContent>
                       {materials.engobes
                         .filter((engobe: any) => !formData.engobeIds.includes(engobe.id.toString()))
                         .map((engobe: any) => (
-                          <SelectItem key={engobe.id} value={engobe.id.toString()}>
+                          <SelectItem key={engobe.id} value={engobe.id.toString()} className="text-xs">
                             {engobe.engobeCode} - {engobe.engobeDescription}
                           </SelectItem>
                         ))}
@@ -1067,22 +1199,23 @@ function DirectoryForm({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => setShowAddMaterial(prev => ({ ...prev, engobe: !prev.engobe }))}
                   >
                     +
                   </Button>
                 </div>
                 {formData.engobeIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-0.5">
                     {formData.engobeIds.map((id) => {
                       const engobe = materials.engobes.find((e: any) => e.id.toString() === id);
                       return (
-                        <Badge key={id} variant="secondary" className="text-xs">
-                          {engobe ? `${engobe.engobeCode} - ${engobe.engobeDescription}` : id}
+                        <Badge key={id} variant="secondary" className="text-xs py-0 px-1">
+                          {engobe ? `${engobe.engobeCode}` : id}
                           <button
                             type="button"
                             onClick={() => handleChange("engobeIds", formData.engobeIds.filter(eid => eid !== id))}
-                            className="ml-1 text-red-500 hover:text-red-700"
+                            className="ml-0.5 text-red-500 hover:text-red-700"
                           >
                             ×
                           </button>
@@ -1092,7 +1225,7 @@ function DirectoryForm({
                   </div>
                 )}
                 {showAddMaterial.engobe && (
-                  <div className="mt-2 p-2 border rounded bg-gray-50">
+                  <div className="p-1.5 border rounded bg-gray-50 space-y-1">
                     <input
                       type="text"
                       placeholder="Code"
@@ -1101,7 +1234,7 @@ function DirectoryForm({
                         ...prev,
                         engobe: { ...prev.engobe, code: e.target.value }
                       }))}
-                      className="w-full p-1 mb-1 border rounded text-sm"
+                      className="w-full p-1 text-xs border rounded"
                     />
                     <input
                       type="text"
@@ -1111,11 +1244,12 @@ function DirectoryForm({
                         ...prev,
                         engobe: { ...prev.engobe, description: e.target.value }
                       }))}
-                      className="w-full p-1 mb-1 border rounded text-sm"
+                      className="w-full p-1 text-xs border rounded"
                     />
                     <Button
                       type="button"
                       size="sm"
+                      className="h-6 text-xs"
                       onClick={async () => {
                         try {
                           const response = await fetch("/api/rnd/materials/engobe", {
@@ -1137,7 +1271,7 @@ function DirectoryForm({
                         }
                       }}
                     >
-                      Add Engobe
+                      Add
                     </Button>
                   </div>
                 )}
@@ -1145,9 +1279,9 @@ function DirectoryForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium">Glaze</label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
+              <label className="text-xs font-medium">Glaze</label>
+              <div className="space-y-1">
+                <div className="flex gap-1">
                   <Select
                     value=""
                     onValueChange={(value) => {
@@ -1156,14 +1290,14 @@ function DirectoryForm({
                       }
                     }}
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select glaze material" />
+                    <SelectTrigger className="flex-1 h-8 text-xs">
+                      <SelectValue placeholder="Select glaze" />
                     </SelectTrigger>
                     <SelectContent>
                       {materials.glazes
                         .filter((glaze: any) => !formData.glazeIds.includes(glaze.id.toString()))
                         .map((glaze: any) => (
-                          <SelectItem key={glaze.id} value={glaze.id.toString()}>
+                          <SelectItem key={glaze.id} value={glaze.id.toString()} className="text-xs">
                             {glaze.glazeCode} - {glaze.glazeDescription}
                           </SelectItem>
                         ))}
@@ -1173,22 +1307,23 @@ function DirectoryForm({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => setShowAddMaterial(prev => ({ ...prev, glaze: !prev.glaze }))}
                   >
                     +
                   </Button>
                 </div>
                 {formData.glazeIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-0.5">
                     {formData.glazeIds.map((id) => {
                       const glaze = materials.glazes.find((g: any) => g.id.toString() === id);
                       return (
-                        <Badge key={id} variant="secondary" className="text-xs">
-                          {glaze ? `${glaze.glazeCode} - ${glaze.glazeDescription}` : id}
+                        <Badge key={id} variant="secondary" className="text-xs py-0 px-1">
+                          {glaze ? `${glaze.glazeCode}` : id}
                           <button
                             type="button"
                             onClick={() => handleChange("glazeIds", formData.glazeIds.filter(gid => gid !== id))}
-                            className="ml-1 text-red-500 hover:text-red-700"
+                            className="ml-0.5 text-red-500 hover:text-red-700"
                           >
                             ×
                           </button>
@@ -1198,7 +1333,7 @@ function DirectoryForm({
                   </div>
                 )}
                 {showAddMaterial.glaze && (
-                  <div className="mt-2 p-2 border rounded bg-gray-50">
+                  <div className="p-1.5 border rounded bg-gray-50 space-y-1">
                     <input
                       type="text"
                       placeholder="Code"
@@ -1207,7 +1342,7 @@ function DirectoryForm({
                         ...prev,
                         glaze: { ...prev.glaze, code: e.target.value }
                       }))}
-                      className="w-full p-1 mb-1 border rounded text-sm"
+                      className="w-full p-1 text-xs border rounded"
                     />
                     <input
                       type="text"
@@ -1217,11 +1352,12 @@ function DirectoryForm({
                         ...prev,
                         glaze: { ...prev.glaze, description: e.target.value }
                       }))}
-                      className="w-full p-1 mb-1 border rounded text-sm"
+                      className="w-full p-1 text-xs border rounded"
                     />
                     <Button
                       type="button"
                       size="sm"
+                      className="h-6 text-xs"
                       onClick={async () => {
                         try {
                           const response = await fetch("/api/rnd/materials/glaze", {
@@ -1243,7 +1379,7 @@ function DirectoryForm({
                         }
                       }}
                     >
-                      Add Glaze
+                      Add
                     </Button>
                   </div>
                 )}
@@ -1251,17 +1387,17 @@ function DirectoryForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium">Stain Oxide</label>
+              <label className="text-xs font-medium">Stain Oxide</label>
               <Select
                 value={formData.stainOxideId}
                 onValueChange={(value) => handleChange("stainOxideId", value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="Select stain oxide" />
                 </SelectTrigger>
                 <SelectContent>
                   {materials.stainOxides.map((stainOxide: any) => (
-                    <SelectItem key={stainOxide.id} value={stainOxide.id.toString()}>
+                    <SelectItem key={stainOxide.id} value={stainOxide.id.toString()} className="text-xs">
                       {stainOxide.stainOxideCode} - {stainOxide.stainOxideDescription}
                     </SelectItem>
                   ))}
@@ -1270,19 +1406,19 @@ function DirectoryForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium">Firing</label>
+              <label className="text-xs font-medium">Firing</label>
               <input
                 type="text"
                 value={formData.firingType}
                 onChange={(e) => handleChange("firingType", e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full p-1.5 text-sm border rounded"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium">Luster</label>
-              <div className="space-y-2">
-                <div className="flex gap-2">
+              <label className="text-xs font-medium">Luster</label>
+              <div className="space-y-1">
+                <div className="flex gap-1">
                   <Select
                     value=""
                     onValueChange={(value) => {
@@ -1291,14 +1427,14 @@ function DirectoryForm({
                       }
                     }}
                   >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select luster material" />
+                    <SelectTrigger className="flex-1 h-8 text-xs">
+                      <SelectValue placeholder="Select luster" />
                     </SelectTrigger>
                     <SelectContent>
                       {materials.lusters
                         .filter((luster: any) => !formData.lusterIds.includes(luster.id.toString()))
                         .map((luster: any) => (
-                          <SelectItem key={luster.id} value={luster.id.toString()}>
+                          <SelectItem key={luster.id} value={luster.id.toString()} className="text-xs">
                             {luster.lustreCode} - {luster.lustreDescription}
                           </SelectItem>
                         ))}
@@ -1308,22 +1444,23 @@ function DirectoryForm({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="h-8 w-8 p-0"
                     onClick={() => setShowAddMaterial(prev => ({ ...prev, luster: !prev.luster }))}
                   >
                     +
                   </Button>
                 </div>
                 {formData.lusterIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-0.5">
                     {formData.lusterIds.map((id) => {
                       const luster = materials.lusters.find((l: any) => l.id.toString() === id);
                       return (
-                        <Badge key={id} variant="secondary" className="text-xs">
-                          {luster ? `${luster.lustreCode} - ${luster.lustreDescription}` : id}
+                        <Badge key={id} variant="secondary" className="text-xs py-0 px-1">
+                          {luster ? `${luster.lustreCode}` : id}
                           <button
                             type="button"
                             onClick={() => handleChange("lusterIds", formData.lusterIds.filter(lid => lid !== id))}
-                            className="ml-1 text-red-500 hover:text-red-700"
+                            className="ml-0.5 text-red-500 hover:text-red-700"
                           >
                             ×
                           </button>
@@ -1333,7 +1470,7 @@ function DirectoryForm({
                   </div>
                 )}
                 {showAddMaterial.luster && (
-                  <div className="mt-2 p-2 border rounded bg-gray-50">
+                  <div className="p-1.5 border rounded bg-gray-50 space-y-1">
                     <input
                       type="text"
                       placeholder="Code"
@@ -1342,7 +1479,7 @@ function DirectoryForm({
                         ...prev,
                         luster: { ...prev.luster, code: e.target.value }
                       }))}
-                      className="w-full p-1 mb-1 border rounded text-sm"
+                      className="w-full p-1 text-xs border rounded"
                     />
                     <input
                       type="text"
@@ -1352,11 +1489,12 @@ function DirectoryForm({
                         ...prev,
                         luster: { ...prev.luster, description: e.target.value }
                       }))}
-                      className="w-full p-1 mb-1 border rounded text-sm"
+                      className="w-full p-1 text-xs border rounded"
                     />
                     <Button
                       type="button"
                       size="sm"
+                      className="h-6 text-xs"
                       onClick={async () => {
                         try {
                           const response = await fetch("/api/rnd/materials/luster", {
@@ -1378,7 +1516,7 @@ function DirectoryForm({
                         }
                       }}
                     >
-                      Add Luster
+                      Add
                     </Button>
                   </div>
                 )}
@@ -1387,22 +1525,22 @@ function DirectoryForm({
           </div>
 
           <div>
-            <label className="text-sm font-medium">Technical Notes</label>
+            <label className="text-xs font-medium">Technical Notes</label>
             <textarea
               value={formData.technotes}
               onChange={(e) => handleChange("technotes", e.target.value)}
-              className="w-full p-2 border rounded"
-              rows={3}
+              className="w-full p-1.5 text-sm border rounded"
+              rows={2}
             />
           </div>
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" size="sm" disabled={submitting}>
           {submitting ? "Saving..." : (editingItem ? "Update" : "Create")}
         </Button>
       </div>

@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Package, Users, FileText, Calculator, DollarSign, Search, Filter, ArrowUpDown, Eye, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Package, Users, FileText, Calculator, DollarSign, Search, Filter, ArrowUpDown, Eye, Edit, Trash2, ChevronLeft, ChevronRight, FolderPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface RnDProject {
   id: number;
@@ -52,6 +53,7 @@ interface PaginationData {
 }
 
 export default function RNDProjectsPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<RnDProject[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,8 +63,10 @@ export default function RNDProjectsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isAddDirectoryDialogOpen, setIsAddDirectoryDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<RnDProject | null>(null);
   const [viewingProject, setViewingProject] = useState<RnDProject | null>(null);
+  const [selectedProjectForDirectory, setSelectedProjectForDirectory] = useState<RnDProject | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Form states
@@ -71,6 +75,15 @@ export default function RNDProjectsPage() {
     projectName: "",
     description: "",
     status: "draft_directory",
+  });
+
+  // Directory form states
+  const [directoryFormData, setDirectoryFormData] = useState({
+    itemName: "",
+    collectCode: "",
+    quantity: 1,
+    colorName: "",
+    notes: "",
   });
 
   // Search and filter states
@@ -259,6 +272,52 @@ export default function RNDProjectsPage() {
     }
   };
 
+  const openAddDirectoryDialog = (project: RnDProject) => {
+    setSelectedProjectForDirectory(project);
+    setDirectoryFormData({
+      itemName: "",
+      collectCode: "",
+      quantity: 1,
+      colorName: "",
+      notes: "",
+    });
+    setIsAddDirectoryDialogOpen(true);
+  };
+
+  const handleCreateDirectory = async () => {
+    if (!selectedProjectForDirectory) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch("/api/rnd/directory", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectId: selectedProjectForDirectory.id,
+          ...directoryFormData,
+        }),
+      });
+
+      if (response.ok) {
+        setIsAddDirectoryDialogOpen(false);
+        setSelectedProjectForDirectory(null);
+        // Optionally navigate to directory page or refresh
+        alert("Directory item created successfully!");
+        fetchProjects(); // Refresh to update counts
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (error) {
+      console.error("Error creating directory item:", error);
+      alert("An error occurred while creating the directory item");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -268,38 +327,38 @@ export default function RNDProjectsPage() {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">R&D Projects</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight">R&D Projects</h1>
+          <p className="text-sm text-muted-foreground">
             Manage your research and development projects
           </p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" />
               New Project
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Project</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="max-w-md">
+            <DialogHeader className="pb-2">
+              <DialogTitle className="text-lg">Create New Project</DialogTitle>
+              <DialogDescription className="text-sm">
                 Add a new R&D project to start developing products for your client.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <Label htmlFor="clientId">Client *</Label>
+                <Label htmlFor="clientId" className="text-xs">Client *</Label>
                 <Select value={formData.clientId} onValueChange={(value) => setFormData({ ...formData, clientId: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-sm">
                     <SelectValue placeholder="Select a client" />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map((client) => (
-                      <SelectItem key={client.clientCode} value={client.clientCode}>
+                      <SelectItem key={client.clientCode} value={client.clientCode} className="text-sm">
                         {client.clientDescription}
                       </SelectItem>
                     ))}
@@ -307,43 +366,46 @@ export default function RNDProjectsPage() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="projectName">Project Name *</Label>
+                <Label htmlFor="projectName" className="text-xs">Project Name *</Label>
                 <Input
                   id="projectName"
                   value={formData.projectName}
                   onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                   placeholder="Enter project name"
+                  className="h-8 text-sm"
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="text-xs">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Enter project description"
+                  className="text-sm"
+                  rows={2}
                 />
               </div>
               <div>
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status" className="text-xs">Status</Label>
                 <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft_directory">Draft Directory</SelectItem>
-                    <SelectItem value="estimate_created">Estimate Created</SelectItem>
-                    <SelectItem value="quotation_sent">Quotation Sent</SelectItem>
-                    <SelectItem value="sample_development">Sample Development</SelectItem>
+                    <SelectItem value="draft_directory" className="text-sm">Draft Directory</SelectItem>
+                    <SelectItem value="estimate_created" className="text-sm">Estimate Created</SelectItem>
+                    <SelectItem value="quotation_sent" className="text-sm">Quotation Sent</SelectItem>
+                    <SelectItem value="sample_development" className="text-sm">Sample Development</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleCreate} disabled={saving}>
+              <Button size="sm" onClick={handleCreate} disabled={saving}>
                 {saving ? "Creating..." : "Create Project"}
               </Button>
             </div>
@@ -402,39 +464,39 @@ export default function RNDProjectsPage() {
 
       {/* Search and Filters */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
+        <CardContent className="p-3">
+          <div className="flex flex-col md:flex-row gap-2">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search projects..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 h-8 text-sm"
                 />
               </div>
             </div>
             <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-40 h-8 text-sm">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft_directory">Draft Directory</SelectItem>
-                <SelectItem value="estimate_created">Estimate Created</SelectItem>
-                <SelectItem value="quotation_sent">Quotation Sent</SelectItem>
-                <SelectItem value="sample_development">Sample Development</SelectItem>
+                <SelectItem value="all" className="text-sm">All Statuses</SelectItem>
+                <SelectItem value="draft_directory" className="text-sm">Draft Directory</SelectItem>
+                <SelectItem value="estimate_created" className="text-sm">Estimate Created</SelectItem>
+                <SelectItem value="quotation_sent" className="text-sm">Quotation Sent</SelectItem>
+                <SelectItem value="sample_development" className="text-sm">Sample Development</SelectItem>
               </SelectContent>
             </Select>
             <Select value={clientFilter || "all"} onValueChange={(value) => setClientFilter(value === "all" ? "" : value)}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-40 h-8 text-sm">
                 <SelectValue placeholder="Filter by client" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Clients</SelectItem>
+                <SelectItem value="all" className="text-sm">All Clients</SelectItem>
                 {clients.map((client) => (
-                  <SelectItem key={client.clientCode} value={client.clientCode}>
+                  <SelectItem key={client.clientCode} value={client.clientCode} className="text-sm">
                     {client.clientDescription}
                   </SelectItem>
                 ))}
@@ -447,54 +509,76 @@ export default function RNDProjectsPage() {
       {/* Projects Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <Table className="text-sm">
             <TableHeader>
-              <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("projectName")} className="h-auto p-0 font-semibold">
+              <TableRow className="h-9">
+                <TableHead className="py-2 px-3">Client</TableHead>
+                <TableHead className="py-2 px-3">
+                  <Button variant="ghost" onClick={() => handleSort("projectName")} className="h-auto p-0 font-semibold text-xs">
                     Project Name
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-3 w-3" />
                   </Button>
                 </TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("status")} className="h-auto p-0 font-semibold">
+                <TableHead className="py-2 px-3">
+                  <Button variant="ghost" onClick={() => handleSort("status")} className="h-auto p-0 font-semibold text-xs">
                     Status
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                    <ArrowUpDown className="ml-1 h-3 w-3" />
                   </Button>
                 </TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="py-2 px-3 w-[140px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {projects.map((project) => (
-                <TableRow key={project.id}>
-                  <TableCell className="font-medium">{project.client.clientDescription}</TableCell>
-                  <TableCell>
-                    <div className="max-w-xs truncate" title={project.projectName}>
+                <TableRow key={project.id} className="h-10">
+                  <TableCell className="font-medium py-1 px-3 text-sm">{project.client.clientDescription}</TableCell>
+                  <TableCell className="py-1 px-3">
+                    <div className="max-w-xs truncate text-sm" title={project.projectName}>
                       {project.projectName}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusColor(project.status) as "default" | "secondary" | "destructive" | "outline"}>
+                  <TableCell className="py-1 px-3">
+                    <Badge variant={getStatusColor(project.status) as "default" | "secondary" | "destructive" | "outline"} className="text-xs py-0 px-1.5">
                       {project.workflowStep || project.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => openViewDialog(project)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => openEditDialog(project)}>
-                        <Edit className="h-4 w-4" />
+                  <TableCell className="py-1 px-3">
+                    <div className="flex gap-0.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={() => openViewDialog(project)}
+                        title="View Details"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => handleDelete(project.id)}
+                        className="h-7 w-7 p-0"
+                        onClick={() => openEditDialog(project)}
+                        title="Edit Project"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700"
+                        onClick={() => openAddDirectoryDialog(project)}
+                        title="Add Directory Item"
+                      >
+                        <FolderPlus className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                        onClick={() => handleDelete(project.id)}
+                        title="Delete Project"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </TableCell>
@@ -502,7 +586,7 @@ export default function RNDProjectsPage() {
               ))}
               {projects.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center py-6 text-muted-foreground text-sm">
                     No projects found
                   </TableCell>
                 </TableRow>
@@ -515,39 +599,41 @@ export default function RNDProjectsPage() {
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} projects
           </div>
           <div className="flex items-center space-x-2">
             <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(parseInt(value))}>
-              <SelectTrigger className="w-20">
+              <SelectTrigger className="w-16 h-7 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="5" className="text-xs">5</SelectItem>
+                <SelectItem value="10" className="text-xs">10</SelectItem>
+                <SelectItem value="20" className="text-xs">20</SelectItem>
+                <SelectItem value="50" className="text-xs">50</SelectItem>
               </SelectContent>
             </Select>
             <Button
               variant="outline"
               size="sm"
+              className="h-7 w-7 p-0"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-sm">
+            <span className="text-xs">
               Page {pagination.page} of {pagination.totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
+              className="h-7 w-7 p-0"
               onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
               disabled={currentPage === pagination.totalPages}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -555,23 +641,23 @@ export default function RNDProjectsPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">Edit Project</DialogTitle>
+            <DialogDescription className="text-sm">
               Update the project details.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
-              <Label htmlFor="edit-clientId">Client *</Label>
+              <Label htmlFor="edit-clientId" className="text-xs">Client *</Label>
               <Select value={formData.clientId} onValueChange={(value) => setFormData({ ...formData, clientId: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 text-sm">
                   <SelectValue placeholder="Select a client" />
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((client) => (
-                    <SelectItem key={client.clientCode} value={client.clientCode}>
+                    <SelectItem key={client.clientCode} value={client.clientCode} className="text-sm">
                       {client.clientDescription} ({client.clientCode})
                     </SelectItem>
                   ))}
@@ -579,151 +665,256 @@ export default function RNDProjectsPage() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="edit-projectName">Project Name *</Label>
+              <Label htmlFor="edit-projectName" className="text-xs">Project Name *</Label>
               <Input
                 id="edit-projectName"
                 value={formData.projectName}
                 onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                 placeholder="Enter project name"
+                className="h-8 text-sm"
               />
             </div>
             <div>
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description" className="text-xs">Description</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Enter project description"
+                className="text-sm"
+                rows={2}
               />
             </div>
             <div>
-              <Label htmlFor="edit-status">Status</Label>
+              <Label htmlFor="edit-status" className="text-xs">Status</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft_directory">Draft Directory</SelectItem>
-                  <SelectItem value="estimate_created">Estimate Created</SelectItem>
-                  <SelectItem value="quotation_sent">Quotation Sent</SelectItem>
-                  <SelectItem value="sample_development">Sample Development</SelectItem>
-                  <SelectItem value="client_approved">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="draft_directory" className="text-sm">Draft Directory</SelectItem>
+                  <SelectItem value="estimate_created" className="text-sm">Estimate Created</SelectItem>
+                  <SelectItem value="quotation_sent" className="text-sm">Quotation Sent</SelectItem>
+                  <SelectItem value="sample_development" className="text-sm">Sample Development</SelectItem>
+                  <SelectItem value="client_approved" className="text-sm">Completed</SelectItem>
+                  <SelectItem value="cancelled" className="text-sm">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdate} disabled={saving}>
+            <Button size="sm" onClick={handleUpdate} disabled={saving}>
               {saving ? "Updating..." : "Update Project"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
+      {/* Add Directory Item Dialog */}
+      <Dialog open={isAddDirectoryDialogOpen} onOpenChange={setIsAddDirectoryDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">Add Directory Item</DialogTitle>
+            <DialogDescription className="text-sm">
+              Add a new directory item to project: <span className="font-medium">{selectedProjectForDirectory?.projectName}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="dir-itemName" className="text-xs">Category (Item Name) *</Label>
+              <Input
+                id="dir-itemName"
+                value={directoryFormData.itemName}
+                onChange={(e) => setDirectoryFormData({ ...directoryFormData, itemName: e.target.value })}
+                placeholder="Enter item name"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="dir-collectCode" className="text-xs">Code</Label>
+                <Input
+                  id="dir-collectCode"
+                  value={directoryFormData.collectCode}
+                  onChange={(e) => setDirectoryFormData({ ...directoryFormData, collectCode: e.target.value })}
+                  placeholder="e.g., AA-001"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor="dir-quantity" className="text-xs">Quantity *</Label>
+                <Input
+                  id="dir-quantity"
+                  type="number"
+                  value={directoryFormData.quantity}
+                  onChange={(e) => setDirectoryFormData({ ...directoryFormData, quantity: parseInt(e.target.value) || 1 })}
+                  min="1"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="dir-colorName" className="text-xs">Color</Label>
+              <Input
+                id="dir-colorName"
+                value={directoryFormData.colorName}
+                onChange={(e) => setDirectoryFormData({ ...directoryFormData, colorName: e.target.value })}
+                placeholder="Enter color"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="dir-notes" className="text-xs">Notes</Label>
+              <Textarea
+                id="dir-notes"
+                value={directoryFormData.notes}
+                onChange={(e) => setDirectoryFormData({ ...directoryFormData, notes: e.target.value })}
+                placeholder="Enter notes"
+                className="text-sm"
+                rows={2}
+              />
+            </div>
+          </div>
+          <div className="flex justify-between items-center pt-2">
+            <Button
+              variant="link"
+              size="sm"
+              className="text-xs p-0 h-auto"
+              onClick={() => {
+                setIsAddDirectoryDialogOpen(false);
+                router.push('/rnd/directory');
+              }}
+            >
+              Go to full Directory page →
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setIsAddDirectoryDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleCreateDirectory} disabled={saving || !directoryFormData.itemName}>
+                {saving ? "Creating..." : "Create Item"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Project Details</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-xl">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">Project Details</DialogTitle>
+            <DialogDescription className="text-sm">
               Complete information about this R&D project
             </DialogDescription>
           </DialogHeader>
           {viewingProject && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Basic Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Project Name</Label>
-                  <p className="text-lg font-semibold">{viewingProject.projectName}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded p-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Project Name</Label>
+                  <p className="text-sm font-semibold">{viewingProject.projectName}</p>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Client</Label>
-                  <p className="text-lg">{viewingProject.client.clientDescription}</p>
-                  <p className="text-sm text-muted-foreground">{viewingProject.client.clientCode}</p>
+                <div className="bg-gray-50 rounded p-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Client</Label>
+                  <p className="text-sm">{viewingProject.client.clientDescription}</p>
+                  <p className="text-xs text-muted-foreground">{viewingProject.client.clientCode}</p>
                 </div>
               </div>
 
               {/* Status and Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded p-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Status</Label>
                   <div className="mt-1">
-                    <Badge variant={getStatusColor(viewingProject.status) as "default" | "secondary" | "destructive" | "outline"}>
+                    <Badge variant={getStatusColor(viewingProject.status) as "default" | "secondary" | "destructive" | "outline"} className="text-xs">
                       {viewingProject.workflowStep || viewingProject.status}
                     </Badge>
                   </div>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Created</Label>
+                <div className="bg-gray-50 rounded p-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Created</Label>
                   <p className="text-sm">{new Date(viewingProject.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
 
               {/* Description */}
               {viewingProject.description && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Description</Label>
+                <div className="bg-gray-50 rounded p-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Description</Label>
                   <p className="text-sm mt-1">{viewingProject.description}</p>
                 </div>
               )}
 
               {/* Project Statistics */}
               <div>
-                <Label className="text-sm font-medium text-muted-foreground mb-3 block">Project Progress</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Label className="text-xs font-medium text-muted-foreground mb-2 block">Project Progress</Label>
+                <div className="grid grid-cols-4 gap-2">
                   <Card>
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-blue-600">{viewingProject.directoryLists?.length || 0}</div>
-                      <div className="text-sm text-muted-foreground">Directory Items</div>
+                    <CardContent className="p-2 text-center">
+                      <div className="text-lg font-bold text-blue-600">{viewingProject.directoryLists?.length || 0}</div>
+                      <div className="text-xs text-muted-foreground">Directory</div>
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-green-600">{viewingProject.estimates?.length || 0}</div>
-                      <div className="text-sm text-muted-foreground">Estimates</div>
+                    <CardContent className="p-2 text-center">
+                      <div className="text-lg font-bold text-green-600">{viewingProject.estimates?.length || 0}</div>
+                      <div className="text-xs text-muted-foreground">Estimates</div>
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-purple-600">{viewingProject.quotations?.length || 0}</div>
-                      <div className="text-sm text-muted-foreground">Quotations</div>
+                    <CardContent className="p-2 text-center">
+                      <div className="text-lg font-bold text-purple-600">{viewingProject.quotations?.length || 0}</div>
+                      <div className="text-xs text-muted-foreground">Quotations</div>
                     </CardContent>
                   </Card>
                   <Card>
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-orange-600">{viewingProject.samples?.length || 0}</div>
-                      <div className="text-sm text-muted-foreground">Samples</div>
+                    <CardContent className="p-2 text-center">
+                      <div className="text-lg font-bold text-orange-600">{viewingProject.samples?.length || 0}</div>
+                      <div className="text-xs text-muted-foreground">Samples</div>
                     </CardContent>
                   </Card>
                 </div>
               </div>
 
               {/* Creator Information */}
-              <div className="border-t pt-4">
-                <Label className="text-sm font-medium text-muted-foreground">Created By</Label>
-                <p className="text-sm mt-1">{viewingProject.creator.username}</p>
+              <div className="border-t pt-3">
+                <Label className="text-xs font-medium text-muted-foreground">Created By</Label>
+                <p className="text-sm">{viewingProject.creator.username}</p>
                 {viewingProject.creator.email && (
-                  <p className="text-sm text-muted-foreground">{viewingProject.creator.email}</p>
+                  <p className="text-xs text-muted-foreground">{viewingProject.creator.email}</p>
                 )}
               </div>
             </div>
           )}
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setIsViewDialogOpen(false)}>
               Close
             </Button>
             {viewingProject && (
-              <Button onClick={() => {
-                setIsViewDialogOpen(false);
-                openEditDialog(viewingProject);
-              }}>
-                Edit Project
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsViewDialogOpen(false);
+                    openAddDirectoryDialog(viewingProject);
+                  }}
+                >
+                  <FolderPlus className="h-3.5 w-3.5 mr-1" />
+                  Add Directory
+                </Button>
+                <Button size="sm" onClick={() => {
+                  setIsViewDialogOpen(false);
+                  openEditDialog(viewingProject);
+                }}>
+                  Edit Project
+                </Button>
+              </>
             )}
           </div>
         </DialogContent>
