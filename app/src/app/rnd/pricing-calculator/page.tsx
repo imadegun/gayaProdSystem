@@ -868,12 +868,14 @@ export default function PricingCalculatorPage() {
                         <TableCell className="text-xs font-mono">{result.itemCode || "-"}</TableCell>
                         {result.error ? (
                           <TableCell colSpan={3} className="text-xs text-red-600">{result.error}</TableCell>
-                        ) : (
+                        ) : result.input && result.costBreakdown ? (
                           <>
                             <TableCell className="text-xs text-right">{result.input.quantity}</TableCell>
                             <TableCell className="text-xs text-right">{formatCurrency(result.costBreakdown.unitPrice)}</TableCell>
                             <TableCell className="text-xs text-right font-medium">{formatCurrency(result.costBreakdown.totalPrice)}</TableCell>
                           </>
+                        ) : (
+                          <TableCell colSpan={3} className="text-xs text-muted-foreground">No data</TableCell>
                         )}
                       </TableRow>
                     ))}
