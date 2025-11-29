@@ -77,6 +77,9 @@ export async function POST(request: NextRequest) {
       itemName,
       collectCode,
       quantity,
+      unit,
+      price,
+      total,
       // Enhanced item properties
       photos,
       textureName,
@@ -139,6 +142,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create directory list item
+    // Calculate total if price and quantity are provided
+    const calculatedTotal = price && quantity ? parseFloat(price) * parseInt(quantity) : (total ? parseFloat(total) : null);
+    
     const directoryList = await prisma.directoryList.create({
       data: {
         projectId: parseInt(projectId),
@@ -147,6 +153,9 @@ export async function POST(request: NextRequest) {
         itemName,
         collectCode,
         quantity: quantity || 1,
+        unit: unit || null,
+        price: price ? parseFloat(price) : null,
+        total: calculatedTotal,
         // Enhanced properties
         photos,
         textureName,

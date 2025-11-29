@@ -16,6 +16,7 @@ import {
   Download,
   Users,
   Settings,
+  Settings2,
   Wifi,
   WifiOff
 } from "lucide-react";
@@ -29,6 +30,8 @@ const navigation = [
   { name: "Dashboard", href: "/rnd", icon: Home, roles: ["R&D", "Admin"] },
   { name: "Projects", href: "/rnd/projects", icon: Package, roles: ["R&D", "Admin"] },
   { name: "Directory Lists", href: "/rnd/directory", icon: FileText, roles: ["R&D", "Admin"] },
+  { name: "Pricing Calculator", href: "/rnd/pricing-calculator", icon: Calculator, roles: ["R&D", "Admin", "Sales"] },
+  { name: "Pricing Settings", href: "/rnd/pricing-settings", icon: Settings2, roles: ["R&D", "Admin"] },
   { name: "Estimates", href: "/rnd/estimates", icon: Calculator, roles: ["R&D", "Admin"] },
   { name: "Quotations", href: "/rnd/quotations", icon: DollarSign, roles: ["R&D", "Admin"] },
   { name: "Proformas", href: "/rnd/proformas", icon: FileText, roles: ["R&D", "Admin"] },
@@ -45,12 +48,7 @@ export default function RNDLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [isConnected, setIsConnected] = useState(false);
-
-  // Mock real-time connection status (would be replaced with actual socket status)
-  useEffect(() => {
-    setIsConnected(true);
-  }, []);
+  const [isConnected] = useState(true); // Mock connection status - would be replaced with actual socket status
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
@@ -83,7 +81,7 @@ export default function RNDLayout({
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-center h-16 px-4 border-b border-blue-500">
-            <h1 className="text-xl font-bold text-white">R&D Portal</h1>
+            <h1 className="text-xl font-bold text-white">R&D</h1>
           </div>
 
           {/* Navigation */}

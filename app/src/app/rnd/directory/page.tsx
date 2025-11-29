@@ -16,6 +16,9 @@ interface DirectoryList {
   itemName: string;
   collectCode?: string;
   quantity: number;
+  unit?: string;
+  price?: number;
+  total?: number;
   status: string;
   // Enhanced item properties
   photos?: string[];
@@ -202,8 +205,10 @@ export default function RNDDirectoryPage() {
                   <TableHead className="py-2 px-2">Category</TableHead>
                   <TableHead className="py-2 px-2">Info Size</TableHead>
                   <TableHead className="py-2 px-2">Material</TableHead>
-                  <TableHead className="w-[100px] py-2 px-2">Color</TableHead>
-                  <TableHead className="py-2 px-2">Texture</TableHead>
+                  <TableHead className="w-[60px] py-2 px-2">Qty</TableHead>
+                  <TableHead className="w-[60px] py-2 px-2">Unit</TableHead>
+                  <TableHead className="w-[80px] py-2 px-2">Price</TableHead>
+                  <TableHead className="w-[80px] py-2 px-2">Total</TableHead>
                   <TableHead className="w-[100px] py-2 px-2">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -234,17 +239,12 @@ export default function RNDDirectoryPage() {
                     </TableCell>
                     <TableCell className="font-mono text-xs py-1 px-2">{item.collectCode || "-"}</TableCell>
                     <TableCell className="font-medium py-1 px-2">{item.itemName}</TableCell>
-                    <TableCell className="font-medium py-1 px-2">{item.sizeInfo}</TableCell>
-                    <TableCell className="font-medium py-1 px-2">{item.materialName}</TableCell>
-                    <TableCell className="font-medium py-1 px-2">{item.colorName}</TableCell>
-                    {/* <TableCell className="py-1 px-2">
-                      {item.colorName ? (
-                        <Badge variant="outline" className="text-xs py-0 px-1">{item.colorName}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">-</span>
-                      )}
-                    </TableCell> */}
-                    <TableCell className="font-medium py-1 px-2">{item.textureName}</TableCell>
+                    <TableCell className="font-medium py-1 px-2">{item.sizeInfo || "-"}</TableCell>
+                    <TableCell className="font-medium py-1 px-2">{item.materialName || "-"}</TableCell>
+                    <TableCell className="text-center py-1 px-2">{item.quantity}</TableCell>
+                    <TableCell className="py-1 px-2">{item.unit || "-"}</TableCell>
+                    <TableCell className="text-right py-1 px-2">{item.price ? item.price.toLocaleString() : "-"}</TableCell>
+                    <TableCell className="text-right font-medium py-1 px-2">{item.total ? item.total.toLocaleString() : "-"}</TableCell>
                     <TableCell className="py-1 px-2">
                       <div className="flex gap-0.5">
                         <Button
@@ -286,7 +286,7 @@ export default function RNDDirectoryPage() {
                 ))}
                 {directoryLists.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground text-sm">
+                    <TableCell colSpan={10} className="text-center py-6 text-muted-foreground text-sm">
                       No directory items created yet
                     </TableCell>
                   </TableRow>
@@ -499,10 +499,18 @@ function DetailModal({
                 <div className="text-muted-foreground text-xs uppercase mb-1">Quantity</div>
                 <div className="font-medium text-sm">{selectedItem.quantity}</div>
               </div>
-              {/* <div className="bg-gray-50 rounded p-2">
-                <div className="text-muted-foreground text-xs uppercase mb-1">Is Set</div>
-                <div className="font-medium text-sm">{selectedItem.isSet ? "Yes" : "No"}</div>
-              </div> */}
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Unit</div>
+                <div className="font-medium text-sm">{selectedItem.unit || "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Price</div>
+                <div className="font-medium text-sm">{selectedItem.price ? selectedItem.price.toLocaleString() : "N/A"}</div>
+              </div>
+              <div className="bg-gray-50 rounded p-2">
+                <div className="text-muted-foreground text-xs uppercase mb-1">Total</div>
+                <div className="font-medium text-sm">{selectedItem.total ? selectedItem.total.toLocaleString() : "N/A"}</div>
+              </div>
             </div>
 
             {/* Notes */}
@@ -630,6 +638,9 @@ function DirectoryForm({
     itemName: editingItem?.itemName || "",
     collectCode: editingItem?.collectCode || "",
     quantity: editingItem?.quantity || 1,
+    unit: editingItem?.unit || "",
+    price: editingItem?.price?.toString() || "",
+    total: editingItem?.total?.toString() || "",
     textureName: editingItem?.textureName || "",
     colorName: editingItem?.colorName || "",
     materialName: editingItem?.materialName || "",
@@ -839,10 +850,17 @@ function DirectoryForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const qty = parseInt(formData.quantity.toString());
+    const unitPrice = formData.price ? parseFloat(formData.price.toString()) : undefined;
+    const calculatedTotal = unitPrice && qty ? unitPrice * qty : (formData.total ? parseFloat(formData.total.toString()) : undefined);
+    
     onSubmit({
       ...formData,
       projectId: parseInt(formData.projectId),
-      quantity: parseInt(formData.quantity.toString()),
+      quantity: qty,
+      unit: formData.unit || undefined,
+      price: unitPrice,
+      total: calculatedTotal,
       clayIds: formData.clayIds.map(id => parseInt(id)),
       glazeIds: formData.glazeIds.map(id => parseInt(id)),
       engobeIds: formData.engobeIds.map(id => parseInt(id)),
@@ -968,10 +986,65 @@ function DirectoryForm({
                <input
                  type="number"
                  value={formData.quantity}
-                 onChange={(e) => handleChange("quantity", e.target.value)}
+                 onChange={(e) => {
+                   handleChange("quantity", e.target.value);
+                   // Auto-calculate total when quantity changes
+                   if (formData.price) {
+                     const newTotal = parseFloat(formData.price) * parseInt(e.target.value || "0");
+                     handleChange("total", newTotal.toString());
+                   }
+                 }}
                  className="w-full p-1.5 text-sm border rounded"
                  min="1"
                  required
+               />
+             </div>
+
+             <div>
+               <label className="text-xs font-medium">Unit</label>
+               <select
+                 value={formData.unit}
+                 onChange={(e) => handleChange("unit", e.target.value)}
+                 className="w-full p-1.5 text-sm border rounded"
+               >
+                 <option value="">Select Unit</option>
+                 <option value="pcs">pcs</option>
+                 <option value="set">set</option>
+                 <option value="pair">pair</option>
+                 <option value="dozen">dozen</option>
+                 <option value="box">box</option>
+               </select>
+             </div>
+
+             <div>
+               <label className="text-xs font-medium">Price</label>
+               <input
+                 type="number"
+                 value={formData.price}
+                 onChange={(e) => {
+                   handleChange("price", e.target.value);
+                   // Auto-calculate total when price changes
+                   if (formData.quantity) {
+                     const newTotal = parseFloat(e.target.value || "0") * parseInt(formData.quantity.toString());
+                     handleChange("total", newTotal.toString());
+                   }
+                 }}
+                 className="w-full p-1.5 text-sm border rounded"
+                 step="0.01"
+                 min="0"
+               />
+             </div>
+
+             <div>
+               <label className="text-xs font-medium">Total</label>
+               <input
+                 type="number"
+                 value={formData.total}
+                 onChange={(e) => handleChange("total", e.target.value)}
+                 className="w-full p-1.5 text-sm border rounded bg-gray-50"
+                 step="0.01"
+                 min="0"
+                 readOnly
                />
              </div>
            </div>

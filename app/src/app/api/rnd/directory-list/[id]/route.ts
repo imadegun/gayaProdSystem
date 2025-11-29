@@ -78,6 +78,9 @@ export async function PUT(
       itemName,
       collectCode,
       quantity,
+      unit,
+      price,
+      total,
       status,
       // Enhanced properties
       photos,
@@ -117,12 +120,20 @@ export async function PUT(
     }
 
     // Update directory list item
+    // Calculate total if price and quantity are provided
+    const calculatedTotal = price !== undefined && quantity !== undefined
+      ? parseFloat(price) * parseInt(quantity)
+      : (total !== undefined ? parseFloat(total) : undefined);
+    
     const directoryList = await prisma.directoryList.update({
       where: { id: directoryId },
       data: {
         itemName,
         collectCode,
         quantity,
+        unit,
+        price: price !== undefined ? parseFloat(price) : undefined,
+        total: calculatedTotal,
         status,
         // Enhanced properties
         photos,

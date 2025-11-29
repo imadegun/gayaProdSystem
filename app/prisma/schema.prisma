@@ -806,6 +806,9 @@ model DirectoryList {
   itemName        String   @map("item_name")
   collectCode     String?  @map("collect_code") // Reference to TblcollectMaster
   quantity        Int      @default(1) @map("quantity")
+  unit            String?  @map("unit") // Unit of measurement (pcs, set, etc.)
+  price           Float?   @map("price") // Unit price
+  total           Float?   @map("total") // Total price (quantity * price)
   notes           String?  @map("notes")
   status          String   @default("draft") @map("status") // draft, approved, rejected
   // Enhanced item properties
@@ -966,4 +969,201 @@ model Payment {
   purchaseOrder     PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
 
   @@map("payments")
+}
+
+// ============================================
+// PRICING SETTINGS MODELS
+// ============================================
+
+// Main pricing settings profile - stores cost rates and margins
+model PricingSettings {
+  id                    Int       @id @default(autoincrement())
+  name                  String    @map("name") // Profile name (e.g., "2024 Standard", "Export Pricing")
+  description           String?   @map("description")
+  
+  // Labor costs
+  laborRatePerMinute    Float     @map("labor_rate_per_minute") // IDR per minute
+  
+  // Material costs
+  clayCostPerKg         Float     @map("clay_cost_per_kg") // IDR per KG
+  glazeCostPerKg        Float     @map("glaze_cost_per_kg") // IDR per KG
+  engobeCostPerKg       Float?    @map("engobe_cost_per_kg") // IDR per KG
+  lusterCostPerKg       Float?    @map("luster_cost_per_kg") // IDR per KG
+  
+  // Firing costs per load
+  bisqueFiringCostPerLoad   Float @map("bisque_firing_cost_per_load") // IDR per kiln load
+  glazeFiringCostPerLoad    Float @map("glaze_firing_cost_per_load") // IDR per kiln load
+  rakuFiringCostPerLoad     Float? @map("raku_firing_cost_per_load") // IDR per kiln load
+  lusterFiringCostPerLoad   Float? @map("luster_firing_cost_per_load") // IDR per kiln load
+  
+  // Kiln capacity
+  kilnCapacityPieces    Int       @default(100) @map("kiln_capacity_pieces") // Pieces per kiln load
+  
+  // Overhead and profit margins
+  overheadRate          Float     @map("overhead_rate") // Percentage (e.g., 0.15 for 15%)
+  profitMargin          Float     @map("profit_margin") // Percentage (e.g., 0.20 for 20%)
+  
+  // Validity period
+  effectiveFrom         DateTime  @map("effective_from")
+  effectiveTo           DateTime? @map("effective_to")
+  
+  // Status flags
+  isActive              Boolean   @default(true) @map("is_active")
+  isDefault             Boolean   @default(false) @map("is_default") // Default profile for calculations
+  
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@map("pricing_settings")
+}
+
+// Production time table - stores time values for different production methods, shapes, and weights
+model ProductionTimeTable {
+  id                    Int       @id @default(autoincrement())
+  
+  // Classification
+  productionMethod      String    @map("production_method") // wheel, casting, slabbing
+  shapeCategory         String    @map("shape_category") // round, oval, square, irregular
+  
+  // Weight range (KG)
+  minWeightKg           Float     @map("min_weight_kg")
+  maxWeightKg           Float     @map("max_weight_kg")
+  
+  // Forming time (minutes)
+  formingMinutes        Float     @map("forming_minutes")
+  
+  // Finishing time by complexity (minutes)
+  finishingStandard     Float     @map("finishing_standard") // Standard complexity
+  finishingMedium       Float     @map("finishing_medium") // Medium complexity
+  finishingComplex      Float     @map("finishing_complex") // Complex/detailed
+  
+  // Glazing time by complexity (minutes)
+  glazingStandard       Float     @map("glazing_standard")
+  glazingMedium         Float     @map("glazing_medium")
+  glazingComplex        Float     @map("glazing_complex")
+  
+  // Fixed times (minutes)
+  movementMinutes       Float     @map("movement_minutes") // Moving between stations
+  packagingMinutes      Float     @map("packaging_minutes")
+  
+  // Firing counts by firing type
+  firingStandardBisque  Int       @default(1) @map("firing_standard_bisque") // Standard: bisque firings
+  firingStandardGlaze   Int       @default(1) @map("firing_standard_glaze") // Standard: glaze firings
+  firingRakuBisque      Int       @default(1) @map("firing_raku_bisque") // Raku: bisque firings
+  firingRakuGlaze       Int       @default(2) @map("firing_raku_glaze") // Raku: glaze firings
+  firingLusterBisque    Int       @default(1) @map("firing_luster_bisque") // Luster: bisque firings
+  firingLusterGlaze     Int       @default(1) @map("firing_luster_glaze") // Luster: glaze firings
+  firingLusterLuster    Int       @default(1) @map("firing_luster_luster") // Luster: luster firings
+  
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@unique([productionMethod, shapeCategory, minWeightKg, maxWeightKg])
+  @@map("production_time_tables")
+}
+
+// Clay preparation time table - stores prep time by weight range
+model ClayPreparationTime {
+  id                    Int       @id @default(autoincrement())
+  
+  // Weight range (KG)
+  minWeightKg           Float     @map("min_weight_kg")
+  maxWeightKg           Float     @map("max_weight_kg")
+  
+  // Preparation time (minutes)
+  preparationMinutes    Float     @map("preparation_minutes")
+  
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@unique([minWeightKg, maxWeightKg])
+  @@map("clay_preparation_times")
+}
+
+// Complexity factor table - stores multipliers for different complexity levels
+model ComplexityFactor {
+  id                    Int       @id @default(autoincrement())
+  
+  name                  String    @map("name") // standard, medium, complex
+  displayName           String    @map("display_name") // Standard, Medium, Complex
+  description           String?   @map("description")
+  
+  // Multipliers for different operations
+  finishingMultiplier   Float     @default(1.0) @map("finishing_multiplier")
+  glazingMultiplier     Float     @default(1.0) @map("glazing_multiplier")
+  
+  sortOrder             Int       @default(0) @map("sort_order")
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name])
+  @@map("complexity_factors")
+}
+
+// Firing type configuration - stores firing type settings
+model FiringTypeConfig {
+  id                    Int       @id @default(autoincrement())
+  
+  name                  String    @map("name") // standard, raku, luster
+  displayName           String    @map("display_name") // Standard, Raku, Luster
+  description           String?   @map("description")
+  
+  // Number of firings required
+  bisqueFirings         Int       @default(1) @map("bisque_firings")
+  glazeFirings          Int       @default(1) @map("glaze_firings")
+  lusterFirings         Int       @default(0) @map("luster_firings")
+  
+  // Cost multiplier (for special firing types)
+  costMultiplier        Float     @default(1.0) @map("cost_multiplier")
+  
+  sortOrder             Int       @default(0) @map("sort_order")
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name])
+  @@map("firing_type_configs")
+}
+
+// Shape category configuration
+model ShapeCategoryConfig {
+  id                    Int       @id @default(autoincrement())
+  
+  name                  String    @map("name") // round, oval, square, irregular
+  displayName           String    @map("display_name") // Round, Oval, Square, Irregular
+  description           String?   @map("description")
+  
+  // Time multiplier for this shape
+  timeMultiplier        Float     @default(1.0) @map("time_multiplier")
+  
+  sortOrder             Int       @default(0) @map("sort_order")
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name])
+  @@map("shape_category_configs")
+}
+
+// Production method configuration
+model ProductionMethodConfig {
+  id                    Int       @id @default(autoincrement())
+  
+  name                  String    @map("name") // wheel, casting, slabbing
+  displayName           String    @map("display_name") // Wheel, Casting, Slabbing
+  description           String?   @map("description")
+  
+  // Time multiplier for this method
+  timeMultiplier        Float     @default(1.0) @map("time_multiplier")
+  
+  sortOrder             Int       @default(0) @map("sort_order")
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@unique([name])
+  @@map("production_method_configs")
 }
