@@ -476,7 +476,9 @@ model User {
   rndProjects   RnDProject[] @relation("RnDCreatedBy")
   quotations    Quotation[]  @relation("QuotationCreatedBy")
   proformas     Proforma[]   @relation("ProformaCreatedBy")
-  estimates     Estimate[]   @relation("EstimateCreatedBy")
+  estimatesCreated  Estimate[]   @relation("EstimateCreatedBy")
+  estimatesPriced   Estimate[]   @relation("EstimatePricedBy")
+  estimatesSent     Estimate[]   @relation("EstimateSentBy")
   purchaseOrderStatusHistory PurchaseOrderStatusHistory[]
 }
 
@@ -776,13 +778,19 @@ model Estimate {
   id            Int      @id @default(autoincrement())
   projectId     Int      @map("project_id")
   estimateNumber String  @unique @map("estimate_number")
-  directoryListId Int    @map("directory_list_id")
   title         String   @map("title")
   description   String?  @map("description")
   totalAmount   Float?   @map("total_amount")
   currencyId    Int?     @map("currency_id")
-  status        String   @default("draft") @map("status") // draft, sent, approved, rejected, revised
+  status        String   @default("draft") @map("status") // draft, pending_price, priced, sent, approved, rejected, revised
+  
+  // Workflow tracking
+  pricedBy      Int?     @map("priced_by") // CEO who set the prices
+  pricedAt      DateTime? @map("priced_at")
+  sentBy        Int?     @map("sent_by") // Sales who sent to client
   sentDate      DateTime? @map("sent_date")
+  sentToEmail   String?  @map("sent_to_email") // Client email address
+  
   responseDate  DateTime? @map("response_date")
   clientResponse String? @map("client_response") // ok_all, ok_selected, revised, cancelled
   notes         String?  @map("notes")
@@ -792,11 +800,33 @@ model Estimate {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   project       RnDProject @relation(fields: [projectId], references: [id])
-  directoryList DirectoryList @relation(fields: [directoryListId], references: [id])
   currency      Currency? @relation(fields: [currencyId], references: [id])
   creator       User      @relation("EstimateCreatedBy", fields: [createdBy], references: [id])
+  pricer        User?     @relation("EstimatePricedBy", fields: [pricedBy], references: [id])
+  sender        User?     @relation("EstimateSentBy", fields: [sentBy], references: [id])
+  items         EstimateItem[]
 
   @@map("estimates")
+}
+
+// Estimate items - links estimates to directory list items with pricing
+model EstimateItem {
+  id              Int      @id @default(autoincrement())
+  estimateId      Int      @map("estimate_id")
+  directoryListId Int      @map("directory_list_id")
+  quantity        Int      @default(1) @map("quantity")
+  unitPrice       Float?   @map("unit_price") // Set by CEO
+  totalPrice      Float?   @map("total_price") // quantity * unitPrice
+  notes           String?  @map("notes")
+  isSelected      Boolean  @default(true) @map("is_selected") // For client selection
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  estimate        Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  directoryList   DirectoryList @relation(fields: [directoryListId], references: [id])
+
+  @@unique([estimateId, directoryListId])
+  @@map("estimate_items")
 }
 model DirectoryList {
   id              Int      @id @default(autoincrement())
@@ -838,7 +868,7 @@ model DirectoryList {
   project         RnDProject @relation(fields: [projectId], references: [id])
   parent          DirectoryList? @relation("DirectoryRevisions", fields: [parentId], references: [id])
   revisions       DirectoryList[] @relation("DirectoryRevisions")
-  estimates       Estimate[]
+  estimateItems   EstimateItem[]
   quotations      Quotation[]
   samples         Sample[]
   proformas       Proforma[]

@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
           },
           parent: true
         }),
-        estimates: true,
+        estimateItems: true,
         quotations: true,
         proformas: true,
       },

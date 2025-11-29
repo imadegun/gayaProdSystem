@@ -111,9 +111,13 @@ async function getEstimateData(estimateId: number, userId: number) {
           client: true
         }
       },
-      directoryList: {
+      items: {
         include: {
-          revisions: true
+          directoryList: {
+            include: {
+              revisions: true
+            }
+          }
         }
       },
       currency: true,
@@ -128,7 +132,7 @@ async function getEstimateData(estimateId: number, userId: number) {
   return {
     document: estimate,
     type: 'estimate',
-    items: [estimate.directoryList] // Estimate has one directory item
+    items: estimate.items.map(item => item.directoryList) // Estimate has multiple items via EstimateItem
   };
 }
 
