@@ -1,6 +1,230 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth-utils";
+import { requireRole, getCurrentUser } from "@/lib/auth-utils";
+
+// GET - Bulk export estimates list
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user || !["R&D", "Sales", "Admin"].includes(user.role)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type"); // 'estimates'
+    const format = searchParams.get("format"); // 'xlsx' or 'pdf'
+    const status = searchParams.get("status");
+    const search = searchParams.get("search");
+    const projectId = searchParams.get("projectId");
+
+    if (!type || !format) {
+      return NextResponse.json(
+        { error: "Type and format are required" },
+        { status: 400 }
+      );
+    }
+
+    if (type === "estimates") {
+      // Build where clause
+      const where: {
+        status?: string;
+        projectId?: number;
+        OR?: Array<{
+          estimateNumber?: { contains: string; mode: "insensitive" };
+          title?: { contains: string; mode: "insensitive" };
+          project?: {
+            OR: Array<{
+              projectName?: { contains: string; mode: "insensitive" };
+              client?: {
+                OR: Array<{
+                  clientCode?: { contains: string; mode: "insensitive" };
+                  clientDescription?: { contains: string; mode: "insensitive" };
+                }>;
+              };
+            }>;
+          };
+        }>;
+      } = {};
+
+      if (status && status !== "all") where.status = status;
+      if (projectId) where.projectId = parseInt(projectId);
+
+      if (search) {
+        where.OR = [
+          { estimateNumber: { contains: search, mode: "insensitive" } },
+          { title: { contains: search, mode: "insensitive" } },
+          {
+            project: {
+              OR: [
+                { projectName: { contains: search, mode: "insensitive" } },
+                {
+                  client: {
+                    OR: [
+                      { clientCode: { contains: search, mode: "insensitive" } },
+                      { clientDescription: { contains: search, mode: "insensitive" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ];
+      }
+
+      const estimates = await prisma.estimate.findMany({
+        where,
+        include: {
+          project: {
+            select: {
+              projectName: true,
+              client: {
+                select: {
+                  clientCode: true,
+                  clientDescription: true,
+                  email: true,
+                }
+              }
+            }
+          },
+          items: {
+            include: {
+              directoryList: {
+                select: {
+                  itemName: true,
+                  collectCode: true,
+                  quantity: true,
+                }
+              }
+            }
+          },
+          currency: {
+            select: {
+              code: true,
+              symbol: true,
+            }
+          },
+          creator: {
+            select: {
+              username: true,
+            }
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (format === "xlsx") {
+        const buffer = await generateEstimatesExcel(estimates);
+        return new Response(buffer, {
+          headers: {
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Content-Disposition": `attachment; filename="estimates-${new Date().toISOString().split("T")[0]}.xlsx"`,
+          },
+        });
+      } else if (format === "pdf") {
+        const buffer = await generateEstimatesPDF(estimates);
+        return new Response(buffer, {
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename="estimates-${new Date().toISOString().split("T")[0]}.pdf"`,
+          },
+        });
+      }
+    }
+
+    return NextResponse.json(
+      { error: "Unsupported export type or format" },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error("Error exporting:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// Generate Excel for estimates list
+async function generateEstimatesExcel(estimates: any[]): Promise<Buffer> {
+  // Create CSV content (can be opened in Excel)
+  const headers = [
+    "Estimate #",
+    "Title",
+    "Project",
+    "Client",
+    "Client Email",
+    "Items Count",
+    "Total Amount",
+    "Currency",
+    "Status",
+    "Created By",
+    "Created Date",
+  ];
+
+  const rows = estimates.map((est) => [
+    est.estimateNumber,
+    est.title,
+    est.project?.projectName || "",
+    est.project?.client?.clientDescription || "",
+    est.project?.client?.email || "",
+    est.items?.length || 0,
+    est.totalAmount || 0,
+    est.currency?.code || "USD",
+    est.status,
+    est.creator?.username || "",
+    new Date(est.createdAt).toLocaleDateString(),
+  ]);
+
+  // Create CSV with BOM for Excel compatibility
+  const BOM = "\uFEFF";
+  const csvContent = BOM + [
+    headers.join(","),
+    ...rows.map((row) =>
+      row.map((cell) => {
+        const cellStr = String(cell);
+        // Escape quotes and wrap in quotes if contains comma or quote
+        if (cellStr.includes(",") || cellStr.includes('"') || cellStr.includes("\n")) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      }).join(",")
+    ),
+  ].join("\n");
+
+  return Buffer.from(csvContent, "utf-8");
+}
+
+// Generate PDF for estimates list
+async function generateEstimatesPDF(estimates: any[]): Promise<Buffer> {
+  // Create a simple text-based PDF content
+  const lines = [
+    "ESTIMATES REPORT",
+    `Generated: ${new Date().toLocaleString()}`,
+    "",
+    "=" .repeat(80),
+    "",
+  ];
+
+  estimates.forEach((est, index) => {
+    lines.push(`${index + 1}. ${est.estimateNumber} - ${est.title}`);
+    lines.push(`   Project: ${est.project?.projectName || "N/A"}`);
+    lines.push(`   Client: ${est.project?.client?.clientDescription || "N/A"}`);
+    lines.push(`   Items: ${est.items?.length || 0}`);
+    lines.push(`   Total: ${est.currency?.symbol || "$"}${est.totalAmount?.toLocaleString() || "0"}`);
+    lines.push(`   Status: ${est.status}`);
+    lines.push(`   Created: ${new Date(est.createdAt).toLocaleDateString()}`);
+    lines.push("");
+  });
+
+  lines.push("=" .repeat(80));
+  lines.push(`Total Estimates: ${estimates.length}`);
+
+  // For a proper PDF, you would use pdfkit or similar library
+  // This is a simplified text representation
+  const content = lines.join("\n");
+  
+  return Buffer.from(content, "utf-8");
+}
 
 export async function POST(request: NextRequest) {
   try {

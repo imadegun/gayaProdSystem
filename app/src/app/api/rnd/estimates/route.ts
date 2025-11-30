@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth-utils";
 
-// GET - Fetch estimates with filtering
+// GET - Fetch estimates with filtering and search
 export async function GET(request: NextRequest) {
   try {
     // Allow R&D, Sales, and Admin roles
@@ -14,12 +14,56 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
     const status = searchParams.get("status");
+    const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    const where: { projectId?: number; status?: string } = {};
+    // Build where clause with search support
+    const where: {
+      projectId?: number;
+      status?: string;
+      OR?: Array<{
+        estimateNumber?: { contains: string; mode: "insensitive" };
+        title?: { contains: string; mode: "insensitive" };
+        project?: {
+          OR: Array<{
+            projectName?: { contains: string; mode: "insensitive" };
+            client?: {
+              OR: Array<{
+                clientCode?: { contains: string; mode: "insensitive" };
+                clientDescription?: { contains: string; mode: "insensitive" };
+              }>;
+            };
+          }>;
+        };
+      }>;
+    } = {};
+    
     if (projectId) where.projectId = parseInt(projectId);
     if (status) where.status = status;
+    
+    // Add search functionality
+    if (search) {
+      where.OR = [
+        { estimateNumber: { contains: search, mode: "insensitive" } },
+        { title: { contains: search, mode: "insensitive" } },
+        {
+          project: {
+            OR: [
+              { projectName: { contains: search, mode: "insensitive" } },
+              {
+                client: {
+                  OR: [
+                    { clientCode: { contains: search, mode: "insensitive" } },
+                    { clientDescription: { contains: search, mode: "insensitive" } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ];
+    }
 
     const [estimates, total] = await Promise.all([
       prisma.estimate.findMany({

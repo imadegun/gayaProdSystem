@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Calculator, FileText, Download, Eye, Plus, Send, DollarSign, 
-  CheckCircle, XCircle, Clock, Edit, Trash2, Mail, Image
+import {
+  Calculator, FileText, Download, Eye, Plus, Send, DollarSign,
+  CheckCircle, XCircle, Clock, Edit, Trash2, Mail, Image,
+  Search, Filter, ChevronLeft, ChevronRight, FileSpreadsheet, FileDown
 } from "lucide-react";
 
 interface DirectoryListItem {
@@ -122,6 +123,7 @@ export default function RNDEstimatesPage() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [priceModalOpen, setPriceModalOpen] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEstimate, setSelectedEstimate] = useState<Estimate | null>(null);
 
   // Form states
@@ -133,34 +135,80 @@ export default function RNDEstimatesPage() {
     currencyId: "",
     notes: "",
   });
+  const [editFormData, setEditFormData] = useState({
+    title: "",
+    description: "",
+    currencyId: "",
+    notes: "",
+  });
   const [pricingItems, setPricingItems] = useState<{ id: number; unitPrice: string; quantity: number }[]>([]);
   const [sendEmail, setSendEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Search, Filter, Pagination states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterProjectId, setFilterProjectId] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize] = useState(10);
+  const [exporting, setExporting] = useState(false);
 
   const userRole = session?.user?.role || "";
   const canCreateEstimate = ["R&D", "Sales", "Admin"].includes(userRole);
   const canSetPrices = ["Admin"].includes(userRole);
   const canSendEstimate = ["Sales", "Admin"].includes(userRole);
+  const canEditEstimate = ["R&D", "Sales", "Admin"].includes(userRole);
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchEstimates();
+  }, [activeTab, debouncedSearch, filterProjectId, currentPage]);
+
+  useEffect(() => {
     fetchProjects();
     fetchCurrencies();
   }, []);
 
-  const fetchEstimates = async () => {
+  const fetchEstimates = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await fetch("/api/rnd/estimates");
+      const params = new URLSearchParams();
+      params.append("page", currentPage.toString());
+      params.append("limit", pageSize.toString());
+      
+      if (activeTab !== "all") {
+        params.append("status", activeTab);
+      }
+      if (debouncedSearch) {
+        params.append("search", debouncedSearch);
+      }
+      if (filterProjectId) {
+        params.append("projectId", filterProjectId);
+      }
+
+      const response = await fetch(`/api/rnd/estimates?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setEstimates(data.estimates);
+        setTotalPages(data.pagination?.totalPages || 1);
+        setTotalCount(data.pagination?.total || 0);
       }
     } catch (error) {
       console.error("Error fetching estimates:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, activeTab, debouncedSearch, filterProjectId]);
 
   const fetchProjects = async () => {
     try {
@@ -323,10 +371,92 @@ export default function RNDEstimatesPage() {
     }
   };
 
+  const handleEditEstimate = async () => {
+    if (!selectedEstimate) return;
+
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/rnd/estimates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedEstimate.id,
+          action: "update",
+          ...editFormData,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchEstimates();
+        setEditModalOpen(false);
+        setSelectedEstimate(null);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to update estimate");
+      }
+    } catch (error) {
+      console.error("Error updating estimate:", error);
+      alert("Failed to update estimate");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleExport = async (format: "xlsx" | "pdf") => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      params.append("format", format);
+      
+      if (activeTab !== "all") {
+        params.append("status", activeTab);
+      }
+      if (debouncedSearch) {
+        params.append("search", debouncedSearch);
+      }
+      if (filterProjectId) {
+        params.append("projectId", filterProjectId);
+      }
+
+      const response = await fetch(`/api/rnd/exports?type=estimates&${params.toString()}`);
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `estimates-${new Date().toISOString().split("T")[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        const error = await response.json();
+        alert(error.error || `Failed to export as ${format.toUpperCase()}`);
+      }
+    } catch (error) {
+      console.error(`Error exporting as ${format}:`, error);
+      alert(`Failed to export as ${format.toUpperCase()}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const resetForm = () => {
     setSelectedProjectId("");
     setSelectedItems([]);
     setFormData({ title: "", description: "", currencyId: "", notes: "" });
+  };
+
+  const openEditModal = (estimate: Estimate) => {
+    setSelectedEstimate(estimate);
+    setEditFormData({
+      title: estimate.title,
+      description: estimate.description || "",
+      currencyId: estimate.currency?.id?.toString() || "",
+      notes: estimate.notes || "",
+    });
+    setEditModalOpen(true);
   };
 
   const openPriceModal = (estimate: Estimate) => {
@@ -373,10 +503,8 @@ export default function RNDEstimatesPage() {
     return `${symbol}${amount.toLocaleString()}`;
   };
 
-  const filteredEstimates = estimates.filter(est => {
-    if (activeTab === "all") return true;
-    return est.status === activeTab;
-  });
+  // Client-side filtering is no longer needed as we filter on the server
+  const filteredEstimates = estimates;
 
   const selectedProject = projects.find(p => p.id.toString() === selectedProjectId);
 
@@ -397,22 +525,88 @@ export default function RNDEstimatesPage() {
             Create and manage cost estimates for R&D projects
           </p>
         </div>
-        {canCreateEstimate && (
-          <Button onClick={() => setCreateModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Estimate
+        <div className="flex gap-2">
+          {/* Export Buttons */}
+          <Button
+            variant="outline"
+            onClick={() => handleExport("xlsx")}
+            disabled={exporting}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Export XLSX
           </Button>
-        )}
+          <Button
+            variant="outline"
+            onClick={() => handleExport("pdf")}
+            disabled={exporting}
+          >
+            <FileDown className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+          {canCreateEstimate && (
+            <Button onClick={() => setCreateModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Estimate
+            </Button>
+          )}
+        </div>
       </div>
 
+      {/* Search and Filter Bar */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by estimate number, title, or client..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="w-full md:w-64">
+              <Select
+                value={filterProjectId}
+                onValueChange={(value) => {
+                  setFilterProjectId(value === "all" ? "" : value);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger>
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by project" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Projects</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      {project.projectName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Status Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(value) => {
+        setActiveTab(value);
+        setCurrentPage(1);
+      }}>
         <TabsList>
-          <TabsTrigger value="all">All ({estimates.length})</TabsTrigger>
-          <TabsTrigger value="draft">Draft ({estimates.filter(e => e.status === "draft").length})</TabsTrigger>
-          <TabsTrigger value="priced">Priced ({estimates.filter(e => e.status === "priced").length})</TabsTrigger>
-          <TabsTrigger value="sent">Sent ({estimates.filter(e => e.status === "sent").length})</TabsTrigger>
-          <TabsTrigger value="approved">Approved ({estimates.filter(e => e.status === "approved").length})</TabsTrigger>
+          <TabsTrigger value="all">All ({totalCount})</TabsTrigger>
+          <TabsTrigger value="draft">Draft</TabsTrigger>
+          <TabsTrigger value="priced">Priced</TabsTrigger>
+          <TabsTrigger value="sent">Sent</TabsTrigger>
+          <TabsTrigger value="approved">Approved</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -499,6 +693,18 @@ export default function RNDEstimatesPage() {
                         </Button>
                       )}
                       
+                      {/* Edit button - for draft and priced estimates */}
+                      {canEditEstimate && ["draft", "priced"].includes(estimate.status) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditModal(estimate)}
+                          title="Edit"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
                       {/* Delete button - only for draft estimates */}
                       {estimate.status === "draft" && (
                         <Button
@@ -518,7 +724,7 @@ export default function RNDEstimatesPage() {
               {filteredEstimates.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    No estimates found
+                    {loading ? "Loading..." : "No estimates found"}
                   </TableCell>
                 </TableRow>
               )}
@@ -526,6 +732,60 @@ export default function RNDEstimatesPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} estimates
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="w-8"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Create Estimate Modal */}
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
@@ -929,6 +1189,110 @@ export default function RNDEstimatesPage() {
                 </Button>
                 <Button onClick={handleSendEstimate} disabled={submitting}>
                   {submitting ? "Sending..." : "Send Estimate"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Estimate Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Estimate - {selectedEstimate?.estimateNumber}</DialogTitle>
+            <DialogDescription>
+              Update estimate details
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedEstimate && (
+            <div className="space-y-4">
+              <div>
+                <Label>Title *</Label>
+                <Input
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                  placeholder="Estimate title"
+                />
+              </div>
+              
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                  placeholder="Optional description"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Currency</Label>
+                  <Select
+                    value={editFormData.currencyId}
+                    onValueChange={(value) => setEditFormData({ ...editFormData, currencyId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((currency) => (
+                        <SelectItem key={currency.id} value={currency.id.toString()}>
+                          {currency.code} - {currency.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Notes</Label>
+                  <Input
+                    value={editFormData.notes}
+                    onChange={(e) => setEditFormData({ ...editFormData, notes: e.target.value })}
+                    placeholder="Internal notes"
+                  />
+                </div>
+              </div>
+
+              {/* Show current items (read-only) */}
+              <div>
+                <Label className="text-sm font-medium">Estimate Items</Label>
+                <div className="border rounded-lg max-h-40 overflow-y-auto mt-2">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Item</TableHead>
+                        <TableHead className="text-right">Qty</TableHead>
+                        <TableHead className="text-right">Unit Price</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedEstimate.items.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">{item.directoryList.itemName}</TableCell>
+                          <TableCell className="text-right">{item.quantity}</TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.unitPrice, selectedEstimate.currency?.symbol)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.totalPrice, selectedEstimate.currency?.symbol)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleEditEstimate} disabled={submitting}>
+                  {submitting ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </div>

@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "migrate": "tsx scripts/migrate-database.ts",
-    "seed": "tsx scripts/seed-sample-data.ts",
+    "seed": "tsx scripts/seed-test-users.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio"
