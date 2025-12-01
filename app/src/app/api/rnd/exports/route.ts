@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
 
       if (format === "xlsx") {
         const buffer = await generateEstimatesExcel(estimates);
-        return new Response(buffer, {
+        return new Response(buffer as any, {
           headers: {
             "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "Content-Disposition": `attachment; filename="estimates-${new Date().toISOString().split("T")[0]}.xlsx"`,
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
         });
       } else if (format === "pdf") {
         const buffer = await generateEstimatesPDF(estimates);
-        return new Response(buffer, {
+        return new Response(buffer as any, {
           headers: {
             "Content-Type": "application/pdf",
             "Content-Disposition": `attachment; filename="estimates-${new Date().toISOString().split("T")[0]}.pdf"`,
@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
     // Generate export based on format
     if (exportFormat === 'pdf') {
       const pdfBuffer = await generatePDF(documentData, documentType);
-      return new Response(pdfBuffer, {
+      return new Response(pdfBuffer as any, {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `attachment; filename="${fileName}.pdf"`
@@ -300,7 +300,7 @@ export async function POST(request: NextRequest) {
       });
     } else if (exportFormat === 'excel') {
       const excelBuffer = await generateExcel(documentData, documentType);
-      return new Response(excelBuffer, {
+      return new Response(excelBuffer as any, {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="${fileName}.xlsx"`
