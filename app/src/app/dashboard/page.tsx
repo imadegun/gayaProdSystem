@@ -55,10 +55,10 @@ export default function Dashboard() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">
+        <h2 className="text-3xl font-bold text-foreground">
           Dashboard
         </h2>
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-muted-foreground">
           Welcome back, {session.user.username}! Here's your production overview.
         </p>
       </div>
@@ -66,10 +66,10 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="space-y-6">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-foreground">
             Welcome to gayaProdSystem
           </h2>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Ceramic Production Management Dashboard
           </p>
         </div>
@@ -219,34 +219,34 @@ export default function Dashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {lastUpdate && (
-                    <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      <p className="text-sm text-blue-700">
+                    <div className="flex items-center space-x-2 p-2 bg-primary/10 rounded">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                      <p className="text-sm text-primary">
                         {lastUpdate}
                       </p>
                     </div>
                   )}
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       System initialized successfully
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       User authentication configured
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Database migration pending
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    <p className="text-sm text-gray-600">
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full"></div>
+                    <p className="text-sm text-muted-foreground">
                       Real-time infrastructure active
                     </p>
                   </div>

@@ -170,19 +170,19 @@ export default function RNDDashboard() {
               </CardHeader>
               <CardContent className="px-4 pb-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <button className="p-2 text-left border rounded-lg hover:bg-gray-50 transition-colors">
+                  <button className="p-2 text-left border rounded-lg hover:bg-accent transition-colors">
                     <Plus className="h-4 w-4 mb-0.5" />
                     <div className="text-xs font-medium">New Project</div>
                   </button>
-                  <button className="p-2 text-left border rounded-lg hover:bg-gray-50 transition-colors">
+                  <button className="p-2 text-left border rounded-lg hover:bg-accent transition-colors">
                     <Users className="h-4 w-4 mb-0.5" />
                     <div className="text-xs font-medium">Add Client</div>
                   </button>
-                  <button className="p-2 text-left border rounded-lg hover:bg-gray-50 transition-colors">
+                  <button className="p-2 text-left border rounded-lg hover:bg-accent transition-colors">
                     <FileText className="h-4 w-4 mb-0.5" />
                     <div className="text-xs font-medium">Directory List</div>
                   </button>
-                  <button className="p-2 text-left border rounded-lg hover:bg-gray-50 transition-colors">
+                  <button className="p-2 text-left border rounded-lg hover:bg-accent transition-colors">
                     <Calculator className="h-4 w-4 mb-0.5" />
                     <div className="text-xs font-medium">Create Estimate</div>
                   </button>

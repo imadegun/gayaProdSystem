@@ -22,6 +22,7 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navigation = [
   { name: "Dashboard", href: "/glaze", icon: Home, roles: ["Glaze", "Admin"] },
@@ -73,13 +74,14 @@ export default function GlazeLayout({
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Sidebar */}
       <div className="fixed inset-y-0 left-0 z-50 w-64 bg-purple-600 shadow-lg">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-center h-16 px-4 border-b border-purple-500">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-purple-500">
             <h1 className="text-xl font-bold text-white">Glaze Portal</h1>
+            <ThemeToggle />
           </div>
 
           {/* Navigation */}
@@ -147,7 +149,7 @@ export default function GlazeLayout({
 
       {/* Main content */}
       <div className="pl-64">
-        <main className="min-h-screen">
+        <main className="min-h-screen bg-background">
           {children}
         </main>
       </div>
