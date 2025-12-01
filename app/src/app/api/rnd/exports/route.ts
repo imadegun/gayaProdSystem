@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Generate Excel for estimates list
-async function generateEstimatesExcel(estimates: any[]): Promise<Buffer> {
+async function generateEstimatesExcel(estimates: any[]): Promise<Uint8Array> {
   // Create CSV content (can be opened in Excel)
   const headers = [
     "Estimate #",
@@ -191,11 +191,11 @@ async function generateEstimatesExcel(estimates: any[]): Promise<Buffer> {
     ),
   ].join("\n");
 
-  return Buffer.from(csvContent, "utf-8");
+  return new Uint8Array(Buffer.from(csvContent, "utf-8"));
 }
 
 // Generate PDF for estimates list
-async function generateEstimatesPDF(estimates: any[]): Promise<Buffer> {
+async function generateEstimatesPDF(estimates: any[]): Promise<Uint8Array> {
   // Create a simple text-based PDF content
   const lines = [
     "ESTIMATES REPORT",
@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
     // Generate export based on format
     if (exportFormat === 'pdf') {
       const pdfBuffer = await generatePDF(documentData, documentType);
-      return new Response(new Uint8Array(pdfBuffer), {
+      return new Response(pdfBuffer, {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `attachment; filename="${fileName}.pdf"`
@@ -300,7 +300,7 @@ export async function POST(request: NextRequest) {
       });
     } else if (exportFormat === 'excel') {
       const excelBuffer = await generateExcel(documentData, documentType);
-      return new Response(new Uint8Array(excelBuffer), {
+      return new Response(excelBuffer, {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="${fileName}.xlsx"`
@@ -460,7 +460,7 @@ async function getInvoiceData(invoiceId: number, userId: number) {
 }
 
 // PDF Generation (simplified - would use a library like pdfkit or puppeteer in production)
-async function generatePDF(documentData: any, documentType: string): Promise<Buffer> {
+async function generatePDF(documentData: any, documentType: string): Promise<Uint8Array> {
   // This is a placeholder - in production, use pdfkit, puppeteer, or similar
   const pdfContent = `
     ${documentType.toUpperCase()}
@@ -476,12 +476,12 @@ async function generatePDF(documentData: any, documentType: string): Promise<Buf
     Total Amount: ${documentData.document.totalAmount || 'TBD'}
   `;
 
-  // Convert to buffer (placeholder implementation)
-  return Buffer.from(pdfContent);
+  // Convert to Uint8Array (placeholder implementation)
+  return new Uint8Array(Buffer.from(pdfContent));
 }
 
 // Excel Generation (simplified - would use exceljs or similar in production)
-async function generateExcel(documentData: any, documentType: string): Promise<Buffer> {
+async function generateExcel(documentData: any, documentType: string): Promise<Uint8Array> {
   // This is a placeholder - in production, use exceljs or similar library
   const excelData = [
     [documentType.toUpperCase(), 'Document Details'],
@@ -503,5 +503,5 @@ async function generateExcel(documentData: any, documentType: string): Promise<B
     row.map((cell: string | number) => `"${cell}"`).join(',')
   ).join('\n');
 
-  return Buffer.from(csvContent);
+  return new Uint8Array(Buffer.from(csvContent));
 }

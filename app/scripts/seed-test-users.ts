@@ -72,10 +72,10 @@ async function main() {
   } else {
     client = await prisma.client.create({
       data: {
-        clientCode: 'TEST-001',
-        clientDescription: 'Test Client for Staging',
-        region: 'Test Region',
-        department: 'Test Department',
+        clientCode: 'ARC01',
+        clientDescription: 'Armanicasa',
+        region: 'Region Italy',
+        department: 'F&B',
         contactPerson: 'John Doe',
         email: 'client@test.com',
         phone: '+1234567890',

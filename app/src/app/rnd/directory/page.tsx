@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Edit, Trash2, Image, Eye, Upload, X } from "lucide-react";
+import { Plus, FileText, Edit, Trash2, Image, Eye, Upload, X, Copy } from "lucide-react";
 
 interface DirectoryList {
   id: number;
@@ -69,12 +69,14 @@ interface Material {
 
 export default function RNDDirectoryPage() {
   const [directoryLists, setDirectoryLists] = useState<DirectoryList[]>([]);
+  const [availableDirectoryItems, setAvailableDirectoryItems] = useState<DirectoryList[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<DirectoryList | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DirectoryList | null>(null);
+  const [duplicatingItem, setDuplicatingItem] = useState<DirectoryList | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -88,6 +90,7 @@ export default function RNDDirectoryPage() {
       if (response.ok) {
         const data = await response.json();
         setDirectoryLists(data.directoryLists);
+        setAvailableDirectoryItems(data.directoryLists);
       }
     } catch (error) {
       console.error("Error fetching directory lists:", error);
@@ -166,6 +169,12 @@ export default function RNDDirectoryPage() {
         console.error("Error deleting directory item:", error);
       }
     }
+  };
+
+  const handleDuplicate = (item: DirectoryList) => {
+    setDuplicatingItem(item);
+    setEditingItem(null);
+    setFormModalOpen(true);
   };
 
   if (loading) {
@@ -274,6 +283,15 @@ export default function RNDDirectoryPage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => handleDuplicate(item)}
+                          title="Duplicate"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
                           onClick={() => handleDelete(item.id)}
                           title="Delete"
@@ -310,7 +328,7 @@ export default function RNDDirectoryPage() {
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader className="pb-2">
             <DialogTitle className="text-lg">
-              {editingItem ? "Edit Directory Item" : "Add Directory Item"}
+              {editingItem ? "Edit Directory Item" : duplicatingItem ? "Duplicate Directory Item" : "Add Directory Item"}
             </DialogTitle>
             <DialogDescription className="text-sm">
               {editingItem ? "Update the directory item details" : "Create a new directory item"}
@@ -319,9 +337,14 @@ export default function RNDDirectoryPage() {
 
           <DirectoryForm
             projects={projects}
+            availableDirectoryItems={availableDirectoryItems}
             editingItem={editingItem}
+            duplicatingItem={duplicatingItem}
             onSubmit={editingItem ? (data) => handleUpdate(editingItem.id, data) : handleCreate}
-            onCancel={() => setFormModalOpen(false)}
+            onCancel={() => {
+              setFormModalOpen(false);
+              setDuplicatingItem(null);
+            }}
             submitting={submitting}
           />
         </DialogContent>
@@ -356,11 +379,13 @@ function DetailModal({
     lusters: [],
     stainOxides: [],
   });
+  const [resolvedComponents, setResolvedComponents] = useState<any[]>([]);
 
-  // Fetch materials when modal opens
+  // Fetch materials and resolve components when modal opens
   useEffect(() => {
     if (open && selectedItem) {
       fetchMaterialsForDetail();
+      resolveComponentDetails();
     }
   }, [open, selectedItem]);
 
@@ -391,6 +416,47 @@ function DetailModal({
       });
     } catch (error) {
       console.error("Error fetching materials:", error);
+    }
+  };
+
+  const resolveComponentDetails = async () => {
+    if (!selectedItem?.components || !Array.isArray(selectedItem.components)) {
+      setResolvedComponents([]);
+      return;
+    }
+
+    try {
+      // Get all directory items to resolve component references
+      const response = await fetch("/api/rnd/directory");
+      if (!response.ok) {
+        setResolvedComponents(selectedItem.components);
+        return;
+      }
+
+      const data = await response.json();
+      const allDirectoryItems = data.directoryLists || [];
+
+      // Resolve each component
+      const resolved = selectedItem.components.map((component: any) => {
+        if (component.componentId) {
+          // Find the referenced directory item
+          const referencedItem = allDirectoryItems.find((item: DirectoryList) => item.id === component.componentId);
+          if (referencedItem) {
+            return {
+              ...component,
+              componentName: referencedItem.itemName,
+              collectCode: referencedItem.collectCode,
+              resolvedItem: referencedItem
+            };
+          }
+        }
+        return component;
+      });
+
+      setResolvedComponents(resolved);
+    } catch (error) {
+      console.error("Error resolving component details:", error);
+      setResolvedComponents(selectedItem.components);
     }
   };
 
@@ -522,10 +588,66 @@ function DetailModal({
             )}
 
             {/* Set Components */}
-            {selectedItem.isSet && selectedItem.components && (
+            {selectedItem.isSet && resolvedComponents.length > 0 && (
               <div className="bg-gray-50 rounded p-2">
-                <div className="text-muted-foreground text-xs uppercase mb-1">Set Components</div>
-                <pre className="text-xs bg-white p-2 rounded border overflow-x-auto">{JSON.stringify(selectedItem.components, null, 2)}</pre>
+                <div className="text-muted-foreground text-xs uppercase mb-2">Set Components ({resolvedComponents.length})</div>
+                <div className="space-y-2">
+                  {resolvedComponents.map((component: any, index: number) => (
+                    <div key={index} className="bg-white p-2 rounded border text-xs">
+                      <div className="flex gap-2 items-center">
+                        {/* Photo thumbnail for directory items */}
+                        {component.componentId && component.resolvedItem?.photos && component.resolvedItem.photos.length > 0 && (
+                          <div className="flex-shrink-0">
+                            <img
+                              src={component.resolvedItem.photos[0]}
+                              alt={component.componentName}
+                              className="w-10 h-10 object-cover rounded border cursor-pointer hover:opacity-80"
+                              onClick={() => window.open(component.resolvedItem.photos[0], '_blank')}
+                            />
+                          </div>
+                        )}
+                        {/* Photo for external components */}
+                        {component.photos && component.photos.length > 0 && !component.componentId && (
+                          <div className="flex-shrink-0">
+                            <img
+                              src={component.photos[0]}
+                              alt={component.componentName}
+                              className="w-10 h-10 object-cover rounded border cursor-pointer hover:opacity-80"
+                              onClick={() => window.open(component.photos[0], '_blank')}
+                            />
+                          </div>
+                        )}
+                        {/* Placeholder for items without photos */}
+                        {((component.componentId && (!component.resolvedItem?.photos || component.resolvedItem.photos.length === 0)) ||
+                          (!component.componentId && (!component.photos || component.photos.length === 0))) && (
+                          <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded border flex items-center justify-center">
+                            <Image className="h-4 w-4 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <div className="grid grid-cols-2 gap-2 mb-1">
+                            <div>
+                              <span className="font-medium">
+                                {component.collectCode && `${component.collectCode} - `}
+                                {component.componentName || component.description || `Item ${component.componentId}`}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Qty:</span>
+                              <span className="font-medium ml-1">{component.quantity}</span>
+                            </div>
+                          </div>
+                          {(component.notes || component.description) && (
+                            <div className="pt-1 border-t">
+                              <span className="text-muted-foreground">Details:</span>
+                              <span className="ml-1">{component.notes || component.description}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </TabsContent>
@@ -622,44 +744,52 @@ function DetailModal({
 // Directory Form Component
 function DirectoryForm({
   projects,
+  availableDirectoryItems,
   editingItem,
+  duplicatingItem,
   onSubmit,
   onCancel,
   submitting
 }: {
   projects: Project[];
+  availableDirectoryItems: DirectoryList[];
   editingItem: DirectoryList | null;
+  duplicatingItem: DirectoryList | null;
   onSubmit: (data: any) => void;
   onCancel: () => void;
   submitting: boolean;
 }) {
   const [formData, setFormData] = useState({
-    projectId: editingItem?.projectId?.toString() || "",
-    itemName: editingItem?.itemName || "",
-    collectCode: editingItem?.collectCode || "",
-    quantity: editingItem?.quantity || 1,
-    unit: editingItem?.unit || "",
-    price: editingItem?.price?.toString() || "",
-    total: editingItem?.total?.toString() || "",
-    textureName: editingItem?.textureName || "",
-    colorName: editingItem?.colorName || "",
-    materialName: editingItem?.materialName || "",
-    sizeInfo: editingItem?.sizeInfo || "",
-    clayIds: (editingItem?.clayIds || []).map(id => id.toString()),
-    glazeIds: (editingItem?.glazeIds || []).map(id => id.toString()),
-    engobeIds: (editingItem?.engobeIds || []).map(id => id.toString()),
-    firingType: editingItem?.firingType || "",
-    lusterIds: (editingItem?.lusterIds || []).map(id => id.toString()),
-    stainOxideId: editingItem?.stainOxideId?.toString() || "",
-    weight: editingItem?.weight?.toString() || "",
-    technotes: editingItem?.technotes || "",
-    isDecor: editingItem?.isDecor || false,
-    notes: editingItem?.notes || "",
-    photos: editingItem?.photos || [],
+    projectId: "",
+    itemName: "",
+    collectCode: "",
+    quantity: 1,
+    unit: "",
+    price: "",
+    total: "",
+    textureName: "",
+    colorName: "",
+    materialName: "",
+    sizeInfo: "",
+    clayIds: [] as string[],
+    glazeIds: [] as string[],
+    engobeIds: [] as string[],
+    firingType: "",
+    lusterIds: [] as string[],
+    stainOxideId: "",
+    weight: "",
+    technotes: "",
+    isDecor: false,
+    isSet: false,
+    components: [] as any[],
+    notes: "",
+    photos: [] as string[],
   });
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingComponentPhoto, setUploadingComponentPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const componentFileInputRef = useRef<HTMLInputElement>(null);
 
   const [materials, setMaterials] = useState<{
     clays: Material[];
@@ -694,6 +824,70 @@ function DirectoryForm({
     fetchMaterials();
   }, []);
 
+  // Update form data when editingItem or duplicatingItem changes
+  useEffect(() => {
+    const item = editingItem || duplicatingItem;
+    if (item) {
+      if (duplicatingItem) {
+        // For duplication, copy all data but modify the name and clear the code
+        setFormData({
+          projectId: item.projectId?.toString() || "",
+          itemName: `${item.itemName || ""} (Copy)`,
+          collectCode: "", // Will be auto-generated
+          quantity: item.quantity || 1,
+          unit: item.unit || "",
+          price: item.price?.toString() || "",
+          total: item.total?.toString() || "",
+          textureName: item.textureName || "",
+          colorName: item.colorName || "",
+          materialName: item.materialName || "",
+          sizeInfo: item.sizeInfo || "",
+          clayIds: (item.clayIds || []).map(id => id.toString()),
+          glazeIds: (item.glazeIds || []).map(id => id.toString()),
+          engobeIds: (item.engobeIds || []).map(id => id.toString()),
+          firingType: item.firingType || "",
+          lusterIds: (item.lusterIds || []).map(id => id.toString()),
+          stainOxideId: item.stainOxideId?.toString() || "",
+          weight: item.weight?.toString() || "",
+          technotes: item.technotes || "",
+          isDecor: item.isDecor || false,
+          isSet: item.isSet || false,
+          components: item.components || [],
+          notes: item.notes || "",
+          photos: item.photos || [], // Copy photos for duplication
+        });
+      } else {
+        // For editing existing items, load the current saved data
+        setFormData({
+          projectId: item.projectId?.toString() || "",
+          itemName: item.itemName || "",
+          collectCode: item.collectCode || "",
+          quantity: item.quantity || 1,
+          unit: item.unit || "",
+          price: item.price?.toString() || "",
+          total: item.total?.toString() || "",
+          textureName: item.textureName || "",
+          colorName: item.colorName || "",
+          materialName: item.materialName || "",
+          sizeInfo: item.sizeInfo || "",
+          clayIds: (item.clayIds || []).map(id => id.toString()),
+          glazeIds: (item.glazeIds || []).map(id => id.toString()),
+          engobeIds: (item.engobeIds || []).map(id => id.toString()),
+          firingType: item.firingType || "",
+          lusterIds: (item.lusterIds || []).map(id => id.toString()),
+          stainOxideId: item.stainOxideId?.toString() || "",
+          weight: item.weight?.toString() || "",
+          technotes: item.technotes || "",
+          isDecor: item.isDecor || false,
+          isSet: item.isSet || false,
+          components: item.components || [],
+          notes: item.notes || "",
+          photos: item.photos || [],
+        });
+      }
+    }
+  }, [editingItem, duplicatingItem]);
+
   const fetchMaterials = async () => {
     try {
       const [clayRes, glazeRes, engobeRes, lusterRes, stainOxideRes] = await Promise.all([
@@ -724,7 +918,7 @@ function DirectoryForm({
     }
   };
 
-  const generateCollectCode = async () => {
+  const generateCollectCode = async (isSet: boolean = false) => {
     try {
       // Get all existing codes from directory and collections
       const [dirResponse, collectResponse] = await Promise.all([
@@ -737,67 +931,39 @@ function DirectoryForm({
         ...(collectResponse.collections || []).map((item: any) => item.collectCode).filter(Boolean)
       ];
 
-      // Find the highest existing code
-      let highestCode = "";
-      let highestFirst = -1;
-      let highestSecond = -1;
-      let highestNum = 0;
-
+      // Determine prefix based on item type
+      // GX prefix for sets/assemblies, AA prefix for individual items
+      const targetPrefix = isSet ? 'GX' : 'AA';
       const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-      for (const code of existingCodes) {
-        if (code && code.includes('-')) {
-          const [letterPart, numPart] = code.split('-');
-          if (letterPart.length === 2 && numPart.length === 3) {
-            const first = letters.indexOf(letterPart[0]);
-            const second = letters.indexOf(letterPart[1]);
-            const num = parseInt(numPart);
+      // Filter codes by the target prefix
+      const prefixCodes = existingCodes.filter((code: string) =>
+        code && code.startsWith(targetPrefix + '-') && code.length === 6
+      );
 
-            if (first >= 0 && second >= 0 && num >= 1 && num <= 999) {
-              // Compare codes: first by letters, then by number
-              const currentValue = (first * 26 * 1000) + (second * 1000) + num;
-              const highestValue = (highestFirst * 26 * 1000) + (highestSecond * 1000) + highestNum;
+      // Find the highest number for this prefix
+      let highestNum = 0;
 
-              if (currentValue > highestValue) {
-                highestCode = code;
-                highestFirst = first;
-                highestSecond = second;
-                highestNum = num;
-              }
-            }
+      for (const code of prefixCodes) {
+        const [prefix, numPart] = code.split('-');
+        if (prefix === targetPrefix) {
+          const num = parseInt(numPart);
+          if (num >= 1 && num <= 999) {
+            highestNum = Math.max(highestNum, num);
           }
         }
       }
 
-      // If no valid codes exist, start from AA-001
-      if (highestFirst === -1) {
-        return "AA-001";
-      }
+      // Generate the next code
+      const nextNum = highestNum + 1;
 
-      // Generate the next code after the highest one
-      let nextFirst = highestFirst;
-      let nextSecond = highestSecond;
-      let nextNum = highestNum + 1;
-
-      // Handle number overflow
+      // Handle number overflow (reset to 001 if exceeds 999)
       if (nextNum > 999) {
-        nextNum = 1;
-        nextSecond++;
-
-        // Handle second letter overflow
-        if (nextSecond > 25) {
-          nextSecond = 0;
-          nextFirst++;
-
-          // Handle first letter overflow (wrap around or stop)
-          if (nextFirst > 25) {
-            // All combinations exhausted - this is extremely unlikely
-            return "";
-          }
-        }
+        // For now, we'll wrap around. In production, you might want to increment the prefix
+        return `${targetPrefix}-001`;
       }
 
-      const nextCode = `${letters[nextFirst]}${letters[nextSecond]}-${String(nextNum).padStart(3, '0')}`;
+      const nextCode = `${targetPrefix}-${String(nextNum).padStart(3, '0')}`;
       return nextCode;
 
     } catch (error) {
@@ -848,12 +1014,85 @@ function DirectoryForm({
     }));
   };
 
+  const handleComponentPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingComponentPhoto(true);
+    try {
+      const newPhotos: string[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Convert to base64 for simple storage (in production, use proper file upload)
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        newPhotos.push(base64);
+      }
+
+      // For now, we'll store component photos in a temporary state
+      // In a real implementation, you'd upload to a server and get URLs back
+      return newPhotos;
+    } catch (error) {
+      console.error("Error uploading component photos:", error);
+      alert("Error uploading component photos. Please try again.");
+      return [];
+    } finally {
+      setUploadingComponentPhoto(false);
+      if (componentFileInputRef.current) {
+        componentFileInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate set components if isSet is true
+    if (formData.isSet) {
+      if (!formData.components || !Array.isArray(formData.components)) {
+        alert("Set components must be a valid JSON array");
+        return;
+      }
+
+      // Validate each component has required fields
+      for (const component of formData.components) {
+        if (typeof component !== 'object' || component === null) {
+          alert("Each component must be an object");
+          return;
+        }
+        // Components can be either:
+        // 1. References to other directory items (componentId required)
+        // 2. External components (componentName/description required)
+        const hasDirectoryReference = component.componentId !== undefined && component.componentId !== null;
+        const hasExternalDescription = component.componentName || component.description;
+
+        if (!hasDirectoryReference && !hasExternalDescription) {
+          alert("Each component must have either componentId (for directory items) or componentName/description (for external components)");
+          return;
+        }
+        if (!component.quantity) {
+          alert("Each component must have quantity");
+          return;
+        }
+        if (typeof component.quantity !== 'number' || component.quantity <= 0) {
+          alert("Component quantity must be a positive number");
+          return;
+        }
+      }
+
+      // TODO: Future enhancement - Calculate total price based on component prices
+      // This would require fetching component details and summing (component.price * component.quantity)
+    }
+
     const qty = parseInt(formData.quantity.toString());
     const unitPrice = formData.price ? parseFloat(formData.price.toString()) : undefined;
     const calculatedTotal = unitPrice && qty ? unitPrice * qty : (formData.total ? parseFloat(formData.total.toString()) : undefined);
-    
+
     onSubmit({
       ...formData,
       projectId: parseInt(formData.projectId),
@@ -867,6 +1106,8 @@ function DirectoryForm({
       lusterIds: formData.lusterIds.map(id => parseInt(id)),
       stainOxideId: formData.stainOxideId ? parseInt(formData.stainOxideId) : undefined,
       weight: formData.weight ? parseFloat(formData.weight.toString()) : undefined,
+      isSet: formData.isSet,
+      components: formData.components,
       photos: formData.photos,
     });
   };
@@ -930,7 +1171,7 @@ function DirectoryForm({
                    size="sm"
                    className="text-xs h-8 px-2"
                    onClick={async () => {
-                     const code = await generateCollectCode();
+                     const code = await generateCollectCode(formData.isSet);
                      if (code) {
                        handleChange("collectCode", code);
                      }
@@ -1014,6 +1255,16 @@ function DirectoryForm({
                  <option value="dozen">dozen</option>
                  <option value="box">box</option>
                </select>
+             </div>
+
+             <div className="flex items-center gap-2">
+               <label className="text-xs font-medium">Is Set/Assembly:</label>
+               <input
+                 type="checkbox"
+                 checked={formData.isSet}
+                 onChange={(e) => handleChange("isSet", e.target.checked)}
+                 className="h-4 w-4"
+               />
              </div>
 
              <div>
@@ -1606,6 +1857,178 @@ function DirectoryForm({
               rows={2}
             />
           </div>
+
+          {/* Set Components Section */}
+          {formData.isSet && (
+            <div>
+              <label className="text-xs font-medium mb-2 block">Set Components</label>
+              <div className="border rounded p-3 bg-gray-50 space-y-3">
+                <p className="text-xs text-gray-600">
+                  Define the components that make up this assembly/set. For external components, you can upload photos using the "Photo" button.
+                </p>
+
+                {/* Add Component Form */}
+                <div className="border rounded p-2 bg-white">
+                  <div className="text-xs font-medium mb-2">Add Component</div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <div className="flex gap-2">
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            const selectedItem = availableDirectoryItems.find(d => d.id.toString() === e.target.value);
+                            if (selectedItem) {
+                              // Add directory item component
+                              const newComponent = {
+                                componentId: selectedItem.id,
+                                componentName: selectedItem.itemName,
+                                quantity: 1,
+                                notes: ""
+                              };
+                              handleChange("components", [...formData.components, newComponent]);
+                            }
+                          }
+                        }}
+                        className="flex-1 p-1.5 text-xs border rounded"
+                      >
+                        <option value="">Select Directory Item</option>
+                        {availableDirectoryItems
+                          .filter(item => !editingItem || item.id !== editingItem.id) // Don't allow self-reference
+                          .map(item => (
+                          <option key={item.id} value={item.id.toString()}>
+                            {item.collectCode ? `${item.collectCode} - ` : ""}{item.itemName}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="flex-1 flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="External component name"
+                          className="flex-1 p-1.5 text-xs border rounded"
+                          onKeyDown={async (e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const input = e.target as HTMLInputElement;
+                              if (input.value.trim()) {
+                                // Check if user uploaded photos for this component
+                                let componentPhotos: string[] = [];
+                                if (componentFileInputRef.current?.files?.length) {
+                                  try {
+                                    componentPhotos = await handleComponentPhotoUpload({
+                                      target: componentFileInputRef.current
+                                    } as any) || [];
+                                  } catch (error) {
+                                    console.error("Failed to upload component photos:", error);
+                                  }
+                                }
+
+                                const newComponent = {
+                                  componentName: input.value.trim(),
+                                  quantity: 1,
+                                  description: "",
+                                  photos: componentPhotos
+                                };
+                                handleChange("components", [...formData.components, newComponent]);
+                                input.value = "";
+                                // Reset file input
+                                if (componentFileInputRef.current) {
+                                  componentFileInputRef.current.value = "";
+                                }
+                              }
+                            }
+                          }}
+                        />
+                        <div className="relative">
+                          <input
+                            ref={componentFileInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            id="component-photo-upload"
+                          />
+                          <label
+                            htmlFor="component-photo-upload"
+                            className="inline-flex items-center px-2 py-1 text-xs border rounded cursor-pointer hover:bg-gray-50"
+                          >
+                            <Upload className="h-3 w-3 mr-1" />
+                            Photo
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Components List */}
+                {formData.components.length > 0 && (
+                  <div className="border rounded p-2 bg-white">
+                    <div className="text-xs font-medium mb-2">Selected Components</div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {formData.components.map((component: any, index: number) => (
+                        <div key={index} className="flex items-start gap-2 p-2 bg-gray-50 rounded text-xs">
+                          {/* Photo thumbnail for external components */}
+                          {component.photos && component.photos.length > 0 && !component.componentId && (
+                            <div className="flex-shrink-0">
+                              <img
+                                src={component.photos[0]}
+                                alt={component.componentName}
+                                className="w-8 h-8 object-cover rounded border"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">
+                              {component.componentId ? (
+                                <>{component.componentName || `Directory Item ${component.componentId}`}</>
+                              ) : (
+                                <>{component.componentName || component.description}</>
+                              )}
+                            </div>
+                            {component.description && !component.componentId && (
+                              <div className="text-gray-500 text-xs truncate">{component.description}</div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <span className="text-gray-500">Qty:</span>
+                            <input
+                              type="number"
+                              value={component.quantity}
+                              onChange={(e) => {
+                                const newComponents = [...formData.components];
+                                newComponents[index].quantity = parseInt(e.target.value) || 1;
+                                handleChange("components", newComponents);
+                              }}
+                              className="w-12 p-0.5 text-xs border rounded text-center"
+                              min="1"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 flex-shrink-0"
+                            onClick={() => {
+                              const newComponents = formData.components.filter((_, i) => i !== index);
+                              handleChange("components", newComponents);
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {formData.components.length === 0 && (
+                  <div className="text-xs text-gray-500 text-center py-4">
+                    No components added yet. Use the form above to add components.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

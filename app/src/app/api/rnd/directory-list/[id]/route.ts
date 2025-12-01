@@ -100,6 +100,9 @@ export async function PUT(
       technotes,
       isDecor,
       notes,
+      // Set/Breakdown support
+      isSet,
+      components,
     } = body;
 
     // Verify the directory list item exists and user has access
@@ -153,6 +156,9 @@ export async function PUT(
         technotes,
         isDecor,
         notes,
+        // Set/Breakdown support
+        isSet: isSet || false,
+        components,
       },
       include: {
         project: {
