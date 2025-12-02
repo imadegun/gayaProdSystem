@@ -34,15 +34,24 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const navigation = [
   { name: "Dashboard", href: "/rnd", icon: Home, roles: ["R&D", "Admin"] },
-  { name: "Projects", href: "/rnd/projects", icon: Package, roles: ["R&D", "Admin"] },
-  { name: "Directory Lists", href: "/rnd/directory", icon: FileText, roles: ["R&D", "Admin"] },
-  { name: "Pricing Calculator", href: "/rnd/pricing-calculator", icon: Calculator, roles: ["R&D", "Admin", "Sales"] },
-  { name: "Pricing Settings", href: "/rnd/pricing-settings", icon: Settings2, roles: ["R&D", "Admin"] },
+  { name: "Settings", href: "/rnd/settings", icon: Settings, roles: ["R&D", "Admin"] },
+];
+
+const purchasingGroup = [
   { name: "Estimates", href: "/rnd/estimates", icon: Calculator, roles: ["R&D", "Admin"] },
   { name: "Quotations", href: "/rnd/quotations", icon: DollarSign, roles: ["R&D", "Admin"] },
   { name: "Proformas", href: "/rnd/proformas", icon: FileText, roles: ["R&D", "Admin"] },
+];
+
+const pricingGroup = [
+  { name: "Calculator", href: "/rnd/pricing-calculator", icon: Calculator, roles: ["R&D", "Admin", "Sales"] },
+  { name: "Pricing Settings", href: "/rnd/pricing-settings", icon: Settings2, roles: ["R&D", "Admin"] },
+];
+
+const rndGroup = [
+  { name: "Projects", href: "/rnd/projects", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "DL", href: "/rnd/directory", icon: FileText, roles: ["R&D", "Admin"] },
   { name: "Samples", href: "/rnd/samples", icon: Package, roles: ["R&D", "Admin"] },
-  { name: "Settings", href: "/rnd/settings", icon: Settings, roles: ["R&D", "Admin"] },
 ];
 
 const manageMaterials = [
@@ -77,6 +86,9 @@ export default function RNDLayout({
   const [isConnected] = useState(true); // Mock connection status - would be replaced with actual socket status
   const [materialsExpanded, setMaterialsExpanded] = useState(false);
   const [collectionsExpanded, setCollectionsExpanded] = useState(false);
+  const [purchasingExpanded, setPurchasingExpanded] = useState(false);
+  const [pricingExpanded, setPricingExpanded] = useState(false);
+  const [rndExpanded, setRndExpanded] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
@@ -132,6 +144,120 @@ export default function RNDLayout({
                 </Link>
               );
             })}
+
+            {/* Purchasing Group */}
+            <div className="pt-4">
+              <button
+                onClick={() => setPurchasingExpanded(!purchasingExpanded)}
+                className="flex items-center w-full px-4 py-2 text-sm font-medium text-blue-100 hover:bg-blue-700 hover:text-white rounded-md transition-colors"
+              >
+                {purchasingExpanded ? (
+                  <ChevronDown className="mr-3 h-5 w-5" />
+                ) : (
+                  <ChevronRight className="mr-3 h-5 w-5" />
+                )}
+                Purchasing
+              </button>
+              {purchasingExpanded && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {purchasingGroup
+                    .filter(item => item.roles.includes("all") || item.roles.includes(session.user.role))
+                    .map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                            isActive
+                              ? "bg-blue-700 text-white border-r-2 border-white"
+                              : "text-blue-200 hover:bg-blue-700 hover:text-white"
+                          }`}
+                        >
+                          <item.icon className="mr-3 h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            {/* Pricing Group */}
+            <div className="pt-4">
+              <button
+                onClick={() => setPricingExpanded(!pricingExpanded)}
+                className="flex items-center w-full px-4 py-2 text-sm font-medium text-blue-100 hover:bg-blue-700 hover:text-white rounded-md transition-colors"
+              >
+                {pricingExpanded ? (
+                  <ChevronDown className="mr-3 h-5 w-5" />
+                ) : (
+                  <ChevronRight className="mr-3 h-5 w-5" />
+                )}
+                Pricing
+              </button>
+              {pricingExpanded && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {pricingGroup
+                    .filter(item => item.roles.includes("all") || item.roles.includes(session.user.role))
+                    .map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                            isActive
+                              ? "bg-blue-700 text-white border-r-2 border-white"
+                              : "text-blue-200 hover:bg-blue-700 hover:text-white"
+                          }`}
+                        >
+                          <item.icon className="mr-3 h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            {/* R&D Group */}
+            <div className="pt-4">
+              <button
+                onClick={() => setRndExpanded(!rndExpanded)}
+                className="flex items-center w-full px-4 py-2 text-sm font-medium text-blue-100 hover:bg-blue-700 hover:text-white rounded-md transition-colors"
+              >
+                {rndExpanded ? (
+                  <ChevronDown className="mr-3 h-5 w-5" />
+                ) : (
+                  <ChevronRight className="mr-3 h-5 w-5" />
+                )}
+                R&D
+              </button>
+              {rndExpanded && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {rndGroup
+                    .filter(item => item.roles.includes("all") || item.roles.includes(session.user.role))
+                    .map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                            isActive
+                              ? "bg-blue-700 text-white border-r-2 border-white"
+                              : "text-blue-200 hover:bg-blue-700 hover:text-white"
+                          }`}
+                        >
+                          <item.icon className="mr-3 h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
 
             {/* Manage Materials Group */}
             <div className="pt-4">
