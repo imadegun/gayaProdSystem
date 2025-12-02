@@ -37,6 +37,10 @@ const navigation = [
   // { name: "Settings", href: "/rnd/settings", icon: Settings, roles: ["R&D", "Admin"] },
 ];
 
+const settingnav = [ 
+  { name: "Settings", href: "/rnd/settings", icon: Settings, roles: ["R&D", "Admin"] },
+];
+
 const purchasingGroup = [
   { name: "Estimates", href: "/rnd/estimates", icon: Calculator, roles: ["R&D", "Admin"] },
   { name: "Quotations", href: "/rnd/quotations", icon: DollarSign, roles: ["R&D", "Admin"] },
@@ -115,6 +119,11 @@ export default function RNDLayout({
   const filteredNavigation = navigation.filter(item =>
     item.roles.includes("all") || item.roles.includes(session.user.role)
   );
+
+   const filteredSettingNavigation = settingnav.filter(item =>
+    item.roles.includes("all") || item.roles.includes(session.user.role)
+  );
+ 
 
   return (
     <div className="min-h-screen bg-background">
@@ -336,6 +345,25 @@ export default function RNDLayout({
                 </div>
               )}
             </div>
+            
+            {/* Settings Navigation */}
+             {filteredSettingNavigation.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isActive
+                      ? "bg-blue-700 text-white border-r-2 border-white"
+                      : "text-blue-100 hover:bg-blue-700 hover:text-white"
+                  }`}
+                >
+                  <item.icon className="mr-3 h-5 w-5" />
+                  {item.name}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User info */}
