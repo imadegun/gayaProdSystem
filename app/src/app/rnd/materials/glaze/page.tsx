@@ -1,14 +1,15 @@
 "use client";
 
-import DataTable from "@/components/rnd/DataTable";
+import EnhancedDataTable from "@/components/rnd/EnhancedDataTable";
 
 const columns = [
   { key: "glazeCode", label: "Code", required: true },
   { key: "glazeDescription", label: "Description", required: true },
-  { key: "glazeDate", label: "Date", type: "date" as const, readonly: true },
-  { key: "unitCost", label: "Unit Cost", type: "number" as const },
-  { key: "costUnit", label: "Cost Unit" },
-  { key: "glazeNotes", label: "Notes" },
+  { key: "glazeDate", label: "Date", type: "date" as const, readonly: true, hidden: true },
+  { key: "unitCost", label: "Unit Cost", type: "number" as const, hidden: true },
+  { key: "costUnit", label: "Cost Unit", hidden: true },
+  { key: "glazeNotes", label: "Notes", hidden: true },
+  { key: "isActive", label: "Status", type: "status" as const, required: true },
 ];
 
 export default function GlazeManagement() {
@@ -21,7 +22,7 @@ export default function GlazeManagement() {
         </p>
       </div>
 
-      <DataTable
+      <EnhancedDataTable
         title="Glaze Materials"
         description="Create and manage glaze materials used in ceramic production"
         apiEndpoint="/api/rnd/materials/glaze"
@@ -29,6 +30,8 @@ export default function GlazeManagement() {
         searchPlaceholder="Search glaze materials..."
         addButtonText="Add Glaze Material"
         idField="id"
+        showStatusFilter={true}
+        viewPopupFields={["glazeCode", "glazeDescription", "glazeNotes"]}
       />
     </div>
   );

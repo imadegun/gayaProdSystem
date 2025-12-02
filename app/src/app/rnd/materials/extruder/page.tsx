@@ -1,14 +1,16 @@
 "use client";
 
-import DataTable from "@/components/rnd/DataTable";
+import EnhancedDataTable from "@/components/rnd/EnhancedDataTable";
 
 const columns = [
+  { key: "extruderImage", label: "Photo", type: "image" as const },
   { key: "estruderCode", label: "Code", required: true },
   { key: "estruderDescription", label: "Description", required: true },
-  { key: "estruderDate", label: "Date", type: "date" as const, readonly: true },
-  { key: "unitCost", label: "Unit Cost", type: "number" as const },
-  { key: "costUnit", label: "Cost Unit" },
-  { key: "estruderNotes", label: "Notes" },
+  { key: "estruderDate", label: "Date", type: "date" as const, readonly: true, hidden: true },
+  { key: "unitCost", label: "Unit Cost", type: "number" as const, hidden: true },
+  { key: "costUnit", label: "Cost Unit", hidden: true },
+  { key: "estruderNotes", label: "Notes", hidden: true },
+  { key: "isActive", label: "Status", type: "status" as const, required: true },
 ];
 
 export default function ExtruderManagement() {
@@ -21,7 +23,7 @@ export default function ExtruderManagement() {
         </p>
       </div>
 
-      <DataTable
+      <EnhancedDataTable
         title="Extruder Materials"
         description="Create and manage extruder materials used in ceramic production"
         apiEndpoint="/api/rnd/materials/extruder"
@@ -29,6 +31,8 @@ export default function ExtruderManagement() {
         searchPlaceholder="Search extruder materials..."
         addButtonText="Add Extruder Material"
         idField="id"
+        showStatusFilter={true}
+        viewPopupFields={["extruderImage", "estruderCode", "estruderDescription", "estruderNotes"]}
       />
     </div>
   );

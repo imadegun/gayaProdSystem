@@ -1,14 +1,16 @@
 "use client";
 
-import DataTable from "@/components/rnd/DataTable";
+import EnhancedDataTable from "@/components/rnd/EnhancedDataTable";
 
 const columns = [
+  { key: "castingImage", label: "Photo", type: "image" as const },
   { key: "castingCode", label: "Code", required: true },
   { key: "castingDescription", label: "Description", required: true },
-  { key: "castingDate", label: "Date", type: "date" as const, readonly: true },
-  { key: "unitCost", label: "Unit Cost", type: "number" as const },
-  { key: "costUnit", label: "Cost Unit" },
-  { key: "castingNotes", label: "Notes" },
+  { key: "castingDate", label: "Date", type: "date" as const, readonly: true, hidden: true },
+  { key: "unitCost", label: "Unit Cost", type: "number" as const, hidden: true },
+  { key: "costUnit", label: "Cost Unit", hidden: true },
+  { key: "castingNotes", label: "Notes", hidden: true },
+  { key: "isActive", label: "Status", type: "status" as const, required: true },
 ];
 
 export default function CastingManagement() {
@@ -21,7 +23,7 @@ export default function CastingManagement() {
         </p>
       </div>
 
-      <DataTable
+      <EnhancedDataTable
         title="Casting Materials"
         description="Create and manage casting materials used in ceramic production"
         apiEndpoint="/api/rnd/materials/casting"
@@ -29,6 +31,8 @@ export default function CastingManagement() {
         searchPlaceholder="Search casting materials..."
         addButtonText="Add Casting Material"
         idField="id"
+        showStatusFilter={true}
+        viewPopupFields={["castingImage", "castingCode", "castingDescription", "castingNotes"]}
       />
     </div>
   );

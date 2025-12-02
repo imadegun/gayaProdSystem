@@ -7,18 +7,62 @@ export async function GET(request: NextRequest) {
     // Require R&D role
     await requireRole(request, "R&D");
 
-    const engobes = await prisma.tblengobe.findMany({
-      select: {
-        id: true,
-        engobeCode: true,
-        engobeDescription: true,
-        engobeDate: true,
-        engobeNotes: true,
-      },
-      orderBy: { engobeCode: "asc" },
-    });
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const status = searchParams.get("status");
 
-    return NextResponse.json({ engobes });
+    // Build where clause
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { engobeCode: { contains: search, mode: "insensitive" } },
+        { engobeDescription: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (status && status !== "all") {
+      where.isActive = status === "true";
+    }
+
+    // Calculate offset
+    const offset = (page - 1) * limit;
+
+    // Fetch engobes with pagination
+    const [engobes, totalCount] = await Promise.all([
+      prisma.tblengobe.findMany({
+        where,
+        select: {
+          id: true,
+          engobeCode: true,
+          engobeDescription: true,
+          engobeDate: true,
+          engobeNotes: true,
+          unitCost: true,
+          costUnit: true,
+          isActive: true,
+        },
+        orderBy: { engobeCode: "asc" },
+        skip: offset,
+        take: limit,
+      }),
+      prisma.tblengobe.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return NextResponse.json({
+      engobes,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    });
   } catch (error) {
     console.error("Error fetching engobes:", error);
     return NextResponse.json(
@@ -34,7 +78,7 @@ export async function POST(request: NextRequest) {
     const user = await requireRole(request, "R&D");
 
     const body = await request.json();
-    const { engobeCode, engobeDescription, engobeNotes } = body;
+    const { engobeCode, engobeDescription, engobeNotes, unitCost, costUnit, isActive } = body;
 
     // Validate required fields
     if (!engobeCode || !engobeDescription) {
@@ -62,6 +106,9 @@ export async function POST(request: NextRequest) {
         engobeCode,
         engobeDescription,
         engobeNotes,
+        unitCost,
+        costUnit,
+        isActive: isActive ?? true,
         engobeDate: new Date(),
       },
       select: {
@@ -70,6 +117,9 @@ export async function POST(request: NextRequest) {
         engobeDescription: true,
         engobeDate: true,
         engobeNotes: true,
+        unitCost: true,
+        costUnit: true,
+        isActive: true,
       }
     });
 

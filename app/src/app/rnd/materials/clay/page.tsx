@@ -1,14 +1,15 @@
 "use client";
 
-import DataTable from "@/components/rnd/DataTable";
+import EnhancedDataTable from "@/components/rnd/EnhancedDataTable";
 
 const columns = [
   { key: "clayCode", label: "Code", required: true },
   { key: "clayDescription", label: "Description", required: true },
-  { key: "clayDate", label: "Date", type: "date" as const, readonly: true },
-  { key: "unitCost", label: "Unit Cost", type: "number" as const },
-  { key: "costUnit", label: "Cost Unit" },
-  { key: "clayNotes", label: "Notes" },
+  { key: "clayDate", label: "Date", type: "date" as const, readonly: true, hidden: true },
+  { key: "unitCost", label: "Unit Cost", type: "number" as const, hidden: true },
+  { key: "costUnit", label: "Cost Unit", hidden: true },
+  { key: "clayNotes", label: "Notes", hidden: true },
+  { key: "isActive", label: "Status", type: "status" as const, required: true },
 ];
 
 export default function ClayManagement() {
@@ -21,7 +22,7 @@ export default function ClayManagement() {
         </p>
       </div>
 
-      <DataTable
+      <EnhancedDataTable
         title="Clay Materials"
         description="Create and manage clay materials used in ceramic production"
         apiEndpoint="/api/rnd/materials/clay"
@@ -29,6 +30,8 @@ export default function ClayManagement() {
         searchPlaceholder="Search clay materials..."
         addButtonText="Add Clay Material"
         idField="id"
+        showStatusFilter={true}
+        viewPopupFields={["clayCode", "clayDescription", "clayNotes"]}
       />
     </div>
   );

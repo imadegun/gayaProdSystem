@@ -1,14 +1,15 @@
 "use client";
 
-import DataTable from "@/components/rnd/DataTable";
+import EnhancedDataTable from "@/components/rnd/EnhancedDataTable";
 
 const columns = [
   { key: "lustreCode", label: "Code", required: true },
   { key: "lustreDescription", label: "Description", required: true },
-  { key: "lustreDate", label: "Date", type: "date" as const, readonly: true },
-  { key: "unitCost", label: "Unit Cost", type: "number" as const },
-  { key: "costUnit", label: "Cost Unit" },
-  { key: "lustreNotes", label: "Notes" },
+  { key: "lustreDate", label: "Date", type: "date" as const, readonly: true, hidden: true },
+  { key: "unitCost", label: "Unit Cost", type: "number" as const, hidden: true },
+  { key: "costUnit", label: "Cost Unit", hidden: true },
+  { key: "lustreNotes", label: "Notes", hidden: true },
+  { key: "isActive", label: "Status", type: "status" as const, required: true },
 ];
 
 export default function LustreManagement() {
@@ -21,7 +22,7 @@ export default function LustreManagement() {
         </p>
       </div>
 
-      <DataTable
+      <EnhancedDataTable
         title="Lustre Materials"
         description="Create and manage lustre materials used in ceramic production"
         apiEndpoint="/api/rnd/materials/luster"
@@ -29,6 +30,8 @@ export default function LustreManagement() {
         searchPlaceholder="Search lustre materials..."
         addButtonText="Add Lustre Material"
         idField="id"
+        showStatusFilter={true}
+        viewPopupFields={["lustreCode", "lustreDescription", "lustreNotes"]}
       />
     </div>
   );

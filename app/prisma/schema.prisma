@@ -44,6 +44,7 @@ model Tblclay {
   clayNotes         String?  @map("ClayNotes")
   unitCost          Float?   @map("unit_cost") // Cost per KG
   costUnit          String?  @default("KG") @map("cost_unit")
+  isActive          Boolean  @default(true) @map("is_active")
 
   // Relations
   productClays      ProductClay[]
@@ -64,6 +65,7 @@ model Tblengobe {
   engobeNotes       String?  @map("EngobeNotes")
   unitCost          Float?   @map("unit_cost") // Cost per KG
   costUnit          String?  @default("KG") @map("cost_unit")
+  isActive          Boolean  @default(true) @map("is_active")
 
   // Relations
   productEngobes    ProductEngobe[]
@@ -84,6 +86,7 @@ model Tblestruder {
   estruderNotes     String?  @map("EstruderNotes")
   unitCost          Float?   @map("unit_cost") // Cost per use
   costUnit          String?  @default("USE") @map("cost_unit")
+  isActive          Boolean  @default(true) @map("is_active")
 
   // Relations
   productEstruders  ProductEstruder[]
@@ -104,6 +107,7 @@ model Tblglaze {
   glazeNotes        String?  @map("GlazeNotes")
   unitCost          Float?   @map("unit_cost") // Cost per KG
   costUnit          String?  @default("KG") @map("cost_unit")
+  isActive          Boolean  @default(true) @map("is_active")
 
   // Relations
   productGlazes     ProductGlaze[]
@@ -124,6 +128,7 @@ model Tbllustre {
   lustreNotes       String?  @map("LustreNotes")
   unitCost          Float?   @map("unit_cost") // Cost per KG
   costUnit          String?  @default("KG") @map("cost_unit")
+  isActive          Boolean  @default(true) @map("is_active")
 
   // Relations
   productLustres    ProductLustre[]
@@ -144,6 +149,7 @@ model Tblstainoxide {
   stainOxideNotes   String?  @map("StainOxideNotes")
   unitCost          Float?   @map("unit_cost") // Cost per KG
   costUnit          String?  @default("KG") @map("cost_unit")
+  isActive          Boolean  @default(true) @map("is_active")
 
   // Relations
   productStainOxides ProductStainOxide[]

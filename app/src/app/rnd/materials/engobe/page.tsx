@@ -1,14 +1,15 @@
 "use client";
 
-import DataTable from "@/components/rnd/DataTable";
+import EnhancedDataTable from "@/components/rnd/EnhancedDataTable";
 
 const columns = [
   { key: "engobeCode", label: "Code", required: true },
   { key: "engobeDescription", label: "Description", required: true },
-  { key: "engobeDate", label: "Date", type: "date" as const, readonly: true },
-  { key: "unitCost", label: "Unit Cost", type: "number" as const },
-  { key: "costUnit", label: "Cost Unit" },
-  { key: "engobeNotes", label: "Notes" },
+  { key: "engobeDate", label: "Date", type: "date" as const, readonly: true, hidden: true },
+  { key: "unitCost", label: "Unit Cost", type: "number" as const, hidden: true },
+  { key: "costUnit", label: "Cost Unit", hidden: true },
+  { key: "engobeNotes", label: "Notes", hidden: true },
+  { key: "isActive", label: "Status", type: "status" as const, required: true },
 ];
 
 export default function EngobeManagement() {
@@ -21,7 +22,7 @@ export default function EngobeManagement() {
         </p>
       </div>
 
-      <DataTable
+      <EnhancedDataTable
         title="Engobe Materials"
         description="Create and manage engobe materials used in ceramic production"
         apiEndpoint="/api/rnd/materials/engobe"
@@ -29,6 +30,8 @@ export default function EngobeManagement() {
         searchPlaceholder="Search engobe materials..."
         addButtonText="Add Engobe Material"
         idField="id"
+        showStatusFilter={true}
+        viewPopupFields={["engobeCode", "engobeDescription", "engobeNotes"]}
       />
     </div>
   );
