@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "migrate": "tsx scripts/migrate-database.ts",
-    "seed": "tsx scripts/seed-test-users.ts",
+    "seed-test": "tsx scripts/seed-test-users.ts",
+    "seed-sample": "tsx scripts/seed-sample-data.ts",
+    "seed-pricing": "tsx scripts/seed-pricing-data.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio"

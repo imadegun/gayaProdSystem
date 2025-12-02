@@ -18,7 +18,12 @@ import {
   Settings,
   Settings2,
   Wifi,
-  WifiOff
+  WifiOff,
+  ChevronDown,
+  ChevronRight,
+  Palette,
+  Layers,
+  Wrench
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -37,8 +42,28 @@ const navigation = [
   { name: "Quotations", href: "/rnd/quotations", icon: DollarSign, roles: ["R&D", "Admin"] },
   { name: "Proformas", href: "/rnd/proformas", icon: FileText, roles: ["R&D", "Admin"] },
   { name: "Samples", href: "/rnd/samples", icon: Package, roles: ["R&D", "Admin"] },
-  { name: "Clients", href: "/rnd/clients", icon: Users, roles: ["R&D", "Admin"] },
   { name: "Settings", href: "/rnd/settings", icon: Settings, roles: ["R&D", "Admin"] },
+];
+
+const manageMaterials = [
+  { name: "Casting", href: "/rnd/materials/casting", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Clay", href: "/rnd/materials/clay", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Engobe", href: "/rnd/materials/engobe", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Extruder", href: "/rnd/materials/extruder", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Glaze", href: "/rnd/materials/glaze", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Lustre", href: "/rnd/materials/lustre", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Stain Oxide", href: "/rnd/materials/stainoxide", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Texture", href: "/rnd/materials/texture", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Tools", href: "/rnd/materials/tools", icon: Wrench, roles: ["R&D", "Admin"] },
+];
+
+const masterCollections = [
+  { name: "Client", href: "/rnd/collections/client", icon: Users, roles: ["R&D", "Admin"] },
+  { name: "Category", href: "/rnd/collections/category", icon: Layers, roles: ["R&D", "Admin"] },
+  { name: "Color", href: "/rnd/collections/color", icon: Palette, roles: ["R&D", "Admin"] },
+  { name: "Material", href: "/rnd/collections/material", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Size", href: "/rnd/collections/size", icon: Package, roles: ["R&D", "Admin"] },
+  { name: "Texture", href: "/rnd/collections/texture", icon: Package, roles: ["R&D", "Admin"] },
 ];
 
 export default function RNDLayout({
@@ -50,6 +75,8 @@ export default function RNDLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isConnected] = useState(true); // Mock connection status - would be replaced with actual socket status
+  const [materialsExpanded, setMaterialsExpanded] = useState(false);
+  const [collectionsExpanded, setCollectionsExpanded] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return; // Still loading
@@ -105,6 +132,82 @@ export default function RNDLayout({
                 </Link>
               );
             })}
+
+            {/* Manage Materials Group */}
+            <div className="pt-4">
+              <button
+                onClick={() => setMaterialsExpanded(!materialsExpanded)}
+                className="flex items-center w-full px-4 py-2 text-sm font-medium text-blue-100 hover:bg-blue-700 hover:text-white rounded-md transition-colors"
+              >
+                {materialsExpanded ? (
+                  <ChevronDown className="mr-3 h-5 w-5" />
+                ) : (
+                  <ChevronRight className="mr-3 h-5 w-5" />
+                )}
+                Manage Materials
+              </button>
+              {materialsExpanded && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {manageMaterials
+                    .filter(item => item.roles.includes("all") || item.roles.includes(session.user.role))
+                    .map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                            isActive
+                              ? "bg-blue-700 text-white border-r-2 border-white"
+                              : "text-blue-200 hover:bg-blue-700 hover:text-white"
+                          }`}
+                        >
+                          <item.icon className="mr-3 h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            {/* Master Collections Group */}
+            <div className="pt-4">
+              <button
+                onClick={() => setCollectionsExpanded(!collectionsExpanded)}
+                className="flex items-center w-full px-4 py-2 text-sm font-medium text-blue-100 hover:bg-blue-700 hover:text-white rounded-md transition-colors"
+              >
+                {collectionsExpanded ? (
+                  <ChevronDown className="mr-3 h-5 w-5" />
+                ) : (
+                  <ChevronRight className="mr-3 h-5 w-5" />
+                )}
+                Master Collections
+              </button>
+              {collectionsExpanded && (
+                <div className="ml-4 mt-2 space-y-1">
+                  {masterCollections
+                    .filter(item => item.roles.includes("all") || item.roles.includes(session.user.role))
+                    .map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                            isActive
+                              ? "bg-blue-700 text-white border-r-2 border-white"
+                              : "text-blue-200 hover:bg-blue-700 hover:text-white"
+                          }`}
+                        >
+                          <item.icon className="mr-3 h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* User info */}
