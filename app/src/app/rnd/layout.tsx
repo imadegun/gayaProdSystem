@@ -34,7 +34,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const navigation = [
   { name: "Dashboard", href: "/rnd", icon: Home, roles: ["R&D", "Admin"] },
-  { name: "Settings", href: "/rnd/settings", icon: Settings, roles: ["R&D", "Admin"] },
+  // { name: "Settings", href: "/rnd/settings", icon: Settings, roles: ["R&D", "Admin"] },
 ];
 
 const purchasingGroup = [
@@ -74,6 +74,8 @@ const masterCollections = [
   { name: "Size", href: "/rnd/collections/size", icon: Package, roles: ["R&D", "Admin"] },
   { name: "Texture", href: "/rnd/collections/texture", icon: Package, roles: ["R&D", "Admin"] },
 ];
+
+
 
 export default function RNDLayout({
   children,
@@ -120,13 +122,13 @@ export default function RNDLayout({
       <div className="fixed inset-y-0 left-0 z-50 w-64 bg-blue-600 shadow-lg">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-blue-500">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-blue-500 flex-shrink-0">
             <h1 className="text-xl font-bold text-white">R&D</h1>
             <ThemeToggle />
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500 scrollbar-track-blue-700">
             {filteredNavigation.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -337,7 +339,7 @@ export default function RNDLayout({
           </nav>
 
           {/* User info */}
-          <div className="p-4 border-t border-blue-500">
+          <div className="p-4 border-t border-blue-500 flex-shrink-0">
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
