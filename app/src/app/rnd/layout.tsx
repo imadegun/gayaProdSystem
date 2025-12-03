@@ -70,7 +70,7 @@ const manageMaterials = [
   { name: "Tools", href: "/rnd/materials/tools", icon: Wrench, roles: ["R&D", "Admin"] },
 ];
 
-const masterCollections = [
+const masterProperties = [
   { name: "Client", href: "/rnd/clients", icon: Users, roles: ["R&D", "Admin"] },
   { name: "Category", href: "/rnd/collections/category", icon: Layers, roles: ["R&D", "Admin"] },
   { name: "Color", href: "/rnd/collections/color", icon: Palette, roles: ["R&D", "Admin"] },
@@ -91,7 +91,7 @@ export default function RNDLayout({
   const pathname = usePathname();
   const [isConnected] = useState(true); // Mock connection status - would be replaced with actual socket status
   const [materialsExpanded, setMaterialsExpanded] = useState(false);
-  const [collectionsExpanded, setCollectionsExpanded] = useState(false);
+  const [propertiesExpanded, setPropertiesExpanded] = useState(false);
   const [purchasingExpanded, setPurchasingExpanded] = useState(false);
   const [pricingExpanded, setPricingExpanded] = useState(false);
   const [rndExpanded, setRndExpanded] = useState(false);
@@ -310,22 +310,22 @@ export default function RNDLayout({
               )}
             </div>
 
-            {/* Master Collections Group */}
+            {/* Master Properties Group */}
             <div className="pt-4">
               <button
-                onClick={() => setCollectionsExpanded(!collectionsExpanded)}
+                onClick={() => setPropertiesExpanded(!propertiesExpanded)}
                 className="flex items-center w-full px-4 py-2 text-sm font-medium text-blue-100 hover:bg-blue-700 hover:text-white rounded-md transition-colors"
               >
-                {collectionsExpanded ? (
+                {propertiesExpanded ? (
                   <ChevronDown className="mr-3 h-5 w-5" />
                 ) : (
                   <ChevronRight className="mr-3 h-5 w-5" />
                 )}
-                Master Collections
+                Master Properties
               </button>
-              {collectionsExpanded && (
+              {propertiesExpanded && (
                 <div className="ml-4 mt-2 space-y-1">
-                  {masterCollections
+                  {masterProperties
                     .filter(item => item.roles.includes("all") || item.roles.includes(session.user.role))
                     .map((item) => {
                       const isActive = pathname === item.href;
