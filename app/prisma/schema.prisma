@@ -171,6 +171,7 @@ model Tbltexture {
   textureNotes      String?  @map("TextureNotes")
   unitCost          Float?   @map("unit_cost") // Cost per KG or per use
   costUnit          String?  @default("KG") @map("cost_unit")
+  isActive          Boolean  @default(true) @map("is_active")
 
   // Relations
   productTextures   ProductTexture[]
@@ -191,6 +192,7 @@ model Tbltools {
   toolsNotes        String?  @map("ToolsNotes")
   unitCost          Float?   @map("unit_cost") // Cost per use or per piece
   costUnit          String?  @default("USE") @map("cost_unit")
+  isActive          Boolean  @default(true) @map("is_active")
 
   // Relations
   productTools      ProductTools[]

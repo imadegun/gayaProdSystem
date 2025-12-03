@@ -1,14 +1,15 @@
 "use client";
 
-import DataTable from "@/components/rnd/DataTable";
+import EnhancedDataTable from "@/components/rnd/EnhancedDataTable";
 
 const columns = [
   { key: "textureCode", label: "Code", required: true },
   { key: "textureDescription", label: "Description", required: true },
-  { key: "textureDate", label: "Date", type: "date" as const, readonly: true },
-  { key: "unitCost", label: "Unit Cost", type: "number" as const },
-  { key: "costUnit", label: "Cost Unit" },
-  { key: "textureNotes", label: "Notes" },
+  { key: "textureDate", label: "Date", type: "date" as const, readonly: true, hidden: true },
+  { key: "unitCost", label: "Unit Cost", type: "number" as const, hidden: true },
+  { key: "costUnit", label: "Cost Unit", hidden: true },
+  { key: "textureNotes", label: "Notes", hidden: true },
+  { key: "isActive", label: "Status", type: "status" as const, required: true },
 ];
 
 export default function TextureManagement() {
@@ -21,7 +22,7 @@ export default function TextureManagement() {
         </p>
       </div>
 
-      <DataTable
+      <EnhancedDataTable
         title="Texture Materials"
         description="Create and manage texture materials used in ceramic production"
         apiEndpoint="/api/rnd/materials/texture"
@@ -29,6 +30,8 @@ export default function TextureManagement() {
         searchPlaceholder="Search texture materials..."
         addButtonText="Add Texture Material"
         idField="id"
+        showStatusFilter={true}
+        viewPopupFields={["textureCode", "textureDescription", "textureNotes"]}
       />
     </div>
   );

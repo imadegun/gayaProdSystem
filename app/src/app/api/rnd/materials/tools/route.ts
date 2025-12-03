@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
+    const status = searchParams.get("status");
 
     // Build where clause
     const where: any = {};
@@ -19,6 +20,10 @@ export async function GET(request: NextRequest) {
         { toolsCode: { contains: search, mode: "insensitive" } },
         { toolsDescription: { contains: search, mode: "insensitive" } },
       ];
+    }
+
+    if (status && status !== "all") {
+      where.isActive = status === "true";
     }
 
     // Calculate offset
@@ -36,6 +41,7 @@ export async function GET(request: NextRequest) {
           toolsNotes: true,
           unitCost: true,
           costUnit: true,
+          isActive: true,
         },
         orderBy: { toolsCode: "asc" },
         skip: offset,
@@ -72,7 +78,7 @@ export async function POST(request: NextRequest) {
     const user = await requireRole(request, "R&D");
 
     const body = await request.json();
-    const { toolsCode, toolsDescription, toolsNotes, unitCost, costUnit } = body;
+    const { toolsCode, toolsDescription, toolsNotes, unitCost, costUnit, isActive } = body;
 
     // Validate required fields
     if (!toolsCode || !toolsDescription) {
@@ -102,6 +108,7 @@ export async function POST(request: NextRequest) {
         toolsNotes,
         unitCost,
         costUnit,
+        isActive: isActive ?? true,
         toolsDate: new Date(),
       },
       select: {
@@ -112,6 +119,7 @@ export async function POST(request: NextRequest) {
         toolsNotes: true,
         unitCost: true,
         costUnit: true,
+        isActive: true,
       }
     });
 
@@ -131,7 +139,7 @@ export async function PUT(request: NextRequest) {
     await requireRole(request, "R&D");
 
     const body = await request.json();
-    const { id, toolsCode, toolsDescription, toolsNotes, unitCost, costUnit } = body;
+    const { id, toolsCode, toolsDescription, toolsNotes, unitCost, costUnit, isActive } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -174,6 +182,7 @@ export async function PUT(request: NextRequest) {
         toolsNotes,
         unitCost,
         costUnit,
+        isActive,
       },
       select: {
         id: true,
@@ -183,6 +192,7 @@ export async function PUT(request: NextRequest) {
         toolsNotes: true,
         unitCost: true,
         costUnit: true,
+        isActive: true,
       }
     });
 
