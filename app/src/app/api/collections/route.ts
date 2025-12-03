@@ -10,19 +10,25 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category");
     const client = searchParams.get("client");
     const collectionType = searchParams.get("collectionType");
-    const sortBy = searchParams.get("sortBy") || "collectCode";
+    const sortBy = searchParams.get("sortBy") || "code";
     const sortOrder = searchParams.get("sortOrder") || "asc";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    // Build where clause
-    const where: any = {};
+    // Build where clause - Only show production-ready Collections (not R&D)
+    const where: any = {
+      collectionType: {
+        in: ['Exclusive', 'Exclusive-Group', 'General'] // Exclude R&D collections
+      },
+      isApproved: true, // Only show approved collections
+      isOrdered: true   // Only show ordered collections
+    };
 
     // Search functionality
     if (search) {
       where.OR = [
-        { collectCode: { contains: search, mode: "insensitive" } },
-        { name: { nameValue: { contains: search, mode: "insensitive" } } },
+        { code: { contains: search, mode: "insensitive" } },
+        { name: { contains: search, mode: "insensitive" } },
         { category: { categoryName: { contains: search, mode: "insensitive" } } },
         { clientDescription: { contains: search, mode: "insensitive" } },
       ];
@@ -31,16 +37,18 @@ export async function GET(request: NextRequest) {
     // Filters
     if (category) where.categoryCode = category;
     if (client) where.clientCode = client;
-    if (collectionType) where.collectionType = collectionType;
+    if (collectionType && ['Exclusive', 'Exclusive-Group', 'General'].includes(collectionType)) {
+      where.collectionType = collectionType;
+    }
 
     // Build orderBy
     const validSortFields = [
-      "collectCode", "clientDescription", "collectionType",
-      "name.nameValue", "category.categoryName", "size.sizeName",
+      "code", "clientDescription", "collectionType",
+      "name", "category.categoryName", "size.sizeName",
       "color.colorName", "material.materialName"
     ];
 
-    const orderBy: any = {};
+    const orderBy: Record<string, any> = {};
     if (validSortFields.includes(sortBy)) {
       if (sortBy.includes(".")) {
         const [relation, field] = sortBy.split(".");
@@ -49,7 +57,7 @@ export async function GET(request: NextRequest) {
         orderBy[sortBy] = sortOrder;
       }
     } else {
-      orderBy.collectCode = "asc"; // default sort
+      orderBy.code = "asc"; // default sort
     }
 
     // Calculate offset
@@ -57,14 +65,13 @@ export async function GET(request: NextRequest) {
 
     // Fetch collections with pagination
     const [collections, totalCount] = await Promise.all([
-      prisma.tblcollectMaster.findMany({
+      prisma.collections.findMany({
         where,
         include: {
           category: true,
           color: true,
           client: true,
           material: true,
-          name: true,
           size: true,
           texture: true,
           productClays: {
@@ -84,7 +91,7 @@ export async function GET(request: NextRequest) {
         skip: offset,
         take: limit,
       }),
-      prisma.tblcollectMaster.count({ where }),
+      prisma.collections.count({ where }),
     ]);
 
     // Get unique filter options
@@ -97,8 +104,12 @@ export async function GET(request: NextRequest) {
         select: { clientCode: true, clientDescription: true },
         orderBy: { clientDescription: "asc" },
       }),
-      prisma.tblcollectMaster.findMany({
-        where: { collectionType: { not: null } },
+      prisma.collections.findMany({
+        where: {
+          collectionType: { in: ['Exclusive', 'Exclusive-Group', 'General'] },
+          isApproved: true,
+          isOrdered: true
+        },
         select: { collectionType: true },
         distinct: ["collectionType"],
       }),

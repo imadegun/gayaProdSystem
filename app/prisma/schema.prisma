@@ -212,6 +212,7 @@ model ProductClay {
 
   product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   clay        Tblclay          @relation(fields: [clayId], references: [id])
+  collections Collections[]    @relation("CollectionClays")
 
   @@unique([collectCode, clayId])
   @@map("product_clays")
@@ -227,6 +228,7 @@ model ProductCasting {
 
   product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   casting     Tblcasting       @relation(fields: [castingId], references: [id])
+  collections Collections[]    @relation("CollectionCastings")
 
   @@unique([collectCode, castingId])
   @@map("product_castings")
@@ -242,6 +244,7 @@ model ProductEstruder {
 
   product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   estruder    Tblestruder      @relation(fields: [estruderId], references: [id])
+  collections Collections[]    @relation("CollectionEstruders")
 
   @@unique([collectCode, estruderId])
   @@map("product_estruders")
@@ -257,6 +260,7 @@ model ProductTexture {
 
   product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   texture     Tbltexture       @relation(fields: [textureId], references: [id])
+  collections Collections[]    @relation("CollectionTextures")
 
   @@unique([collectCode, textureId])
   @@map("product_textures")
@@ -272,6 +276,7 @@ model ProductTools {
 
   product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   tools       Tbltools         @relation(fields: [toolsId], references: [id])
+  collections Collections[]    @relation("CollectionTools")
 
   @@unique([collectCode, toolsId])
   @@map("product_tools")
@@ -287,6 +292,7 @@ model ProductEngobe {
 
   product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   engobe      Tblengobe        @relation(fields: [engobeId], references: [id])
+  collections Collections[]    @relation("CollectionEngobes")
 
   @@unique([collectCode, engobeId])
   @@map("product_engobes")
@@ -302,6 +308,7 @@ model ProductStainOxide {
 
   product       TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   stainOxide    Tblstainoxide    @relation(fields: [stainOxideId], references: [id])
+  collections   Collections[]    @relation("CollectionStainOxides")
 
   @@unique([collectCode, stainOxideId])
   @@map("product_stain_oxides")
@@ -317,6 +324,7 @@ model ProductLustre {
 
   product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   lustre      Tbllustre        @relation(fields: [lustreId], references: [id])
+  collections Collections[]    @relation("CollectionLustres")
 
   @@unique([collectCode, lustreId])
   @@map("product_lustres")
@@ -333,6 +341,7 @@ model ProductGlaze {
 
   product     TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
   glaze       Tblglaze         @relation(fields: [glazeId], references: [id])
+  collections Collections[]    @relation("CollectionGlazes")
 
   @@unique([collectCode, glazeId])
   @@map("product_glazes")
@@ -394,17 +403,19 @@ model TblcollectMaster {
 model TblcollectCategory {
   categoryCode    String @id @map("category_code")
   categoryName    String @map("category_name")
+products        TblcollectMaster[]
+collections     Collections[] @relation("CollectionCategories")
 
-  products        TblcollectMaster[]
-  @@map("tblcollect_category")
+@@map("tblcollect_category")
 }
 
 model TblcollectColor {
   colorCode    String @id @map("color_code")
   colorName    String @map("color_name")
+products     TblcollectMaster[]
+collections  Collections[] @relation("CollectionColors")
 
-  products     TblcollectMaster[]
-  @@map("tblcollect_color")
+@@map("tblcollect_color")
 }
 
 model Client {
@@ -423,6 +434,7 @@ model Client {
   products        TblcollectMaster[]
   purchaseOrders  PurchaseOrder[]
   rndProjects     RnDProject[]
+  collections    Collections[] @relation("ClientCollections")
 
   @@map("tblcollect_design")
 }
@@ -430,33 +442,37 @@ model Client {
 model TblcollectMaterial {
   materialCode    String @id @map("material_code")
   materialName    String @map("material_name")
+products        TblcollectMaster[]
+collections     Collections[] @relation("CollectionMaterials")
 
-  products        TblcollectMaster[]
-  @@map("tblcollect_material")
+@@map("tblcollect_material")
 }
 
 model TblcollectName {
   nameCode    String @id @map("name_code")
   nameValue   String @map("name_value")
+products    TblcollectMaster[]
+collections Collections[] @relation("CollectionNames")
 
-  products    TblcollectMaster[]
-  @@map("tblcollect_name")
+@@map("tblcollect_name")
 }
 
 model TblcollectSize {
   sizeCode    String @id @map("size_code")
   sizeName    String @map("size_name")
+products    TblcollectMaster[]
+collections Collections[] @relation("CollectionSizes")
 
-  products    TblcollectMaster[]
-  @@map("tblcollect_size")
+@@map("tblcollect_size")
 }
 
 model TblcollectTexture {
   textureCode    String @id @map("texture_code")
   textureName    String @map("texture_name")
+products       TblcollectMaster[]
+collections    Collections[] @relation("CollectionTextures")
 
-  products       TblcollectMaster[]
-  @@map("tblcollect_texture")
+@@map("tblcollect_texture")
 }
 
 // New production tracking tables
@@ -488,6 +504,8 @@ model User {
   estimatesPriced   Estimate[]   @relation("EstimatePricedBy")
   estimatesSent     Estimate[]   @relation("EstimateSentBy")
   purchaseOrderStatusHistory PurchaseOrderStatusHistory[]
+  collections  Collections[] @relation("RnDCollections")
+  collectionTransitions CollectionTransition[] @relation("CollectionTransitionCreators")
 }
 
 model Employee {
@@ -602,6 +620,7 @@ model WorkPlanAssignment {
   employee        Employee        @relation(fields: [employeeId], references: [id])
   productionStage ProductionStage @relation(fields: [productionStageId], references: [id])
   product         TblcollectMaster @relation(fields: [collectCode], references: [collectCode])
+  collections     Collections[]    @relation("CollectionWorkPlans")
   productionRecaps ProductionRecap[]
 }
 
@@ -1189,14 +1208,14 @@ model ShapeCategoryConfig {
 // Production method configuration
 model ProductionMethodConfig {
   id                    Int       @id @default(autoincrement())
-  
+
   name                  String    @map("name") // wheel, casting, slabbing
   displayName           String    @map("display_name") // Wheel, Casting, Slabbing
   description           String?   @map("description")
-  
+
   // Time multiplier for this method
   timeMultiplier        Float     @default(1.0) @map("time_multiplier")
-  
+
   sortOrder             Int       @default(0) @map("sort_order")
   isActive              Boolean   @default(true) @map("is_active")
   createdAt             DateTime  @default(now()) @map("created_at")
@@ -1204,4 +1223,81 @@ model ProductionMethodConfig {
 
   @@unique([name])
   @@map("production_method_configs")
+}
+
+// Collections model for R&D to Production transition
+model Collections {
+  id                Int      @id @default(autoincrement())
+  code              String   @unique
+  designCode        String?
+  nameCode          String?
+  categoryCode      String?
+  sizeCode          String?
+  textureCode       String?
+  colorCode         String?
+  materialCode      String?
+  clientCode        String?
+  clientDescription String?
+  technicalDrawing  String?
+  photos            Json?
+  isAssembly        Boolean  @default(false)
+  assemblyComponents Json?
+  collectionType    String  @default("R&D") // R&D, Exclusive, Exclusive-Group, General
+  isApproved        Boolean  @default(false)
+  isOrdered         Boolean  @default(false)
+  approvalDate      DateTime?
+  orderDate         DateTime?
+  rndUserId         Int?
+  clientId          Int?
+
+  // Relations
+  rndUser           User?    @relation("RnDCollections", fields: [rndUserId], references: [id])
+  client            Client?  @relation("ClientCollections", fields: [clientCode], references: [clientCode])
+  category          TblcollectCategory? @relation("CollectionCategories", fields: [categoryCode], references: [categoryCode])
+  color             TblcollectColor?    @relation("CollectionColors", fields: [colorCode], references: [colorCode])
+  material          TblcollectMaterial? @relation("CollectionMaterials", fields: [materialCode], references: [materialCode])
+  name              TblcollectName?     @relation("CollectionNames", fields: [nameCode], references: [nameCode])
+  size              TblcollectSize?     @relation("CollectionSizes", fields: [sizeCode], references: [sizeCode])
+  texture           TblcollectTexture?  @relation("CollectionTextures", fields: [textureCode], references: [textureCode])
+
+  // Material relations
+  productClays      ProductClay[] @relation("CollectionClays")
+  productCastings   ProductCasting[] @relation("CollectionCastings")
+  productEstruders  ProductEstruder[] @relation("CollectionEstruders")
+  productTextures   ProductTexture[] @relation("CollectionTextures")
+  productTools      ProductTools[] @relation("CollectionTools")
+  productEngobes    ProductEngobe[] @relation("CollectionEngobes")
+  productStainOxides ProductStainOxide[] @relation("CollectionStainOxides")
+  productLustres    ProductLustre[] @relation("CollectionLustres")
+  productGlazes     ProductGlaze[] @relation("CollectionGlazes")
+
+  // Production relations
+  workPlanAssignments WorkPlanAssignment[] @relation("CollectionWorkPlans")
+
+  // Transition relations
+  rndTransitions      CollectionTransition[] @relation("RnDTransitions")
+  clientTransitions   CollectionTransition[] @relation("ClientTransitions")
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("collections")
+}
+
+// Collection transition tracking
+model CollectionTransition {
+  id                Int      @id @default(autoincrement())
+  rndCollectionId   Int      @map("rnd_collection_id")
+  clientCollectionId Int?    @map("client_collection_id")
+  transitionDate    DateTime @default(now()) @map("transition_date")
+  transitionType    String  @map("transition_type") // approval, order, cancellation
+  notes             String?
+  createdBy        Int      @map("created_by")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  rndCollection     Collections @relation("RnDTransitions", fields: [rndCollectionId], references: [id])
+  clientCollection Collections? @relation("ClientTransitions", fields: [clientCollectionId], references: [id])
+  creator            User        @relation("CollectionTransitionCreators", fields: [createdBy], references: [id])
+
+  @@map("collection_transitions")
 }

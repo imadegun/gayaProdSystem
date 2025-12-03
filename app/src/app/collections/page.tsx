@@ -10,21 +10,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Filter, ChevronLeft, ChevronRight, Grid, List, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface Collection {
-  id: number;
-  collectCode: string;
+  id: string;
+  code: string;
+  name: string;
   clientCode: string | null;
   clientDescription: string | null;
-  collectionType: string | null;
+  collectionType: 'Exclusive' | 'Exclusive-Group' | 'General';
   photo1: string | null;
   photo2: string | null;
   photo3: string | null;
   photo4: string | null;
   category?: { categoryName: string };
-  name?: { nameValue: string };
   size?: { sizeName: string };
   color?: { colorName: string };
   material?: { materialName: string };
-  design?: { designName: string };
   texture?: { textureName: string };
   productGlazes?: Array<{ glaze: { glazeDescription: string } }>;
 }
@@ -254,14 +253,14 @@ function CollectionsPageContent() {
                   <TableHead>
                     <Button
                       variant="ghost"
-                      onClick={() => handleSort("collectCode")}
+                      onClick={() => handleSort("code")}
                       className="h-auto p-0 font-medium"
                     >
                       Code
-                      {sortBy === "collectCode" && (
+                      {sortBy === "code" && (
                         sortOrder === "asc" ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />
                       )}
-                      {sortBy !== "collectCode" && <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />}
+                      {sortBy !== "code" && <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />}
                     </Button>
                   </TableHead>
                   <TableHead>
@@ -348,8 +347,8 @@ function CollectionsPageContent() {
               <TableBody>
                 {data?.collections.map((collection) => (
                   <TableRow key={collection.id}>
-                    <TableCell className="font-medium">{collection.collectCode}</TableCell>
-                    <TableCell>{collection.name?.nameValue || "-"}</TableCell>
+                    <TableCell className="font-medium">{collection.code}</TableCell>
+                    <TableCell>{collection.name || "-"}</TableCell>
                     <TableCell>{collection.category?.categoryName || "-"}</TableCell>
                     <TableCell>{collection.size?.sizeName || "-"}</TableCell>
                     <TableCell>{collection.color?.colorName || "-"}</TableCell>
@@ -357,7 +356,7 @@ function CollectionsPageContent() {
                     <TableCell>{collection.clientDescription || "-"}</TableCell>
                     <TableCell>
                       <Badge variant={collection.collectionType === "Exclusive" ? "default" : "secondary"}>
-                        {collection.collectionType || "General"}
+                        {collection.collectionType}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -373,7 +372,7 @@ function CollectionsPageContent() {
                   {collection.photo1 ? (
                     <img
                       src={`/api/images/${collection.photo1}`}
-                      alt={collection.collectCode}
+                      alt={collection.code}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -383,14 +382,14 @@ function CollectionsPageContent() {
                   )}
                   <div className="absolute top-2 right-2">
                     <Badge variant={collection.collectionType === "Exclusive" ? "default" : "secondary"}>
-                      {collection.collectionType || "General"}
+                      {collection.collectionType}
                     </Badge>
                   </div>
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-lg mb-2">{collection.collectCode}</h3>
+                  <h3 className="font-semibold text-lg mb-2">{collection.code}</h3>
                   <div className="space-y-1 text-sm text-gray-600">
-                    {collection.name && <p><strong>Name:</strong> {collection.name.nameValue}</p>}
+                    {collection.name && <p><strong>Name:</strong> {collection.name}</p>}
                     {collection.category && <p><strong>Category:</strong> {collection.category.categoryName}</p>}
                     {collection.size && <p><strong>Size:</strong> {collection.size.sizeName}</p>}
                     {collection.color && <p><strong>Color:</strong> {collection.color.colorName}</p>}
