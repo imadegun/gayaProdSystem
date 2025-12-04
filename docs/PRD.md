@@ -12,65 +12,27 @@ Build an enterprise application Product Collections Management & Production Trac
 
 ### General Description of the Flow
 
-1. **R&D (Research & Development) Sample Development & Directory List**
-    Enhanced sample development flow with user-specific project management and revision tracking:
+1. **R&D (Research & Development) Flow**
+    The R&D process follows a structured flow from initial project creation to final collection approval:
 
-    **R&D Collections vs Client Collections Flow:**
-    - **R&D Collections (Development Stage)**: Directory lists created during sample development are R&D collections - they are in development/pre-production stage
-    - **Client Collections (Production Stage)**: Only when samples are approved AND ordered by client do they become client collections
-    - **Transition Point**: R&D collection data becomes client collection data only upon Purchase Order approval
-    - **R&D Reference Collections**: Non-approved samples remain as R&D reference collections for future use
-
-    **User-Specific Sample Project Management:**
-    - Within the R&D User role, individual users are responsible for managing their own sample projects
-    - Each R&D user maintains separate project portfolios with full ownership and tracking
-    - Project isolation ensures users can manage multiple client projects simultaneously
-
-    **Directory List Management with Revisions:**
-    - A single project directory list can have multiple revisions logged by revision date
-    - Users maintain complete track record from first directory draft to final approved product
-    - Revision history provides audit trail and supports iterative client feedback loops
-
-    **Directory List Item Properties:**
-    - Items include comprehensive properties: photos, code, item name, texture name, color name, material name, size information, notes
-    - Set/breakdown model support: items can be composite sets consisting of multiple components
-    - Examples: Tea pot + underliner, amenity bottle + stainless steel pump, sink + kitchen, mug + wooden lid
-    - Assembly management for complex multi-part ceramic and non-ceramic combinations
-
-    **Communication Flow Across R&D and Sales Departments:**
-    - **Estimate List**: Draft item directory list in sketch/reference form, emailed to client
-    - **Quotation**: Directory list with product properties, emailed to client
-    - **Proforma**: Directory list in finished form, emailed to client
-    - **Invoice**: Approved Purchase Order list becoming official client order
-
-    **Sales Manager Role & Pricing:**
-    - Sales Manager (CEO in this company) responsible for pricing from draft directory to invoice
-    - Advanced pricing calculation application with special formulas based on:
-      - Material factors (clay type, glaze quality, firing requirements)
-      - Difficulty level (complexity of design and production)
-      - Firing type (biscuit, high, luster firing specifications)
-      - Glaze level/technique (application methods, decorative complexity)
-    - Multi-currency support for professional international administration
-    - All documents support export features: PDF & Excel formats
+    **1.1 Project (Client Project)**
+    -   **Status Tracking**: This list determines the status of each item (e.g., "Sample", "Collection", "Rejected", "Revision Needed").
+    -   **Distinction**: Similar to collections but focuses on the *status* of the physical samples during the development phase.
+    -   **Relationship**: Exists in **parallel** with the Directory List. The Directory List is the plan/specification, while the Sample List tracks the physical reality.
+      -   Difficulty level (complexity of design and production)
+      -   Firing type (biscuit, high, luster firing specifications)
+      -   Glaze level/technique (application methods, decorative complexity)
+    -   Multi-currency support for professional international administration
+    -   All documents support export features: PDF & Excel formats
 
     **Sample Development Workflow:**
-    1. Client request for new sample development
-    2. R&D user creates Estimate List (draft directory) and emails to client
-    3. Client feedback loop with revisions tracked by date
-    4. Approved Estimate becomes Quotation with detailed properties
-    5. Sample creation process begins with assigned R&D user ownership
-    6. Completed samples update directory list with final specifications
-    7. Sales Manager creates Proforma from approved directory items
-    8. Client response options:
-       - "Samples OK for all models": Proceed to Invoice (Purchase Order) → **R&D Collection becomes Client Collection**
-       - "Samples OK with some selected models": Update Proforma → Invoice, R&D updates directory for approved models only → **Only approved models become Client Collection**
-       - "Revised samples": Return to revision loop with new directory version
-       - "Samples Cancel": Project termination → **R&D Collection remains as reference only**
-       - "Samples OK but not ordered": Archive as potential future opportunity → **R&D Collection remains as reference only**
-    9. All documents maintain update timestamps and revision history
-    10. Directory lists include detailed technical specifications (clay, glaze, texture, engobe, firing type, luster, etc.)
-    11. **Approved/ordered models become client product collections** (production-ready)
-    12. **Non-approved models become R&D reference collections** (development archive)
+    1.  **Project Creation**: R&D user starts a new Client Project.
+    2.  **Directory List**: User creates the Directory List (specifications) and manages **Batch Revisions** for iterations.
+    3.  **Communication**: Estimate List -> Quotation sent to client.
+    4.  **Sample List**: Physical samples are produced. The Sample List tracks their status.
+    5.  **Approval/Statusing**: Samples are marked as "Approved" (Collection), "Rejected", or "Revision Needed".
+    6.  **Collections**: Approved items from the Sample List become the **Client Collection**.
+    7.  **Order**: Sales Manager creates Proforma/Invoice for the approved Collection.
 
 2. **Purchase Order Management (POL)**
    - The sales user will update the order status to the client when the order is nearly complete or approximately 80% complete and will also request payment.

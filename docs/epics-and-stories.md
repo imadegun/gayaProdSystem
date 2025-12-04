@@ -101,28 +101,115 @@ So that I can maintain separate projects with full ownership and isolation.
 **Then** individual project portfolio is displayed
 **And** user can create, edit, and manage only their own projects
 **And** project isolation prevents cross-user access
+# gayaProdSystem - Epic Breakdown
+
+**Author:** BMad
+**Date:** 2025-11-11
+**Project Level:** Enterprise B2B Web Application
+**Target Scale:** Single-company deployment with 100+ concurrent users
+
+---
+
+## Overview
+
+This document provides the complete epic and story breakdown for gayaProdSystem, decomposing the requirements from the [PRD](./PRD.md) into implementable stories. The system transforms artisanal ceramic production into a sophisticated, data-driven enterprise platform with stock management functionality.
+
+**Key Flow Clarification:**
+- **R&D Collections**: Development-stage directory lists created during sample development (pre-production)
+- **Client Collections**: Production-ready collections created only when R&D samples are approved AND ordered via Purchase Orders
+- **Transition Point**: R&D data becomes client collection data only upon Purchase Order approval
+
+The epic structure follows natural groupings based on business capabilities: Foundation (database migration and infrastructure), Client Management (R&D and sales workflows), Product Management (collections and production), Quality Assurance (QC and stock), and Support Systems (users, employees, reporting).
+
+---
+
+## Epic 1: Foundation & Infrastructure
+
+**Goal:** Establish the technical foundation enabling all subsequent development work, including database migration and core infrastructure setup.
+
+### Story 1.1: Database Migration & Schema Setup
+As a system administrator,
+I want to migrate from MySQL (gayafusionall schema) to PostgreSQL,
+So that I can leverage complex queries and improved performance for production tracking.
+
+**Acceptance Criteria:**
+**Given** existing MySQL database with 11,000+ product records
+**When** migration process is executed
+**Then** all data is preserved with zero loss and relationships maintained
+**And** complex production tracking queries perform within 3 seconds
+
+**Prerequisites:** None (foundation story)
+
+**Technical Notes:** Preserve tblcollect_master, material tables, reference tables; add production tracking, user management, workflow tables; validate performance benchmarks.
+
+### Story 1.2: User Authentication & Role Management
+As a system administrator,
+I want to implement user registration and role-based access control,
+So that users can securely access the system with appropriate permissions.
+
+**Acceptance Criteria:**
+**Given** user registration request
+**When** user provides credentials and role selection
+**Then** account is created with JWT authentication
+**And** role-based permissions are enforced (R&D, Sales, Forming, Glaze, QC/Packaging)
+
+**Prerequisites:** Story 1.1
+
+**Technical Notes:** Implement JWT with refresh tokens, role hierarchy, sub-role management, password security policies.
+
+### Story 1.3: Real-Time Infrastructure Setup
+As a developer,
+I want to implement WebSocket infrastructure,
+So that all users receive live production status updates.
+
+**Acceptance Criteria:**
+**Given** production data changes
+**When** updates occur in any stage
+**Then** all connected clients receive updates within 2 seconds
+**And** performance remains stable with 100+ concurrent users
+
+**Prerequisites:** Story 1.1
+
+**Technical Notes:** WebSocket server integration, connection management, message queuing, fallback to polling for unsupported clients.
+
+---
+
+## Epic 2: Client Management & Sales Workflow
+
+**Goal:** Enable comprehensive client lifecycle management from R&D onboarding through professional sales documentation, including user-specific project management, revision tracking, advanced pricing, and multi-currency support.
+
+### Story 2.1: R&D Client Onboarding
+As an R&D user,
+I want to onboard new clients,
+So that development workflows can be initiated properly.
+
+**Acceptance Criteria:**
+**Given** new client information
+**When** R&D user creates client profile
+**Then** automatic client code is generated
+**And** client regions and departments are assigned
+
+**Prerequisites:** Story 1.2
+
+**Technical Notes:** Client table integration with existing schema, region/department reference data.
+
+### Story 2.2: User-Specific Sample Project Management
+As an R&D user,
+I want to manage my own sample project portfolio,
+So that I can maintain separate projects with full ownership and isolation.
+
+**Acceptance Criteria:**
+**Given** R&D user role assigned
+**When** user accesses sample projects
+**Then** individual project portfolio is displayed
+**And** user can create, edit, and manage only their own projects
+**And** project isolation prevents cross-user access
 **And** project ownership is clearly tracked
 
 **Prerequisites:** Story 2.1
 
 **Technical Notes:** User-based project filtering, ownership validation, project isolation logic, portfolio dashboard.
 
-### Story 2.3: Directory List Revision Management
-As an R&D user,
-I want to manage multiple revisions of directory lists,
-So that I can track the complete history from draft to final approval.
-
-**Acceptance Criteria:**
-**Given** active sample project
-**When** directory list is modified
-**Then** new revision is created with timestamp
-**And** revision history is maintained chronologically
-**And** users can view and compare all revisions
-**And** audit trail shows who made each revision and when
-
-**Prerequisites:** Story 2.2
-
-**Technical Notes:** Revision tracking system, version comparison interface, timestamp logging, audit trail implementation.
 
 ### Story 2.4: Enhanced Directory Item Properties
 As an R&D user,
@@ -158,21 +245,6 @@ So that complex multi-part items can be properly managed.
 **Prerequisites:** Story 2.4
 
 **Technical Notes:** Component relationship modeling, assembly tracking, hierarchical item structure, production integration.
-
-### Story 2.6: Document Communication Flow
-As a sales manager,
-I want to manage the complete document flow,
-So that client communication follows professional standards.
-
-**Acceptance Criteria:**
-**Given** directory list approval
-**When** sales process begins
-**Then** Estimate List (draft directory) is generated and emailed to client
-**And** approved Estimate becomes Quotation with detailed properties
-**And** Quotation approval creates Proforma in finished form
-**And** Proforma approval becomes Invoice (Purchase Order)
-**And** all documents maintain revision history and timestamps
-**And** email integration supports professional client communication
 
 **Prerequisites:** Story 2.5
 
@@ -252,22 +324,20 @@ So that client orders transition smoothly to production.
 
 **Technical Notes:** Proforma generation from directory data, payment integration, order status tracking, production workflow triggers.
 
-### Story 2.3: Sales Proforma & Purchase Order Management
-As a sales admin,
-I want to generate proformas and manage purchase orders,
-So that client orders transition smoothly to production.
+### Story 2.11: Sample List Management
+As an R&D user,
+I want to manage the Sample List and track the status of physical samples,
+So that I can distinguish between approved collections, rejected samples, and items needing revision.
 
 **Acceptance Criteria:**
-**Given** approved directory items
-**When** sales admin creates proforma
-**Then** professional proforma is generated
-**And** client communication is tracked
-**And** deposit payment status is monitored
-**And** approved orders automatically initiate production workflow
+**Given** a Directory List with items
+**When** physical samples are produced
+**Then** they are added to the Sample List
+**And** each sample has a status (Sample, Collection, Rejected, Revision Needed)
+**And** only "Collection" status items are eligible for the final Client Collection
+**And** Sample List exists in parallel with Directory List (Plan vs. Reality)
 
-**Prerequisites:** Story 2.2
-
-**Technical Notes:** Proforma generation from directory data, payment integration, order status tracking, production workflow triggers.
+**Prerequisites:** Story 2.3
 
 ---
 

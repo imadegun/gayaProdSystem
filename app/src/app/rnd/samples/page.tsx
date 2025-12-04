@@ -51,12 +51,22 @@ export default function RNDSamplesPage() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending": return "secondary";
-      case "in_progress": return "blue";
-      case "completed": return "green";
-      case "rejected": return "red";
-      default: return "gray";
+    switch (status.toLowerCase()) {
+      case "sample": return "default";
+      case "collection": return "default";
+      case "rejected": return "destructive";
+      case "revision_needed": return "secondary";
+      default: return "secondary";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "sample": return "Sample";
+      case "collection": return "Collection";
+      case "rejected": return "Rejected";
+      case "revision_needed": return "Revision Needed";
+      default: return status;
     }
   };
 
@@ -121,7 +131,7 @@ export default function RNDSamplesPage() {
                   <TableCell>{sample.quantity}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusColor(sample.status) as "default" | "secondary" | "destructive" | "outline"}>
-                      {sample.status}
+                      {getStatusLabel(sample.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>

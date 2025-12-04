@@ -102,7 +102,8 @@ export async function POST(request: NextRequest) {
       isSet,
       components,
       // Revision support
-      parentId
+      parentId,
+      batchLabel
     } = body;
 
     // Validate required fields
@@ -144,11 +145,12 @@ export async function POST(request: NextRequest) {
     // Create directory list item
     // Calculate total if price and quantity are provided
     const calculatedTotal = price && quantity ? parseFloat(price) * parseInt(quantity) : (total ? parseFloat(total) : null);
-    
+
     const directoryList = await prisma.directoryList.create({
       data: {
         projectId: parseInt(projectId),
         revisionNumber,
+        batchLabel,
         parentId: parentId ? parseInt(parentId) : null,
         itemName,
         collectCode,
@@ -190,14 +192,6 @@ export async function POST(request: NextRequest) {
             }
           }
         },
-        // Single material relations - temporarily commented out due to schema issues
-        // stainOxide: {
-        //   select: {
-        //     id: true,
-        //     stainOxideCode: true,
-        //     stainOxideDescription: true,
-        //   }
-        // },
         revisions: true,
         parent: true,
       }

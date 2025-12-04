@@ -859,6 +859,7 @@ model DirectoryList {
   id              Int      @id @default(autoincrement())
   projectId       Int      @map("project_id")
   revisionNumber  Int      @default(1) @map("revision_number")
+  batchLabel      String?  @map("batch_label") // User-defined date/label (e.g., "4 dec 2025")
   parentId        Int?     @map("parent_id") // For revision tracking
   itemName        String   @map("item_name")
   collectCode     String?  @map("collect_code") // Reference to TblcollectMaster

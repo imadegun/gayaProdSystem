@@ -20,6 +20,7 @@ interface DirectoryList {
   price?: number;
   total?: number;
   status: string;
+  batchLabel?: string;
   // Enhanced item properties
   photos?: string[];
   textureName?: string;
@@ -211,6 +212,7 @@ export default function RNDDirectoryPage() {
                 <TableRow className="h-9">
                   <TableHead className="w-[60px] py-2 px-2">Photo</TableHead>
                   <TableHead className="w-[100px] py-2 px-2">Code</TableHead>
+                  <TableHead className="py-2 px-2">Batch</TableHead>
                   <TableHead className="py-2 px-2">Category</TableHead>
                   <TableHead className="py-2 px-2">Info Size</TableHead>
                   <TableHead className="py-2 px-2">Material</TableHead>
@@ -247,6 +249,11 @@ export default function RNDDirectoryPage() {
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-xs py-1 px-2">{item.collectCode || "-"}</TableCell>
+                    <TableCell className="text-xs py-1 px-2">
+                      {item.batchLabel ? (
+                        <Badge variant="outline" className="text-[10px] px-1">{item.batchLabel}</Badge>
+                      ) : "-"}
+                    </TableCell>
                     <TableCell className="font-medium py-1 px-2">{item.itemName}</TableCell>
                     <TableCell className="font-medium py-1 px-2">{item.sizeInfo || "-"}</TableCell>
                     <TableCell className="font-medium py-1 px-2">{item.materialName || "-"}</TableCell>
@@ -761,6 +768,7 @@ function DirectoryForm({
 }) {
   const [formData, setFormData] = useState({
     projectId: "",
+    batchLabel: "",
     itemName: "",
     collectCode: "",
     quantity: 1,
