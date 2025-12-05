@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, FileText, Edit, Trash2, Image, Eye, Upload, X, Copy } from "lucide-react";
+
+interface MaterialWeight {
+  id: number;
+  weight?: number | null;
+}
 
 interface DirectoryList {
   id: number;
@@ -27,11 +32,11 @@ interface DirectoryList {
   colorName?: string;
   materialName?: string;
   sizeInfo?: string;
-  // Technical specifications (JSON arrays for multiple materials)
-  clayIds?: number[];
-  glazeIds?: number[];
-  engobeIds?: number[];
-  lusterIds?: number[];
+  // Technical specifications (JSON arrays for multiple materials with weights)
+  clayMaterials?: MaterialWeight[];
+  glazeMaterials?: MaterialWeight[];
+  engobeMaterials?: MaterialWeight[];
+  lusterMaterials?: MaterialWeight[];
   firingType?: string;
   stainOxideId?: number;
   dimensions?: any;
@@ -79,11 +84,50 @@ export default function RNDDirectoryPage() {
   const [editingItem, setEditingItem] = useState<DirectoryList | null>(null);
   const [duplicatingItem, setDuplicatingItem] = useState<DirectoryList | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<string>("all");
+
+  // Materials for list view
+  const [materials, setMaterials] = useState<{
+    clays: Material[];
+    glazes: Material[];
+    engobes: Material[];
+    lusters: Material[];
+    stainOxides: Material[];
+  }>({
+    clays: [],
+    glazes: [],
+    engobes: [],
+    lusters: [],
+    stainOxides: [],
+  });
 
   useEffect(() => {
     fetchDirectoryLists();
     fetchProjects();
+    fetchMaterialsForList();
   }, []);
+
+  // Extract unique batches and get filtered items
+  const uniqueBatches = useMemo(() => {
+    const batches = directoryLists
+      .map(item => item.batchLabel)
+      .filter((label): label is string => label !== null && label !== undefined && label !== "");
+    return Array.from(new Set(batches)).sort();
+  }, [directoryLists]);
+
+  const filteredDirectoryLists = useMemo(() => {
+    if (selectedBatch === "all") return directoryLists;
+    return directoryLists.filter(item => item.batchLabel === selectedBatch);
+  }, [directoryLists, selectedBatch]);
+
+  // Get the latest update date for the selected batch
+  const batchUpdateDate = useMemo(() => {
+    if (selectedBatch === "all" || filteredDirectoryLists.length === 0) return null;
+    const dates = filteredDirectoryLists
+      .map(item => new Date(item.updatedAt))
+      .sort((a, b) => b.getTime() - a.getTime());
+    return dates[0];
+  }, [selectedBatch, filteredDirectoryLists]);
 
   const fetchDirectoryLists = async () => {
     try {
@@ -110,6 +154,69 @@ export default function RNDDirectoryPage() {
     } catch (error) {
       console.error("Error fetching projects:", error);
     }
+  };
+
+  const fetchMaterialsForList = async () => {
+    try {
+      const [clayRes, glazeRes, engobeRes, lusterRes, stainOxideRes] = await Promise.all([
+        fetch("/api/rnd/materials/clay"),
+        fetch("/api/rnd/materials/glaze"),
+        fetch("/api/rnd/materials/engobe"),
+        fetch("/api/rnd/materials/luster"),
+        fetch("/api/rnd/materials/stainoxide"),
+      ]);
+
+      const [clayData, glazeData, engobeData, lusterData, stainOxideData] = await Promise.all([
+        clayRes.json(),
+        glazeRes.json(),
+        engobeRes.json(),
+        lusterRes.json(),
+        stainOxideRes.json(),
+      ]);
+
+      setMaterials({
+        clays: clayData.clays || [],
+        glazes: glazeData.glazes || [],
+        engobes: engobeData.engobes || [],
+        lusters: lusterData.lusters || [],
+        stainOxides: stainOxideData.stainOxides || [],
+      });
+    } catch (error) {
+      console.error("Error fetching materials:", error);
+    }
+  };
+
+  // Helper function to get material codes with weights
+  const getMaterialCodesWithWeights = (materials: MaterialWeight[] | undefined, materialList: any[], codeField: string) => {
+    if (!materials || materials.length === 0) return "-";
+    const codes = materials.map(m => {
+      const material = materialList.find((mat: any) => mat.id === m.id);
+      const code = material ? material[codeField] : `ID:${m.id}`;
+      const weight = m.weight ? ` (${m.weight} kg)` : "";
+      return `${code}${weight}`;
+    });
+    return codes.join(", ");
+  };
+
+  // Helper function to format dimensions
+  const formatDimensions = (dimensions: any) => {
+    if (!dimensions) return "-";
+    if (typeof dimensions === 'string') return dimensions;
+
+    // Handle JSON object with diameter and height
+    if (dimensions.diameter && dimensions.height) {
+      return `Diam. ${dimensions.diameter} x H ${dimensions.height}`;
+    }
+    // Handle width, length, height
+    if (dimensions.width && dimensions.length && dimensions.height) {
+      return `W ${dimensions.width} x L ${dimensions.length} x H ${dimensions.height}`;
+    }
+    // Handle width and height
+    if (dimensions.width && dimensions.height) {
+      return `W ${dimensions.width} x H ${dimensions.height}`;
+    }
+
+    return JSON.stringify(dimensions);
   };
 
   const handleCreate = async (formData: any) => {
@@ -204,28 +311,57 @@ export default function RNDDirectoryPage() {
         </Button>
       </div>
 
+      {/* Batch Tabs */}
+      <div className="flex items-center justify-between gap-4">
+        <Tabs value={selectedBatch} onValueChange={setSelectedBatch} className="flex-1">
+          <TabsList className="h-9">
+            <TabsTrigger value="all" className="text-xs">All Batches</TabsTrigger>
+            {uniqueBatches.map((batch) => (
+              <TabsTrigger key={batch} value={batch} className="text-xs">
+                {batch}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        {batchUpdateDate && (
+          <div className="text-xs text-muted-foreground">
+            Updated by: {batchUpdateDate.toLocaleDateString('en-GB')}
+          </div>
+        )}
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table className="text-sm">
               <TableHeader>
                 <TableRow className="h-9">
+                  <TableHead className="w-[40px] py-2 px-2">No</TableHead>
                   <TableHead className="w-[60px] py-2 px-2">Photo</TableHead>
                   <TableHead className="w-[100px] py-2 px-2">Code</TableHead>
-                  <TableHead className="py-2 px-2">Batch</TableHead>
                   <TableHead className="py-2 px-2">Category</TableHead>
-                  <TableHead className="py-2 px-2">Info Size</TableHead>
+                  <TableHead className="py-2 px-2">Info/Size</TableHead>
                   <TableHead className="py-2 px-2">Material</TableHead>
+                  <TableHead className="py-2 px-2">Colour</TableHead>
+                  <TableHead className="py-2 px-2">Texture</TableHead>
+                  <TableHead className="py-2 px-2">Final Size (cm)</TableHead>
                   <TableHead className="w-[60px] py-2 px-2">Qty</TableHead>
                   <TableHead className="w-[60px] py-2 px-2">Unit</TableHead>
-                  <TableHead className="w-[80px] py-2 px-2">Price</TableHead>
-                  <TableHead className="w-[80px] py-2 px-2">Total</TableHead>
+                  <TableHead className="w-[80px] py-2 px-2">Unit Price</TableHead>
+                  <TableHead className="w-[80px] py-2 px-2">Total Price</TableHead>
+                  <TableHead className="py-2 px-2">Notes</TableHead>
+                  <TableHead className="w-[80px] py-2 px-2">Clay</TableHead>
+                  <TableHead className="w-[50px] py-2 px-2">Dec</TableHead>
+                  <TableHead className="w-[80px] py-2 px-2">Glaze</TableHead>
+                  <TableHead className="w-[80px] py-2 px-2">Firing</TableHead>
+                  <TableHead className="w-[80px] py-2 px-2">Lustre</TableHead>
                   <TableHead className="w-[100px] py-2 px-2">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {directoryLists.map((item) => (
+                {filteredDirectoryLists.map((item, index) => (
                   <TableRow key={item.id} className="h-12">
+                    <TableCell className="text-center py-1 px-2 text-xs">{index + 1}</TableCell>
                     <TableCell className="py-1 px-2">
                       {item.photos && item.photos.length > 0 ? (
                         <div className="flex items-center gap-1">
@@ -249,18 +385,28 @@ export default function RNDDirectoryPage() {
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-xs py-1 px-2">{item.collectCode || "-"}</TableCell>
-                    <TableCell className="text-xs py-1 px-2">
-                      {item.batchLabel ? (
-                        <Badge variant="outline" className="text-[10px] px-1">{item.batchLabel}</Badge>
-                      ) : "-"}
-                    </TableCell>
                     <TableCell className="font-medium py-1 px-2">{item.itemName}</TableCell>
-                    <TableCell className="font-medium py-1 px-2">{item.sizeInfo || "-"}</TableCell>
-                    <TableCell className="font-medium py-1 px-2">{item.materialName || "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs">{item.sizeInfo || "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs">{item.materialName || "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs">{item.colorName || "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs">{item.textureName || "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs">{formatDimensions(item.dimensions)}</TableCell>
                     <TableCell className="text-center py-1 px-2">{item.quantity}</TableCell>
-                    <TableCell className="py-1 px-2">{item.unit || "-"}</TableCell>
-                    <TableCell className="text-right py-1 px-2">{item.price ? item.price.toLocaleString() : "-"}</TableCell>
-                    <TableCell className="text-right font-medium py-1 px-2">{item.total ? item.total.toLocaleString() : "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs">{item.unit || "-"}</TableCell>
+                    <TableCell className="text-right py-1 px-2 text-xs">{item.price ? `$ ${item.price.toLocaleString()}` : "-"}</TableCell>
+                    <TableCell className="text-right font-medium py-1 px-2 text-xs">{item.total ? `$ ${item.total.toLocaleString()}` : "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs truncate max-w-[100px]">{item.notes || "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs text-green-700">{getMaterialCodesWithWeights(item.clayMaterials, materials.clays, 'clayCode')}</TableCell>
+                    <TableCell className="text-center py-1 px-2">
+                      {item.isDecor ? (
+                        <span className="text-green-600 text-lg">✓</span>
+                      ) : (
+                        <span className="text-red-600 text-lg">✗</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-1 px-2 text-xs text-green-700">{getMaterialCodesWithWeights(item.glazeMaterials, materials.glazes, 'glazeCode')}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs text-green-700">{item.firingType || "-"}</TableCell>
+                    <TableCell className="py-1 px-2 text-xs text-green-700">{getMaterialCodesWithWeights(item.lusterMaterials, materials.lusters, 'lustreCode')}</TableCell>
                     <TableCell className="py-1 px-2">
                       <div className="flex gap-0.5">
                         <Button
@@ -540,7 +686,7 @@ function DetailModal({
                   <span className="text-muted-foreground text-xs">Client:</span>
                   <span className="text-xs truncate ml-2">{selectedItem.project.client.clientDescription}</span>
                 </div>
-             
+
                 <div className="flex justify-left">
                   <span className="text-muted-foreground text-xs">Status:</span>
                   <Badge variant={selectedItem.status === "approved" ? "default" : "secondary"} className="text-xs py-0 px-1 h-5">{selectedItem.status}</Badge>
@@ -627,10 +773,10 @@ function DetailModal({
                         {/* Placeholder for items without photos */}
                         {((component.componentId && (!component.resolvedItem?.photos || component.resolvedItem.photos.length === 0)) ||
                           (!component.componentId && (!component.photos || component.photos.length === 0))) && (
-                          <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded border flex items-center justify-center">
-                            <Image className="h-4 w-4 text-gray-400" />
-                          </div>
-                        )}
+                            <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded border flex items-center justify-center">
+                              <Image className="h-4 w-4 text-gray-400" />
+                            </div>
+                          )}
                         <div className="flex-1">
                           <div className="grid grid-cols-2 gap-2 mb-1">
                             <div>
@@ -987,7 +1133,7 @@ function DirectoryForm({
     setUploadingPhoto(true);
     try {
       const newPhotos: string[] = [];
-      
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         // Convert to base64 for simple storage (in production, use proper file upload)
@@ -999,7 +1145,7 @@ function DirectoryForm({
         });
         newPhotos.push(base64);
       }
-      
+
       setFormData(prev => ({
         ...prev,
         photos: [...prev.photos, ...newPhotos]
@@ -1134,179 +1280,179 @@ function DirectoryForm({
         </TabsList>
 
         <TabsContent value="general" className="space-y-3 mt-3">
-           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-             <div>
-               <label className="text-xs font-medium">Project</label>
-               <select
-                 value={formData.projectId}
-                 onChange={(e) => handleChange("projectId", e.target.value)}
-                 className="w-full p-1.5 text-sm border rounded"
-                 required
-               >
-                 <option value="">Select Project</option>
-                 {projects.map(project => (
-                   <option key={project.id} value={project.id.toString()}>
-                     {project.projectName}
-                   </option>
-                 ))}
-               </select>
-             </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div>
+              <label className="text-xs font-medium">Project</label>
+              <select
+                value={formData.projectId}
+                onChange={(e) => handleChange("projectId", e.target.value)}
+                className="w-full p-1.5 text-sm border rounded"
+                required
+              >
+                <option value="">Select Project</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id.toString()}>
+                    {project.projectName}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Category (Item Name)</label>
-               <input
-                 type="text"
-                 value={formData.itemName}
-                 onChange={(e) => handleChange("itemName", e.target.value)}
-                 className="w-full p-1.5 text-sm border rounded"
-                 required
-               />
-             </div>
+            <div>
+              <label className="text-xs font-medium">Category (Item Name)</label>
+              <input
+                type="text"
+                value={formData.itemName}
+                onChange={(e) => handleChange("itemName", e.target.value)}
+                className="w-full p-1.5 text-sm border rounded"
+                required
+              />
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Code</label>
-               <div className="flex gap-1">
-                 <input
-                   type="text"
-                   value={formData.collectCode}
-                   onChange={(e) => handleChange("collectCode", e.target.value)}
-                   className="flex-1 p-1.5 text-sm border rounded"
-                   placeholder="Auto or manual"
-                 />
-                 <Button
-                   type="button"
-                   variant="outline"
-                   size="sm"
-                   className="text-xs h-8 px-2"
-                   onClick={async () => {
-                     const code = await generateCollectCode(formData.isSet);
-                     if (code) {
-                       handleChange("collectCode", code);
-                     }
-                   }}
-                 >
-                   Gen
-                 </Button>
-               </div>
-             </div>
+            <div>
+              <label className="text-xs font-medium">Code</label>
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  value={formData.collectCode}
+                  onChange={(e) => handleChange("collectCode", e.target.value)}
+                  className="flex-1 p-1.5 text-sm border rounded"
+                  placeholder="Auto or manual"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-8 px-2"
+                  onClick={async () => {
+                    const code = await generateCollectCode(formData.isSet);
+                    if (code) {
+                      handleChange("collectCode", code);
+                    }
+                  }}
+                >
+                  Gen
+                </Button>
+              </div>
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Size Info</label>
-               <input
-                 type="text"
-                 value={formData.sizeInfo}
-                 onChange={(e) => handleChange("sizeInfo", e.target.value)}
-                 className="w-full p-1.5 text-sm border rounded"
-               />
-             </div>
+            <div>
+              <label className="text-xs font-medium">Size Info</label>
+              <input
+                type="text"
+                value={formData.sizeInfo}
+                onChange={(e) => handleChange("sizeInfo", e.target.value)}
+                className="w-full p-1.5 text-sm border rounded"
+              />
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Materials</label>
-               <input
-                 type="text"
-                 value={formData.materialName}
-                 onChange={(e) => handleChange("materialName", e.target.value)}
-                 className="w-full p-1.5 text-sm border rounded"
-               />
-             </div>
+            <div>
+              <label className="text-xs font-medium">Materials</label>
+              <input
+                type="text"
+                value={formData.materialName}
+                onChange={(e) => handleChange("materialName", e.target.value)}
+                className="w-full p-1.5 text-sm border rounded"
+              />
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Color</label>
-               <input
-                 type="text"
-                 value={formData.colorName}
-                 onChange={(e) => handleChange("colorName", e.target.value)}
-                 className="w-full p-1.5 text-sm border rounded"
-               />
-             </div>
+            <div>
+              <label className="text-xs font-medium">Color</label>
+              <input
+                type="text"
+                value={formData.colorName}
+                onChange={(e) => handleChange("colorName", e.target.value)}
+                className="w-full p-1.5 text-sm border rounded"
+              />
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Texture</label>
-               <input
-                 type="text"
-                 value={formData.textureName}
-                 onChange={(e) => handleChange("textureName", e.target.value)}
-                 className="w-full p-1.5 text-sm border rounded"
-               />
-             </div>
+            <div>
+              <label className="text-xs font-medium">Texture</label>
+              <input
+                type="text"
+                value={formData.textureName}
+                onChange={(e) => handleChange("textureName", e.target.value)}
+                className="w-full p-1.5 text-sm border rounded"
+              />
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Qty</label>
-               <input
-                 type="number"
-                 value={formData.quantity}
-                 onChange={(e) => {
-                   handleChange("quantity", e.target.value);
-                   // Auto-calculate total when quantity changes
-                   if (formData.price) {
-                     const newTotal = parseFloat(formData.price) * parseInt(e.target.value || "0");
-                     handleChange("total", newTotal.toString());
-                   }
-                 }}
-                 className="w-full p-1.5 text-sm border rounded"
-                 min="1"
-                 required
-               />
-             </div>
+            <div>
+              <label className="text-xs font-medium">Qty</label>
+              <input
+                type="number"
+                value={formData.quantity}
+                onChange={(e) => {
+                  handleChange("quantity", e.target.value);
+                  // Auto-calculate total when quantity changes
+                  if (formData.price) {
+                    const newTotal = parseFloat(formData.price) * parseInt(e.target.value || "0");
+                    handleChange("total", newTotal.toString());
+                  }
+                }}
+                className="w-full p-1.5 text-sm border rounded"
+                min="1"
+                required
+              />
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Unit</label>
-               <select
-                 value={formData.unit}
-                 onChange={(e) => handleChange("unit", e.target.value)}
-                 className="w-full p-1.5 text-sm border rounded"
-               >
-                 <option value="">Select Unit</option>
-                 <option value="pcs">pcs</option>
-                 <option value="set">set</option>
-                 <option value="pair">pair</option>
-                 <option value="dozen">dozen</option>
-                 <option value="box">box</option>
-               </select>
-             </div>
+            <div>
+              <label className="text-xs font-medium">Unit</label>
+              <select
+                value={formData.unit}
+                onChange={(e) => handleChange("unit", e.target.value)}
+                className="w-full p-1.5 text-sm border rounded"
+              >
+                <option value="">Select Unit</option>
+                <option value="pcs">pcs</option>
+                <option value="set">set</option>
+                <option value="pair">pair</option>
+                <option value="dozen">dozen</option>
+                <option value="box">box</option>
+              </select>
+            </div>
 
-             <div className="flex items-center gap-2">
-               <label className="text-xs font-medium">Is Set/Assembly:</label>
-               <input
-                 type="checkbox"
-                 checked={formData.isSet}
-                 onChange={(e) => handleChange("isSet", e.target.checked)}
-                 className="h-4 w-4"
-               />
-             </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium">Is Set/Assembly:</label>
+              <input
+                type="checkbox"
+                checked={formData.isSet}
+                onChange={(e) => handleChange("isSet", e.target.checked)}
+                className="h-4 w-4"
+              />
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Price</label>
-               <input
-                 type="number"
-                 value={formData.price}
-                 onChange={(e) => {
-                   handleChange("price", e.target.value);
-                   // Auto-calculate total when price changes
-                   if (formData.quantity) {
-                     const newTotal = parseFloat(e.target.value || "0") * parseInt(formData.quantity.toString());
-                     handleChange("total", newTotal.toString());
-                   }
-                 }}
-                 className="w-full p-1.5 text-sm border rounded"
-                 step="0.01"
-                 min="0"
-               />
-             </div>
+            <div>
+              <label className="text-xs font-medium">Price</label>
+              <input
+                type="number"
+                value={formData.price}
+                onChange={(e) => {
+                  handleChange("price", e.target.value);
+                  // Auto-calculate total when price changes
+                  if (formData.quantity) {
+                    const newTotal = parseFloat(e.target.value || "0") * parseInt(formData.quantity.toString());
+                    handleChange("total", newTotal.toString());
+                  }
+                }}
+                className="w-full p-1.5 text-sm border rounded"
+                step="0.01"
+                min="0"
+              />
+            </div>
 
-             <div>
-               <label className="text-xs font-medium">Total</label>
-               <input
-                 type="number"
-                 value={formData.total}
-                 onChange={(e) => handleChange("total", e.target.value)}
-                 className="w-full p-1.5 text-sm border rounded bg-gray-50"
-                 step="0.01"
-                 min="0"
-                 readOnly
-               />
-             </div>
-           </div>
+            <div>
+              <label className="text-xs font-medium">Total</label>
+              <input
+                type="number"
+                value={formData.total}
+                onChange={(e) => handleChange("total", e.target.value)}
+                className="w-full p-1.5 text-sm border rounded bg-gray-50"
+                step="0.01"
+                min="0"
+                readOnly
+              />
+            </div>
+          </div>
 
           <div>
             <label className="text-xs font-medium">Notes</label>
@@ -1903,10 +2049,10 @@ function DirectoryForm({
                         {availableDirectoryItems
                           .filter(item => !editingItem || item.id !== editingItem.id) // Don't allow self-reference
                           .map(item => (
-                          <option key={item.id} value={item.id.toString()}>
-                            {item.collectCode ? `${item.collectCode} - ` : ""}{item.itemName}
-                          </option>
-                        ))}
+                            <option key={item.id} value={item.id.toString()}>
+                              {item.collectCode ? `${item.collectCode} - ` : ""}{item.itemName}
+                            </option>
+                          ))}
                       </select>
                       <div className="flex-1 flex gap-2">
                         <input

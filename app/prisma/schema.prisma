@@ -875,11 +875,11 @@ model DirectoryList {
   colorName       String?  @map("color_name")
   materialName    String?  @map("material_name")
   sizeInfo        String?  @map("size_info") // Size information
-  // Technical specifications (JSON arrays for multiple materials)
-  clayIds         Json?    @map("clay_ids") // Array of clay IDs
-  glazeIds        Json?    @map("glaze_ids") // Array of glaze IDs
-  engobeIds       Json?    @map("engobe_ids") // Array of engobe IDs
-  lusterIds       Json?    @map("luster_ids") // Array of luster IDs
+  // Technical specifications (JSON arrays for multiple materials with weights)
+  clayMaterials    Json?    @map("clay_materials")    // [{id: number, weight: number}]
+  glazeMaterials   Json?    @map("glaze_materials")   // [{id: number, weight: number}]
+  engobeMaterials  Json?    @map("engobe_materials")  // [{id: number, weight: number}]
+  lusterMaterials  Json?    @map("luster_materials")  // [{id: number, weight: number}]
   firingType      String?  @map("firing_type")
   stainOxideId    Int?     @map("stain_oxide_id") // Reference to Tblstainoxide
   dimensions      Json?    @map("dimensions") // Width, Height, Length, Diameter

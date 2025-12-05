@@ -86,11 +86,11 @@ export async function POST(request: NextRequest) {
       colorName,
       materialName,
       sizeInfo,
-      // Technical specifications (JSON arrays for multiple materials)
-      clayIds,
-      glazeIds,
-      engobeIds,
-      lusterIds,
+      // Technical specifications (JSON arrays for multiple materials with weights)
+      clayMaterials,
+      glazeMaterials,
+      engobeMaterials,
+      lusterMaterials,
       firingType,
       stainOxideId,
       dimensions,
@@ -164,11 +164,11 @@ export async function POST(request: NextRequest) {
         colorName,
         materialName,
         sizeInfo,
-        // Technical specs (JSON arrays for multiple materials)
-        clayIds: clayIds || [],
-        glazeIds: glazeIds || [],
-        engobeIds: engobeIds || [],
-        lusterIds: lusterIds || [],
+        // Technical specs (JSON arrays for multiple materials with weights)
+        clayMaterials: clayMaterials || [],
+        glazeMaterials: glazeMaterials || [],
+        engobeMaterials: engobeMaterials || [],
+        lusterMaterials: lusterMaterials || [],
         firingType,
         stainOxideId: stainOxideId ? parseInt(stainOxideId) : null,
         dimensions,
