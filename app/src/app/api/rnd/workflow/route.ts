@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
               itemName: item.itemName,
               collectCode: item.collectCode,
               quantity: item.quantity || 1,
-              clayIds: item.clayIds,
-              glazeIds: item.glazeIds,
-              engobeIds: item.engobeIds,
-              lusterIds: item.lusterIds,
+              clayMaterials: item.clayMaterials,
+              glazeMaterials: item.glazeMaterials,
+              engobeMaterials: item.engobeMaterials,
+              lusterMaterials: item.lusterMaterials,
               firingType: item.firingType,
               stainOxideId: item.stainOxideId,
               dimensions: item.dimensions,
@@ -328,29 +328,29 @@ export async function POST(request: NextRequest) {
             : null;
 
           // Create PurchaseOrder
-           const purchaseOrder = await tx.purchaseOrder.create({
-             data: {
-               poNumber,
-               proformaId: data.proformaId,
-               clientId: proformaToApprove.project.clientId,
-               orderDate: new Date(),
-               depositPercentage,
-               depositAmount,
-               totalAmount: proformaToApprove.totalAmount,
-               status: 'pending_deposit',
-               createdBy: Number(user.id),
-             }
-           });
+          const purchaseOrder = await tx.purchaseOrder.create({
+            data: {
+              poNumber,
+              proformaId: data.proformaId,
+              clientId: proformaToApprove.project.clientId,
+              orderDate: new Date(),
+              depositPercentage,
+              depositAmount,
+              totalAmount: proformaToApprove.totalAmount,
+              status: 'pending_deposit',
+              createdBy: Number(user.id),
+            }
+          });
 
-           // Log initial status
-           await tx.purchaseOrderStatusHistory.create({
-             data: {
-               purchaseOrderId: purchaseOrder.id,
-               newStatus: 'pending_deposit',
-               changedBy: Number(user.id),
-               changeReason: 'Purchase order created from approved proforma',
-             }
-           });
+          // Log initial status
+          await tx.purchaseOrderStatusHistory.create({
+            data: {
+              purchaseOrderId: purchaseOrder.id,
+              newStatus: 'pending_deposit',
+              changedBy: Number(user.id),
+              changeReason: 'Purchase order created from approved proforma',
+            }
+          });
 
           // Create PurchaseOrderItems from selectedItems
           const selectedItemIds = proformaToApprove.selectedItems as number[] || [];

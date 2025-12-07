@@ -56,7 +56,7 @@ async function migrateCollections() {
         await prisma.collections.create({
           data: {
             code: existing.collectCode,
-            name: existing.name?.nameValue || existing.collectCode,
+            nameCode: existing.nameCode,
             collectionType,
             isApproved: true, // Assume existing collections are approved
             isOrdered: true,  // Assume existing collections are ordered
@@ -67,10 +67,8 @@ async function migrateCollections() {
             textureCode: existing.textureCode,
             colorCode: existing.colorCode,
             materialCode: existing.materialCode,
-            photo1: existing.photo1,
-            photo2: existing.photo2,
-            photo3: existing.photo3,
-            photo4: existing.photo4,
+            photos: [existing.photo1, existing.photo2, existing.photo3, existing.photo4].filter(p => p !== null),
+            technicalDrawing: existing.techDraw,
             createdAt: existing.createdAt,
             updatedAt: existing.updatedAt,
           }

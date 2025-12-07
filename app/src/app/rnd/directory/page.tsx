@@ -56,6 +56,8 @@ interface DirectoryList {
       clientDescription: string;
     };
   };
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Project {
@@ -347,14 +349,6 @@ export default function RNDDirectoryPage() {
                   <TableHead className="py-2 px-2">Final Size (cm)</TableHead>
                   <TableHead className="w-[60px] py-2 px-2">Qty</TableHead>
                   <TableHead className="w-[60px] py-2 px-2">Unit</TableHead>
-                  <TableHead className="w-[80px] py-2 px-2">Unit Price</TableHead>
-                  <TableHead className="w-[80px] py-2 px-2">Total Price</TableHead>
-                  <TableHead className="py-2 px-2">Notes</TableHead>
-                  <TableHead className="w-[80px] py-2 px-2">Clay</TableHead>
-                  <TableHead className="w-[50px] py-2 px-2">Dec</TableHead>
-                  <TableHead className="w-[80px] py-2 px-2">Glaze</TableHead>
-                  <TableHead className="w-[80px] py-2 px-2">Firing</TableHead>
-                  <TableHead className="w-[80px] py-2 px-2">Lustre</TableHead>
                   <TableHead className="w-[100px] py-2 px-2">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -393,20 +387,6 @@ export default function RNDDirectoryPage() {
                     <TableCell className="py-1 px-2 text-xs">{formatDimensions(item.dimensions)}</TableCell>
                     <TableCell className="text-center py-1 px-2">{item.quantity}</TableCell>
                     <TableCell className="py-1 px-2 text-xs">{item.unit || "-"}</TableCell>
-                    <TableCell className="text-right py-1 px-2 text-xs">{item.price ? `$ ${item.price.toLocaleString()}` : "-"}</TableCell>
-                    <TableCell className="text-right font-medium py-1 px-2 text-xs">{item.total ? `$ ${item.total.toLocaleString()}` : "-"}</TableCell>
-                    <TableCell className="py-1 px-2 text-xs truncate max-w-[100px]">{item.notes || "-"}</TableCell>
-                    <TableCell className="py-1 px-2 text-xs text-green-700">{getMaterialCodesWithWeights(item.clayMaterials, materials.clays, 'clayCode')}</TableCell>
-                    <TableCell className="text-center py-1 px-2">
-                      {item.isDecor ? (
-                        <span className="text-green-600 text-lg">✓</span>
-                      ) : (
-                        <span className="text-red-600 text-lg">✗</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-1 px-2 text-xs text-green-700">{getMaterialCodesWithWeights(item.glazeMaterials, materials.glazes, 'glazeCode')}</TableCell>
-                    <TableCell className="py-1 px-2 text-xs text-green-700">{item.firingType || "-"}</TableCell>
-                    <TableCell className="py-1 px-2 text-xs text-green-700">{getMaterialCodesWithWeights(item.lusterMaterials, materials.lusters, 'lustreCode')}</TableCell>
                     <TableCell className="py-1 px-2">
                       <div className="flex gap-0.5">
                         <Button
@@ -457,7 +437,7 @@ export default function RNDDirectoryPage() {
                 ))}
                 {directoryLists.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-6 text-muted-foreground text-sm">
+                    <TableCell colSpan={12} className="text-center py-6 text-muted-foreground text-sm">
                       No directory items created yet
                     </TableCell>
                   </TableRow>
@@ -613,14 +593,14 @@ function DetailModal({
     }
   };
 
-  // Helper function to get material names by IDs
-  const getMaterialNames = (ids: number[] | undefined, materials: any[], codeField: string, descField: string) => {
-    if (!ids || ids.length === 0) return "N/A";
-    const names = ids.map(id => {
-      const material = materials.find((m: any) => m.id === id);
-      return material ? `${material[codeField]} - ${material[descField]}` : `ID: ${id}`;
-    });
-    return names.join(", ");
+  // Helper function to get material details with weights
+  const getMaterialDetails = (items: { id: string | number; weight?: string | number | null }[] | undefined, materials: any[], codeField: string, descField: string) => {
+    if (!items || items.length === 0) return "N/A";
+    return items.map(item => {
+      const material = materials.find((m: any) => m.id.toString() === item.id.toString());
+      const weightStr = item.weight ? ` (${item.weight} kg)` : "";
+      return material ? `${material[codeField]} - ${material[descField]}${weightStr}` : `ID: ${item.id}${weightStr}`;
+    }).join(", ");
   };
 
   if (!selectedItem) return null;
@@ -847,19 +827,19 @@ function DetailModal({
               <div className="bg-gray-50 rounded p-2">
                 <div className="text-muted-foreground text-xs uppercase mb-1">Clay</div>
                 <div className="font-medium text-sm">
-                  {getMaterialNames(selectedItem.clayIds, loadedMaterials.clays, 'clayCode', 'clayDescription')}
+                  {getMaterialDetails(selectedItem.clayMaterials, loadedMaterials.clays, 'clayCode', 'clayDescription')}
                 </div>
               </div>
               <div className="bg-gray-50 rounded p-2">
                 <div className="text-muted-foreground text-xs uppercase mb-1">Engobe</div>
                 <div className="font-medium text-sm">
-                  {getMaterialNames(selectedItem.engobeIds, loadedMaterials.engobes, 'engobeCode', 'engobeDescription')}
+                  {getMaterialDetails(selectedItem.engobeMaterials, loadedMaterials.engobes, 'engobeCode', 'engobeDescription')}
                 </div>
               </div>
               <div className="bg-gray-50 rounded p-2">
                 <div className="text-muted-foreground text-xs uppercase mb-1">Glaze</div>
                 <div className="font-medium text-sm">
-                  {getMaterialNames(selectedItem.glazeIds, loadedMaterials.glazes, 'glazeCode', 'glazeDescription')}
+                  {getMaterialDetails(selectedItem.glazeMaterials, loadedMaterials.glazes, 'glazeCode', 'glazeDescription')}
                 </div>
               </div>
               <div className="bg-gray-50 rounded p-2">
@@ -871,7 +851,7 @@ function DetailModal({
               <div className="bg-gray-50 rounded p-2">
                 <div className="text-muted-foreground text-xs uppercase mb-1">Luster</div>
                 <div className="font-medium text-sm">
-                  {getMaterialNames(selectedItem.lusterIds, loadedMaterials.lusters, 'lustreCode', 'lustreDescription')}
+                  {getMaterialDetails(selectedItem.lusterMaterials, loadedMaterials.lusters, 'lustreCode', 'lustreDescription')}
                 </div>
               </div>
               <div className="bg-gray-50 rounded p-2">
@@ -925,11 +905,11 @@ function DirectoryForm({
     colorName: "",
     materialName: "",
     sizeInfo: "",
-    clayIds: [] as string[],
-    glazeIds: [] as string[],
-    engobeIds: [] as string[],
+    clayMaterials: [] as { id: string; weight: string }[],
+    glazeMaterials: [] as { id: string; weight: string }[],
+    engobeMaterials: [] as { id: string; weight: string }[],
     firingType: "",
-    lusterIds: [] as string[],
+    lusterMaterials: [] as { id: string; weight: string }[],
     stainOxideId: "",
     weight: "",
     technotes: "",
@@ -986,6 +966,7 @@ function DirectoryForm({
         // For duplication, copy all data but modify the name and clear the code
         setFormData({
           projectId: item.projectId?.toString() || "",
+          batchLabel: item.batchLabel || "",
           itemName: `${item.itemName || ""} (Copy)`,
           collectCode: "", // Will be auto-generated
           quantity: item.quantity || 1,
@@ -996,11 +977,11 @@ function DirectoryForm({
           colorName: item.colorName || "",
           materialName: item.materialName || "",
           sizeInfo: item.sizeInfo || "",
-          clayIds: (item.clayIds || []).map(id => id.toString()),
-          glazeIds: (item.glazeIds || []).map(id => id.toString()),
-          engobeIds: (item.engobeIds || []).map(id => id.toString()),
+          clayMaterials: (item.clayMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
+          glazeMaterials: (item.glazeMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
+          engobeMaterials: (item.engobeMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
           firingType: item.firingType || "",
-          lusterIds: (item.lusterIds || []).map(id => id.toString()),
+          lusterMaterials: (item.lusterMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
           stainOxideId: item.stainOxideId?.toString() || "",
           weight: item.weight?.toString() || "",
           technotes: item.technotes || "",
@@ -1014,6 +995,7 @@ function DirectoryForm({
         // For editing existing items, load the current saved data
         setFormData({
           projectId: item.projectId?.toString() || "",
+          batchLabel: item.batchLabel || "",
           itemName: item.itemName || "",
           collectCode: item.collectCode || "",
           quantity: item.quantity || 1,
@@ -1024,11 +1006,11 @@ function DirectoryForm({
           colorName: item.colorName || "",
           materialName: item.materialName || "",
           sizeInfo: item.sizeInfo || "",
-          clayIds: (item.clayIds || []).map(id => id.toString()),
-          glazeIds: (item.glazeIds || []).map(id => id.toString()),
-          engobeIds: (item.engobeIds || []).map(id => id.toString()),
+          clayMaterials: (item.clayMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
+          glazeMaterials: (item.glazeMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
+          engobeMaterials: (item.engobeMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
           firingType: item.firingType || "",
-          lusterIds: (item.lusterIds || []).map(id => id.toString()),
+          lusterMaterials: (item.lusterMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
           stainOxideId: item.stainOxideId?.toString() || "",
           weight: item.weight?.toString() || "",
           technotes: item.technotes || "",
@@ -1254,10 +1236,22 @@ function DirectoryForm({
       unit: formData.unit || undefined,
       price: unitPrice,
       total: calculatedTotal,
-      clayIds: formData.clayIds.map(id => parseInt(id)),
-      glazeIds: formData.glazeIds.map(id => parseInt(id)),
-      engobeIds: formData.engobeIds.map(id => parseInt(id)),
-      lusterIds: formData.lusterIds.map(id => parseInt(id)),
+      clayMaterials: formData.clayMaterials.map(m => ({
+        id: parseInt(m.id),
+        weight: m.weight ? parseFloat(m.weight) : null
+      })),
+      glazeMaterials: formData.glazeMaterials.map(m => ({
+        id: parseInt(m.id),
+        weight: m.weight ? parseFloat(m.weight) : null
+      })),
+      engobeMaterials: formData.engobeMaterials.map(m => ({
+        id: parseInt(m.id),
+        weight: m.weight ? parseFloat(m.weight) : null
+      })),
+      lusterMaterials: formData.lusterMaterials.map(m => ({
+        id: parseInt(m.id),
+        weight: m.weight ? parseFloat(m.weight) : null
+      })),
       stainOxideId: formData.stainOxideId ? parseInt(formData.stainOxideId) : undefined,
       weight: formData.weight ? parseFloat(formData.weight.toString()) : undefined,
       isSet: formData.isSet,
@@ -1266,7 +1260,7 @@ function DirectoryForm({
     });
   };
 
-  const handleChange = (field: string, value: string | boolean | string[]) => {
+  const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -1522,8 +1516,8 @@ function DirectoryForm({
                   <Select
                     value=""
                     onValueChange={(value) => {
-                      if (value && !formData.clayIds.includes(value)) {
-                        handleChange("clayIds", [...formData.clayIds, value]);
+                      if (value && !formData.clayMaterials.some((m: any) => m.id === value)) {
+                        handleChange("clayMaterials", [...formData.clayMaterials, { id: value, weight: "" }]);
                       }
                     }}
                   >
@@ -1532,7 +1526,7 @@ function DirectoryForm({
                     </SelectTrigger>
                     <SelectContent>
                       {materials.clays
-                        .filter((clay: any) => !formData.clayIds.includes(clay.id.toString()))
+                        .filter((clay: any) => !formData.clayMaterials.some((m: any) => m.id === clay.id.toString()))
                         .map((clay: any) => (
                           <SelectItem key={clay.id} value={clay.id.toString()} className="text-xs">
                             {clay.clayCode} - {clay.clayDescription}
@@ -1550,21 +1544,37 @@ function DirectoryForm({
                     +
                   </Button>
                 </div>
-                {formData.clayIds.length > 0 && (
-                  <div className="flex flex-wrap gap-0.5">
-                    {formData.clayIds.map((id) => {
-                      const clay = materials.clays.find((c: any) => c.id.toString() === id);
+                {formData.clayMaterials.length > 0 && (
+                  <div className="space-y-1 mt-1">
+                    {formData.clayMaterials.map((material, index) => {
+                      const clay = materials.clays.find((c: any) => c.id.toString() === material.id);
                       return (
-                        <Badge key={id} variant="secondary" className="text-xs py-0 px-1">
-                          {clay ? `${clay.clayCode}` : id}
+                        <div key={material.id} className="flex items-center gap-2 text-xs border rounded p-1 bg-gray-50">
+                          <span className="font-medium flex-1 truncate">{clay ? `${clay.clayCode} - ${clay.clayDescription}` : material.id}</span>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              placeholder="kg"
+                              value={material.weight}
+                              onChange={(e) => {
+                                const newMaterials = [...formData.clayMaterials];
+                                newMaterials[index].weight = e.target.value;
+                                handleChange("clayMaterials", newMaterials);
+                              }}
+                              className="w-16 p-1 text-xs border rounded bg-white"
+                              step="0.01"
+                              min="0"
+                            />
+                            <span className="text-muted-foreground text-[10px]">kg</span>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => handleChange("clayIds", formData.clayIds.filter(cid => cid !== id))}
-                            className="ml-0.5 text-red-500 hover:text-red-700"
+                            onClick={() => handleChange("clayMaterials", formData.clayMaterials.filter((m: any) => m.id !== material.id))}
+                            className="text-red-500 hover:text-red-700 ml-1 p-1"
                           >
-                            ×
+                            <X className="h-3 w-3" />
                           </button>
-                        </Badge>
+                        </div>
                       );
                     })}
                   </div>
@@ -1609,8 +1619,8 @@ function DirectoryForm({
                           if (response.ok) {
                             const newClayData = await response.json();
                             await fetchMaterials();
-                            if (newClayData.clay && !formData.clayIds.includes(newClayData.clay.id.toString())) {
-                              handleChange("clayIds", [...formData.clayIds, newClayData.clay.id.toString()]);
+                            if (newClayData.clay && !formData.clayMaterials.some((m: any) => m.id === newClayData.clay.id.toString())) {
+                              handleChange("clayMaterials", [...formData.clayMaterials, { id: newClayData.clay.id.toString(), weight: "" }]);
                             }
                             setNewMaterial(prev => ({ ...prev, clay: { code: "", description: "", notes: "" } }));
                             setShowAddMaterial(prev => ({ ...prev, clay: false }));
@@ -1627,16 +1637,7 @@ function DirectoryForm({
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium">KG (Weight)</label>
-              <input
-                type="number"
-                value={formData.weight}
-                onChange={(e) => handleChange("weight", e.target.value)}
-                className="w-full p-1.5 text-sm border rounded"
-                step="0.01"
-              />
-            </div>
+
 
             <div className="flex items-center gap-2">
               <label className="text-xs font-medium">Is Decor:</label>
@@ -1655,8 +1656,8 @@ function DirectoryForm({
                   <Select
                     value=""
                     onValueChange={(value) => {
-                      if (value && !formData.engobeIds.includes(value)) {
-                        handleChange("engobeIds", [...formData.engobeIds, value]);
+                      if (value && !formData.engobeMaterials.some((m: any) => m.id === value)) {
+                        handleChange("engobeMaterials", [...formData.engobeMaterials, { id: value, weight: "" }]);
                       }
                     }}
                   >
@@ -1665,7 +1666,7 @@ function DirectoryForm({
                     </SelectTrigger>
                     <SelectContent>
                       {materials.engobes
-                        .filter((engobe: any) => !formData.engobeIds.includes(engobe.id.toString()))
+                        .filter((engobe: any) => !formData.engobeMaterials.some((m: any) => m.id === engobe.id.toString()))
                         .map((engobe: any) => (
                           <SelectItem key={engobe.id} value={engobe.id.toString()} className="text-xs">
                             {engobe.engobeCode} - {engobe.engobeDescription}
@@ -1683,21 +1684,37 @@ function DirectoryForm({
                     +
                   </Button>
                 </div>
-                {formData.engobeIds.length > 0 && (
-                  <div className="flex flex-wrap gap-0.5">
-                    {formData.engobeIds.map((id) => {
-                      const engobe = materials.engobes.find((e: any) => e.id.toString() === id);
+                {formData.engobeMaterials.length > 0 && (
+                  <div className="space-y-1 mt-1">
+                    {formData.engobeMaterials.map((material, index) => {
+                      const engobe = materials.engobes.find((e: any) => e.id.toString() === material.id);
                       return (
-                        <Badge key={id} variant="secondary" className="text-xs py-0 px-1">
-                          {engobe ? `${engobe.engobeCode}` : id}
+                        <div key={material.id} className="flex items-center gap-2 text-xs border rounded p-1 bg-gray-50">
+                          <span className="font-medium flex-1 truncate">{engobe ? `${engobe.engobeCode} - ${engobe.engobeDescription}` : material.id}</span>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              placeholder="kg"
+                              value={material.weight}
+                              onChange={(e) => {
+                                const newMaterials = [...formData.engobeMaterials];
+                                newMaterials[index].weight = e.target.value;
+                                handleChange("engobeMaterials", newMaterials);
+                              }}
+                              className="w-16 p-1 text-xs border rounded bg-white"
+                              step="0.01"
+                              min="0"
+                            />
+                            <span className="text-muted-foreground text-[10px]">kg</span>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => handleChange("engobeIds", formData.engobeIds.filter(eid => eid !== id))}
-                            className="ml-0.5 text-red-500 hover:text-red-700"
+                            onClick={() => handleChange("engobeMaterials", formData.engobeMaterials.filter((m: any) => m.id !== material.id))}
+                            className="text-red-500 hover:text-red-700 ml-1 p-1"
                           >
-                            ×
+                            <X className="h-3 w-3" />
                           </button>
-                        </Badge>
+                        </div>
                       );
                     })}
                   </div>
@@ -1763,8 +1780,8 @@ function DirectoryForm({
                   <Select
                     value=""
                     onValueChange={(value) => {
-                      if (value && !formData.glazeIds.includes(value)) {
-                        handleChange("glazeIds", [...formData.glazeIds, value]);
+                      if (value && !formData.glazeMaterials.some((m: any) => m.id === value)) {
+                        handleChange("glazeMaterials", [...formData.glazeMaterials, { id: value, weight: "" }]);
                       }
                     }}
                   >
@@ -1773,7 +1790,7 @@ function DirectoryForm({
                     </SelectTrigger>
                     <SelectContent>
                       {materials.glazes
-                        .filter((glaze: any) => !formData.glazeIds.includes(glaze.id.toString()))
+                        .filter((glaze: any) => !formData.glazeMaterials.some((m: any) => m.id === glaze.id.toString()))
                         .map((glaze: any) => (
                           <SelectItem key={glaze.id} value={glaze.id.toString()} className="text-xs">
                             {glaze.glazeCode} - {glaze.glazeDescription}
@@ -1791,21 +1808,37 @@ function DirectoryForm({
                     +
                   </Button>
                 </div>
-                {formData.glazeIds.length > 0 && (
-                  <div className="flex flex-wrap gap-0.5">
-                    {formData.glazeIds.map((id) => {
-                      const glaze = materials.glazes.find((g: any) => g.id.toString() === id);
+                {formData.glazeMaterials.length > 0 && (
+                  <div className="space-y-1 mt-1">
+                    {formData.glazeMaterials.map((material, index) => {
+                      const glaze = materials.glazes.find((g: any) => g.id.toString() === material.id);
                       return (
-                        <Badge key={id} variant="secondary" className="text-xs py-0 px-1">
-                          {glaze ? `${glaze.glazeCode}` : id}
+                        <div key={material.id} className="flex items-center gap-2 text-xs border rounded p-1 bg-gray-50">
+                          <span className="font-medium flex-1 truncate">{glaze ? `${glaze.glazeCode} - ${glaze.glazeDescription}` : material.id}</span>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              placeholder="kg"
+                              value={material.weight}
+                              onChange={(e) => {
+                                const newMaterials = [...formData.glazeMaterials];
+                                newMaterials[index].weight = e.target.value;
+                                handleChange("glazeMaterials", newMaterials);
+                              }}
+                              className="w-16 p-1 text-xs border rounded bg-white"
+                              step="0.01"
+                              min="0"
+                            />
+                            <span className="text-muted-foreground text-[10px]">kg</span>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => handleChange("glazeIds", formData.glazeIds.filter(gid => gid !== id))}
-                            className="ml-0.5 text-red-500 hover:text-red-700"
+                            onClick={() => handleChange("glazeMaterials", formData.glazeMaterials.filter((m: any) => m.id !== material.id))}
+                            className="text-red-500 hover:text-red-700 ml-1 p-1"
                           >
-                            ×
+                            <X className="h-3 w-3" />
                           </button>
-                        </Badge>
+                        </div>
                       );
                     })}
                   </div>
@@ -1900,8 +1933,8 @@ function DirectoryForm({
                   <Select
                     value=""
                     onValueChange={(value) => {
-                      if (value && !formData.lusterIds.includes(value)) {
-                        handleChange("lusterIds", [...formData.lusterIds, value]);
+                      if (value && !formData.lusterMaterials.some((m: any) => m.id === value)) {
+                        handleChange("lusterMaterials", [...formData.lusterMaterials, { id: value, weight: "" }]);
                       }
                     }}
                   >
@@ -1910,7 +1943,7 @@ function DirectoryForm({
                     </SelectTrigger>
                     <SelectContent>
                       {materials.lusters
-                        .filter((luster: any) => !formData.lusterIds.includes(luster.id.toString()))
+                        .filter((luster: any) => !formData.lusterMaterials.some((m: any) => m.id === luster.id.toString()))
                         .map((luster: any) => (
                           <SelectItem key={luster.id} value={luster.id.toString()} className="text-xs">
                             {luster.lustreCode} - {luster.lustreDescription}
@@ -1928,21 +1961,37 @@ function DirectoryForm({
                     +
                   </Button>
                 </div>
-                {formData.lusterIds.length > 0 && (
-                  <div className="flex flex-wrap gap-0.5">
-                    {formData.lusterIds.map((id) => {
-                      const luster = materials.lusters.find((l: any) => l.id.toString() === id);
+                {formData.lusterMaterials.length > 0 && (
+                  <div className="space-y-1 mt-1">
+                    {formData.lusterMaterials.map((material, index) => {
+                      const luster = materials.lusters.find((l: any) => l.id.toString() === material.id);
                       return (
-                        <Badge key={id} variant="secondary" className="text-xs py-0 px-1">
-                          {luster ? `${luster.lustreCode}` : id}
+                        <div key={material.id} className="flex items-center gap-2 text-xs border rounded p-1 bg-gray-50">
+                          <span className="font-medium flex-1 truncate">{luster ? `${luster.lustreCode} - ${luster.lustreDescription}` : material.id}</span>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              placeholder="kg"
+                              value={material.weight}
+                              onChange={(e) => {
+                                const newMaterials = [...formData.lusterMaterials];
+                                newMaterials[index].weight = e.target.value;
+                                handleChange("lusterMaterials", newMaterials);
+                              }}
+                              className="w-16 p-1 text-xs border rounded bg-white"
+                              step="0.01"
+                              min="0"
+                            />
+                            <span className="text-muted-foreground text-[10px]">kg</span>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => handleChange("lusterIds", formData.lusterIds.filter(lid => lid !== id))}
-                            className="ml-0.5 text-red-500 hover:text-red-700"
+                            onClick={() => handleChange("lusterMaterials", formData.lusterMaterials.filter((m: any) => m.id !== material.id))}
+                            className="text-red-500 hover:text-red-700 ml-1 p-1"
                           >
-                            ×
+                            <X className="h-3 w-3" />
                           </button>
-                        </Badge>
+                        </div>
                       );
                     })}
                   </div>

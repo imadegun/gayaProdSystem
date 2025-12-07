@@ -99,12 +99,18 @@ export async function POST(request: Request) {
       );
     }
 
+    const { clientId, ...otherData } = validation.data;
+
+    // Convert clientId (string) to clientCode if clientCode is missing
+    const finalClientCode = otherData.clientCode || clientId;
+
     const collectionData = {
-      ...validation.data,
+      ...otherData,
+      clientCode: finalClientCode,
       collectionType: 'R&D',
       isApproved: false,
       isOrdered: false,
-      rndUserId: session.user.id,
+      rndUserId: parseInt(session.user.id),
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -118,7 +124,7 @@ export async function POST(request: Request) {
       data: {
         rndCollectionId: newCollection.id,
         transitionType: 'creation',
-        createdBy: session.user.id
+        createdBy: parseInt(session.user.id)
       }
     });
 
@@ -176,7 +182,7 @@ export async function PUT(request: Request) {
       data: {
         rndCollectionId: updatedCollection.id,
         transitionType: 'approval',
-        createdBy: session.user.id
+        createdBy: parseInt(session.user.id)
       }
     });
 

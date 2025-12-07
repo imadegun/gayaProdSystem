@@ -62,11 +62,11 @@ export default function RNDCollectionsPage() {
 
   const filteredCollections = collections.filter(collection => {
     const matchesSearch = collection.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         collection.name.toLowerCase().includes(searchTerm.toLowerCase())
+      collection.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' ||
-                         (statusFilter === 'approved' && collection.isApproved) ||
-                         (statusFilter === 'pending' && !collection.isApproved) ||
-                         (statusFilter === 'ordered' && collection.isOrdered)
+      (statusFilter === 'approved' && collection.isApproved) ||
+      (statusFilter === 'pending' && !collection.isApproved) ||
+      (statusFilter === 'ordered' && collection.isOrdered)
     const matchesType = typeFilter === 'all' || collection.collectionType === typeFilter
 
     return matchesSearch && matchesStatus && matchesType
@@ -89,7 +89,7 @@ export default function RNDCollectionsPage() {
       'Exclusive-Group': 'secondary',
       'General': 'outline'
     }
-    return <Badge variant={variants[type as keyof typeof variants] || 'outline'}>{type}</Badge>
+    return <Badge variant={(variants[type as keyof typeof variants] || 'outline') as "default" | "secondary" | "outline" | "destructive"}>{type}</Badge>
   }
 
   if (loading) {
