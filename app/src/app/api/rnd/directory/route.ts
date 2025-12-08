@@ -11,20 +11,55 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get("projectId");
     const includeRevisions = searchParams.get("includeRevisions") === "true";
 
+    // Pagination params
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
+
+    // Search and Filter params
+    const search = searchParams.get("search");
+    const status = searchParams.get("status");
+    const clientCode = searchParams.get("clientCode");
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: Record<string, any> = {};
+
+    // Base scoping: User's owned projects
+    where.project = {
+      createdBy: parseInt(user.id)
+    };
+
     if (projectId) {
-      // Ensure user can only access their own projects
       where.projectId = parseInt(projectId);
+    }
+
+    if (status && status !== "all") {
+      where.status = status;
+    }
+
+    if (clientCode && clientCode !== "all") {
       where.project = {
-        createdBy: parseInt(user.id)
-      };
-    } else {
-      // If no project specified, show all user's projects' directory lists
-      where.project = {
-        createdBy: parseInt(user.id)
+        ...where.project,
+        client: {
+          clientCode: clientCode
+        }
       };
     }
+
+    if (search) {
+      where.OR = [
+        { itemName: { contains: search, mode: "insensitive" } },
+        { collectCode: { contains: search, mode: "insensitive" } },
+        {
+          project: {
+            projectName: { contains: search, mode: "insensitive" }
+          }
+        }
+      ];
+    }
+
+    // Get total count for pagination
+    const total = await prisma.directoryList.count({ where });
 
     const directoryLists = await prisma.directoryList.findMany({
       where,
@@ -54,9 +89,20 @@ export async function GET(request: NextRequest) {
         { revisionNumber: "desc" },
         { createdAt: "desc" }
       ],
+      skip,
+      take: limit,
     });
 
-    return NextResponse.json({ directoryLists });
+    return NextResponse.json({
+      directoryLists,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
   } catch (error) {
     console.error("Error fetching directory lists:", error);
     return NextResponse.json(

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Edit, Trash2, Image, Eye, Upload, X, Copy } from "lucide-react";
+import { Plus, FileText, Edit, Trash2, Image, Eye, Upload, X, Copy, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MaterialWeight {
   id: number;
@@ -103,8 +103,23 @@ export default function RNDDirectoryPage() {
     stainOxides: [],
   });
 
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1
+  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [clientFilter, setClientFilter] = useState("all");
+
   useEffect(() => {
+    // Check if searching or filtering, if so skip fetchDirectoryLists initially to avoid double fetch if page reset needed
+    // Actually, simple fetch is fine.
     fetchDirectoryLists();
+  }, [pagination.page, pagination.limit, searchQuery, statusFilter, clientFilter]);
+
+  useEffect(() => {
     fetchProjects();
     fetchMaterialsForList();
   }, []);
@@ -132,12 +147,28 @@ export default function RNDDirectoryPage() {
   }, [selectedBatch, filteredDirectoryLists]);
 
   const fetchDirectoryLists = async () => {
+    setLoading(true);
     try {
-      const response = await fetch("/api/rnd/directory");
+      const params = new URLSearchParams();
+      params.append("page", pagination.page.toString());
+      params.append("limit", pagination.limit.toString());
+
+      if (searchQuery) params.append("search", searchQuery);
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (clientFilter !== "all") params.append("clientCode", clientFilter);
+
+      const response = await fetch(`/api/rnd/directory?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setDirectoryLists(data.directoryLists);
         setAvailableDirectoryItems(data.directoryLists);
+        if (data.pagination) {
+          setPagination(prev => ({
+            ...prev,
+            total: data.pagination.total,
+            totalPages: data.pagination.totalPages
+          }));
+        }
       }
     } catch (error) {
       console.error("Error fetching directory lists:", error);
@@ -332,6 +363,67 @@ export default function RNDDirectoryPage() {
         )}
       </div>
 
+      {/* Filters Bar */}
+      <Card className="bg-gray-50/50">
+        <CardContent className="p-3">
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative w-60">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <input
+                placeholder="Search items, code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-sm border rounded bg-white"
+              />
+            </div>
+
+            <Select value={clientFilter} onValueChange={setClientFilter}>
+              <SelectTrigger className="w-[180px] h-9 text-xs bg-white">
+                <SelectValue placeholder="Filter by Client" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Clients</SelectItem>
+                {Array.from(new Set(projects.map(p => JSON.stringify({ code: p.client.clientCode, name: p.client.clientDescription }))))
+                  .map(s => JSON.parse(s))
+                  .map((c: any) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.name}
+                    </SelectItem>
+                  ))
+                }
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[150px] h-9 text-xs bg-white">
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 ml-auto"
+              onClick={() => {
+                setSearchQuery("");
+                setClientFilter("all");
+                setStatusFilter("all");
+                setPagination(prev => ({ ...prev, page: 1 }));
+              }}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Clear
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -341,6 +433,7 @@ export default function RNDDirectoryPage() {
                   <TableHead className="w-[40px] py-2 px-2">No</TableHead>
                   <TableHead className="w-[60px] py-2 px-2">Photo</TableHead>
                   <TableHead className="w-[100px] py-2 px-2">Code</TableHead>
+                  <TableHead className="py-2 px-2">Client</TableHead>
                   <TableHead className="py-2 px-2">Category</TableHead>
                   <TableHead className="py-2 px-2">Info/Size</TableHead>
                   <TableHead className="py-2 px-2">Material</TableHead>
@@ -379,6 +472,7 @@ export default function RNDDirectoryPage() {
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-xs py-1 px-2">{item.collectCode || "-"}</TableCell>
+                    <TableCell className="text-xs py-1 px-2 text-muted-foreground">{item.project.client.clientDescription}</TableCell>
                     <TableCell className="font-medium py-1 px-2">{item.itemName}</TableCell>
                     <TableCell className="py-1 px-2 text-xs">{item.sizeInfo || "-"}</TableCell>
                     <TableCell className="py-1 px-2 text-xs">{item.materialName || "-"}</TableCell>
@@ -446,6 +540,35 @@ export default function RNDDirectoryPage() {
             </Table>
           </div>
         </CardContent>
+        {/* Pagination */}
+        <div className="border-t p-2 flex items-center justify-between bg-gray-50">
+          <div className="text-xs text-muted-foreground">
+            Showing {filteredDirectoryLists.length} of {pagination.total} items
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 w-7 p-0"
+              disabled={pagination.page <= 1}
+              onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs font-medium">
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 w-7 p-0"
+              disabled={pagination.page >= pagination.totalPages}
+              onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </Card>
 
       {/* Technical Sheet Detail Modal with Tabs */}
@@ -905,6 +1028,12 @@ function DirectoryForm({
     colorName: "",
     materialName: "",
     sizeInfo: "",
+    dimensions: {
+      width: "",
+      length: "",
+      height: "",
+      diameter: ""
+    } as any,
     clayMaterials: [] as { id: string; weight: string }[],
     glazeMaterials: [] as { id: string; weight: string }[],
     engobeMaterials: [] as { id: string; weight: string }[],
@@ -962,6 +1091,16 @@ function DirectoryForm({
   useEffect(() => {
     const item = editingItem || duplicatingItem;
     if (item) {
+      let parsedDimensions = { width: "", length: "", height: "", diameter: "" };
+      if (item.dimensions && typeof item.dimensions === 'object') {
+        parsedDimensions = {
+          width: (item.dimensions as any).width || "",
+          length: (item.dimensions as any).length || "",
+          height: (item.dimensions as any).height || "",
+          diameter: (item.dimensions as any).diameter || ""
+        };
+      }
+
       if (duplicatingItem) {
         // For duplication, copy all data but modify the name and clear the code
         setFormData({
@@ -977,6 +1116,7 @@ function DirectoryForm({
           colorName: item.colorName || "",
           materialName: item.materialName || "",
           sizeInfo: item.sizeInfo || "",
+          dimensions: parsedDimensions,
           clayMaterials: (item.clayMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
           glazeMaterials: (item.glazeMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
           engobeMaterials: (item.engobeMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
@@ -1006,6 +1146,7 @@ function DirectoryForm({
           colorName: item.colorName || "",
           materialName: item.materialName || "",
           sizeInfo: item.sizeInfo || "",
+          dimensions: parsedDimensions,
           clayMaterials: (item.clayMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
           glazeMaterials: (item.glazeMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
           engobeMaterials: (item.engobeMaterials || []).map(m => ({ id: m.id.toString(), weight: m.weight ? m.weight.toString() : "" })),
@@ -1254,6 +1395,12 @@ function DirectoryForm({
       })),
       stainOxideId: formData.stainOxideId ? parseInt(formData.stainOxideId) : undefined,
       weight: formData.weight ? parseFloat(formData.weight.toString()) : undefined,
+      dimensions: {
+        width: formData.dimensions.width || undefined,
+        height: formData.dimensions.height || undefined,
+        length: formData.dimensions.length || undefined,
+        diameter: formData.dimensions.diameter || undefined
+      },
       isSet: formData.isSet,
       components: formData.components,
       photos: formData.photos,
@@ -1338,6 +1485,52 @@ function DirectoryForm({
                 onChange={(e) => handleChange("sizeInfo", e.target.value)}
                 className="w-full p-1.5 text-sm border rounded"
               />
+            </div>
+
+            <div className="col-span-2 md:col-span-3">
+              <label className="text-xs font-medium mb-1 block">Final Size (cm)</label>
+              <div className="grid grid-cols-4 gap-2">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Width"
+                    value={formData.dimensions.width}
+                    onChange={(e) => handleChange("dimensions", { ...formData.dimensions, width: e.target.value })}
+                    className="w-full p-1.5 text-sm border rounded"
+                  />
+                  <span className="text-[10px] text-muted-foreground">Width</span>
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Length"
+                    value={formData.dimensions.length}
+                    onChange={(e) => handleChange("dimensions", { ...formData.dimensions, length: e.target.value })}
+                    className="w-full p-1.5 text-sm border rounded"
+                  />
+                  <span className="text-[10px] text-muted-foreground">Length</span>
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Height"
+                    value={formData.dimensions.height}
+                    onChange={(e) => handleChange("dimensions", { ...formData.dimensions, height: e.target.value })}
+                    className="w-full p-1.5 text-sm border rounded"
+                  />
+                  <span className="text-[10px] text-muted-foreground">Height</span>
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Diameter"
+                    value={formData.dimensions.diameter}
+                    onChange={(e) => handleChange("dimensions", { ...formData.dimensions, diameter: e.target.value })}
+                    className="w-full p-1.5 text-sm border rounded"
+                  />
+                  <span className="text-[10px] text-muted-foreground">Diameter</span>
+                </div>
+              </div>
             </div>
 
             <div>
